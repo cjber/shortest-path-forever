@@ -8,6 +8,14 @@ end
 local Farming = {}
 ns.Farming = Farming
 local instance = 0
+---@type table<string, true>
+local owners = {}
+
+---@param owner string?
+---@return boolean
+function Farming.Owns(owner)
+	return owner ~= nil and owners[owner] == true
+end
 
 -- The tour drives Shortest Path only through its public API.
 ---@return SPFAPIJourneyState?
@@ -106,6 +114,7 @@ function Farming.new()
 	---@class SPFFarmingController
 	local controller = {}
 	local function detach(batch)
+		owners[batch.owner] = nil
 		if batch.unobserve then
 			batch.unobserve()
 			batch.unobserve = nil
@@ -197,6 +206,7 @@ function Farming.new()
 				return false
 			end
 			current = batch
+			owners[batch.owner] = true
 			batch.unsubscribe = api.Subscribe(function()
 				inspect(batch)
 			end)

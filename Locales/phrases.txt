@@ -382,6 +382,7 @@ L["Sizes boat, lift, tram and portal icons on the world map."] = "Sizes boat, li
 L["Sizes flight master icons on the world map."] = "Sizes flight master icons on the world map."
 L["Sizes the walking dots on the minimap."] = "Sizes the walking dots on the minimap."
 L["Sizes transport icons on the minimap."] = "Sizes transport icons on the minimap."
+L["Skip this stop"] = "Skip this stop"
 L["Solid"] = "Solid"
 L["Stable master"] = "Stable master"
 L["Start"] = "Start"

@@ -9,6 +9,7 @@
 
 ---@class SPFFarmingFactory
 ---@field new fun(): SPFFarmingController
+---@field Owns fun(owner: string?): boolean
 
 ---@class SPFFarmingDriverBatch
 ---@field token SPFFarmingBatch

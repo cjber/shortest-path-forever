@@ -369,6 +369,42 @@ undo.tooltip(tooltip)
 assert(tooltipText:find("again", 1, true) and tooltipText:find("new route", 1, true))
 undo.callback()
 assert(not avoided)
+local farming, completed, skipped = false, 0, 0
+local goal = {}
+ns.IsFarmingJourney = function()
+	return farming
+end
+ns.JourneyGoal = function()
+	return goal
+end
+ns.SkipJourneyStep = function(index)
+	assert(index == 1)
+	completed = completed + 1
+end
+ns.SkipJourneyStop = function(expectedGoal)
+	assert(expectedGoal == goal)
+	skipped = skipped + 1
+end
+plan = { legs = { { mode = "walk" } } }
+module.blocks[1].rows = { { key = 1, text = "Walk", current = true } }
+module:LayoutContents()
+line.click(line, "LeftButton")
+local root = t.menus[#t.menus]
+assert(not entry(root, "Skip this stop"))
+assert(entry(root, "Complete this step")).callback()
+farming = true
+for _, button in ipairs({ "LeftButton", "RightButton" }) do
+	line.click(line, button)
+	root = t.menus[#t.menus]
+	assert(not entry(root, "Complete this step"), "the last leg's completion is the skip")
+	assert(entry(root, "Skip this stop")).callback()
+end
+plan = { legs = { { mode = "walk" }, { mode = "walk" } } }
+line.click(line, "LeftButton")
+root = t.menus[#t.menus]
+assert(entry(root, "Complete this step")).callback()
+assert(entry(root, "Skip this stop")).callback()
+assert(completed == 2 and skipped == 3)
 ns.JourneyInfo = function()
 	return journey or nil
 end

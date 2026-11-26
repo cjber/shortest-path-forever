@@ -701,3 +701,4 @@ L["With TomTom installed, point TomTom's arrow at each step instead of our arrow
 L["Walking routes can now be dotted or solid."] =
 	"Пешие маршруты теперь могут быть пунктирными или сплошными." -- mt
 L["Mailbox"] = "Почтовый ящик" -- mt
+L["Skip this stop"] = "Пропустить эту остановку" -- mt

@@ -156,7 +156,7 @@ function ns.JourneyReplanned()
 end
 
 ---@param point SPFPoint?
----@param reason? "arrived"|"cleared" -- why a nil point ended the journey
+---@param reason? "arrived"|"cleared"|"skipped" -- why a nil point ended the journey
 function ns.JourneyChanged(point, reason)
 	if ns.ProgressJourneyChanged then
 		ns.ProgressJourneyChanged(point, reason)

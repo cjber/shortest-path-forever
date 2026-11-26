@@ -6,7 +6,7 @@
 ---@alias SPFAPIMode "walk"|"flight"|"boat"|"zeppelin"|"lift"|"tram"|"portal"|"passage"|"teleport"
 ---@alias SPFAPINoRoute "combat"|"invalid"|"unreachable"|"loading" -- retry after combat; never for bad input; unreachable with what this character knows; loading while the addon builds its data
 
----@alias SPFAPIEnded "arrived"|"cleared"|"replaced"|"cancelled" -- reached the last stop; the player cleared it; another journey took over; the owner's own Cancel
+---@alias SPFAPIEnded "arrived"|"cleared"|"replaced"|"cancelled"|"skipped" -- reached the last stop; the player cleared it; another journey took over; the owner's own Cancel; the player skipped the last farming stop
 
 ---@alias SPFAPINotReady "loading"|"none" -- still building the data; nothing to answer
 

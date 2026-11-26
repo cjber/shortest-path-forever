@@ -44,6 +44,7 @@ These images are generated previews of the Shortest Path UI.
 - **Follow your guide.** RestedXP and Guidelime journeys are on by default, with no TomTom or bridge addon; without TomTom, other guides' waypoints work. Turn on *Follow Dugi guides* in Guidance to follow Dugi too, with its own arrow still visible. RestedXP keeps its own arrow. Adventure Guide takes over when its RestedXP display is on.
 - **Choose what you see.** Hide Journey steps, the arrow, or all map marks (*Show Shortest Path marks*). With OpenMap on, the route crosses its stitched map into the neighbouring zones. Move and scale the arrow, choose whether its label shows the distance, the time left or both, and add the time left under the compass.
 - **Complete a step.** Click the current journey step and choose *Complete this step*. Skipping a Hearthstone leaves it out for that journey; other steps return if you still need them.
+- **Skip a farming stop.** Click or right-click the current journey step and choose *Skip this stop* to pass a recorded node and continue the tour.
 - **See departures.** Dock and flight master tooltips show destinations and times.
 - **Travel prompts.** Hearthstone and teleport steps show what to cast. A sound and taskbar flash warn before a boat arrives, and an optional ping marks your arrival. A red corpse route guides ghosts back to their bodies.
 

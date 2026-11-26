@@ -122,8 +122,9 @@ the addon can use it once it shows the requested map.
   not have, or an owner that does not own the route returns `false`.
 - `Active()` says whether any journey is guiding, yours or another addon's.
 - `Ended(owner)` says why that owner's last journey ended: `"arrived"` after its last stop, `"cleared"` by the
-  player (or by turning Journeys off), `"replaced"` by another addon's or the player's journey, or `"cancelled"`
-  by the owner's own `Cancel`; its second return is the `GetTime()` it ended. While the journey runs, before the
+  player (or by turning Journeys off), `"replaced"` by another addon's or the player's journey, `"cancelled"`
+  by the owner's own `Cancel`, or `"skipped"` after skipping a farming batch's last stop. The second return is
+  the `GetTime()` it ended. While the journey runs, before the
   owner's first, and after a reload it returns `nil` and a reason: `"loading"` while the addon is still building
   its data, `"none"` when there is no ended journey to report. `Subscribe` says when to read it again.
 - `Subscribe(callback)` calls `callback(changes)` on the frame after guidance changes, at most once per burst of

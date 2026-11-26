@@ -328,7 +328,7 @@ end
 ---@type SPFRoutePolicy
 local journeyPolicy = "normal"
 
----@param reason "arrived"|"cleared"
+---@param reason "arrived"|"cleared"|"skipped"
 local function EndJourney(reason)
 	Search.Reset()
 	goal, result, nextPoint = nil, nil, nil
@@ -354,6 +354,14 @@ function ns.ClearJourney()
 	EndJourney("cleared")
 end
 
+---@param reason "arrived"|"skipped"
+local function AdvanceStop(reason)
+	nextPoint = ns.NextJourneyStop and ns.NextJourneyStop(goal)
+	if not nextPoint then
+		EndJourney(reason)
+	end
+end
+
 -- Completion may run inside a planner callback. Start at most one next stop on the driver's next step,
 -- after that callback unwinds; coincident stops must never recurse through the whole route in one frame.
 local function Arrive()
@@ -365,10 +373,7 @@ local function Arrive()
 			return
 		end
 	end
-	nextPoint = ns.NextJourneyStop and ns.NextJourneyStop(goal)
-	if not nextPoint then
-		EndJourney("arrived")
-	end
+	AdvanceStop("arrived")
 end
 
 local function UpdateProgress()
@@ -608,12 +613,32 @@ local function Refresh()
 	RefreshTracker()
 end
 
+---@return boolean
+function ns.IsFarmingJourney()
+	return ns.Farming ~= nil and ns.JourneyOwner ~= nil and ns.Farming.Owns(ns.JourneyOwner())
+end
+
+local function CanSkip()
+	return goal ~= nil and result ~= nil and not (replacingGoal or nextPoint or CorpseRun() or InCombatLockdown())
+end
+
+-- Pass a farming tour's stop without having reached it. The driver plans the next one on its next update.
+---@param expectedGoal SPFPoint the stop the menu was opened on
+---@return boolean
+function ns.SkipJourneyStop(expectedGoal)
+	if not (CanSkip() and goal == expectedGoal and ns.IsFarmingJourney()) then
+		return false
+	end
+	AdvanceStop("skipped")
+	return true
+end
+
 -- Advance only the current leg. A refused Hearthstone stays out of this journey's later plans,
 -- which still start at the player's actual position.
 ---@param index integer?
 ---@return boolean
 function ns.SkipJourneyStep(index)
-	if not goal or not result or replacingGoal or CorpseRun() or InCombatLockdown() then
+	if not CanSkip() then
 		return false
 	end
 	local current = progress.index
@@ -622,6 +647,10 @@ function ns.SkipJourneyStep(index)
 	end
 	if not result.legs[current] then
 		return false
+	end
+	-- Completing a farming stop's last leg by hand is no arrival: the tour accepts it only as a skip.
+	if current == #result.legs and ns.IsFarmingJourney() then
+		return ns.SkipJourneyStop(goal)
 	end
 	if result.legs[current].teleport and result.legs[current].teleport.bind then
 		withoutHearth = true
