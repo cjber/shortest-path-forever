@@ -17,7 +17,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 ### Added
 
 - Addons with their own arrow can hide Shortest Path's while the game's waypoint marker keeps following your route.
-- **Route to your map pin** in Guidance, on by default: turn it off to keep the game's map pin without starting a journey. Shift- and Alt-click still plan journeys. Thanks to xh43k for the report. (#1391)
+- Route to your map pin in Guidance, on by default: turn it off to keep the game's map pin without starting a journey. Shift- and Alt-click still plan journeys. Thanks to xh43k for the report. (#1391)
 
 ### Fixed
 
