@@ -135,12 +135,24 @@ assert(vendors.db.townServiceKinds.gear == true, "a vendor kind turned on in the
 vendors.db.townServiceFood = true
 assert(loadCore(vendors.db).db.townServiceFood == true, "a vendor switch turned on after the change stays on")
 assert(loadCore({ resumeJourney = false }).db.resumeJourney == nil, "the retired keep-journeys switch leaves the save")
--- The standalone RestedXP arrow mode replaced "Hide RestedXP's arrow" and the fill wrote its default into old saves (#1349).
+-- The RestedXP arrow mode replaced "Hide RestedXP's arrow"; the fill wrote its default into old saves (#1349).
 assert(fresh.db.restedxpArrow == "restedxp", "new installs keep RestedXP's own arrow")
-assert(loadCore({ restedxpHideArrow = true, restedxpArrow = "restedxp" }).db.restedxpArrow == "shortestPath", "a save that hid RestedXP's arrow gets our arrow back")
-assert(loadCore({ restedxpHideArrow = true }).db.restedxpArrow == "shortestPath", "a save from before the mode gets our arrow back")
-assert(loadCore({ restedxpHideArrow = false, restedxpArrow = "restedxp" }).db.restedxpArrow == "both", "a save that kept both arrows keeps both")
-assert(loadCore({ restedxpHideArrow = true, restedxpArrow = "both" }).db.restedxpArrow == "both", "a chosen mode survives")
+assert(
+	loadCore({ restedxpHideArrow = true, restedxpArrow = "restedxp" }).db.restedxpArrow == "shortestPath",
+	"a save that hid RestedXP's arrow gets our arrow back"
+)
+assert(
+	loadCore({ restedxpHideArrow = true }).db.restedxpArrow == "shortestPath",
+	"a save from before the mode gets our arrow back"
+)
+assert(
+	loadCore({ restedxpHideArrow = false, restedxpArrow = "restedxp" }).db.restedxpArrow == "both",
+	"a save that kept both arrows keeps both"
+)
+assert(
+	loadCore({ restedxpHideArrow = true, restedxpArrow = "both" }).db.restedxpArrow == "both",
+	"a chosen mode survives"
+)
 local arrowMoved = loadCore({ restedxpHideArrow = true, restedxpArrow = "restedxp" })
 arrowMoved.db.restedxpArrow = "restedxp"
 assert(loadCore(arrowMoved.db).db.restedxpArrow == "restedxp", "RestedXP's arrow chosen after the move stays chosen")

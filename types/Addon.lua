@@ -376,6 +376,7 @@
 ---@field restedxp? boolean -- follow RestedXP guide targets
 ---@field restedxpArrow? "restedxp"|"shortestPath"|"both"
 ---@field restedxpHideArrow? boolean -- hide the guide arrow during Adventure Guide integration
+---@field restedxpArrowMoved? integer -- set once the pre-mode hide-arrow choice moved into restedxpArrow
 ---@field guidelime? boolean -- follow Guidelime's current guide step (Guidelime.lua)
 ---@field dugi? boolean -- follow Dugi Guides' current guide step (Dugi.lua)
 ---@field zygor? boolean -- follow Zygor's current guide step without a TomTom bridge (Zygor.lua)
