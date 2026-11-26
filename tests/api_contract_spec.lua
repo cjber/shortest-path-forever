@@ -42,9 +42,9 @@ local function last()
 	return heard[#heard] or {}
 end
 
--- What is there to call: version 2, minor 7, and every function the hand-off checks before calling it.
+-- What is there to call: version 2, minor 8, and every function the hand-off checks before calling it.
 equal(API.version, 2, "version 2 removes peer and leaderboard APIs")
-equal(API.minor, 7, "minor 7 adds WalkPath")
+equal(API.minor, 8, "minor 8 adds NavigateRoute stopMarkers")
 for _, name in ipairs({
 	"NavigateRoute",
 	"ObserveStops",

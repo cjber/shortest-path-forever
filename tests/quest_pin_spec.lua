@@ -238,5 +238,17 @@ pins = nativeActive.QuestPinTemplate
 assert(ns.db.hideQuestPins == false and not pins[1].hidden, "off again, the game's markers stay beside the journey")
 assert(ShortestPathForever.API.Cancel("Test"))
 
+-- A route with stopMarkers = false draws no pin for its stops, so the game's pins for their quests stay shown even
+-- with the switch on.
+ns.SetOption("hideQuestPins", true)
+assert(ShortestPathForever.API.NavigateRoute("Test", {
+	{ map = 1414, x = 0.51, y = 0.5, title = "First", questID = 101, handins = { 303 } },
+	{ map = 1414, x = 0.55, y = 0.5, title = "Second", questID = 202 },
+}, { stopMarkers = false }))
+settle()
+pins = nativeActive.QuestPinTemplate
+assert(not pins[1].hidden and not pins[2].hidden and not pins[3].hidden, "an unmarked route hides no quest pin")
+assert(ShortestPathForever.API.Cancel("Test"))
+
 print("quest pin spec: marked pins hidden, unmarked shown, restored on clear and after provider refreshes")
 ]==]))()

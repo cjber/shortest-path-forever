@@ -46,7 +46,8 @@ local function Marked()
 	end
 	---@param point SPFPoint?
 	local function Add(point)
-		if not point or point.corpse then
+		-- A stop that draws no pin marks nothing: the game's pin for its quest stays.
+		if not point or point.corpse or (point.stop or point).unmarked then
 			return
 		end
 		if point.questID then
