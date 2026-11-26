@@ -539,7 +539,7 @@ function Layer:RefreshStops()
 	-- of the key: tracking, pausing, yielding or turning Guide off turns the goal pin gold or bronze. So is everything
 	-- a button shows, since a new route keeps the buttons when the key is the same.
 	local groups, keys =
-		ns.OverlapGroups(map, marks, STOP_SIZE), {
+		ns.core.MapCanvas.OverlapGroups(map, marks, STOP_SIZE), {
 			mapID,
 			ns.GoalPinActive() and "tracked" or "untracked",
 			first,

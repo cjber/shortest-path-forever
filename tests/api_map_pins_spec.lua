@@ -41,6 +41,20 @@ for _, owner in ipairs({ "  ", 7 }) do
 	local ok, reason = API.SuspendMapPins(owner)
 	assert(ok == nil and reason == "invalid", "an owner that is not a non-blank string is refused")
 end
+-- A pin without a level type, as a road or wall report mark, takes a point of interest's level, over the explored art.
+ns.charDB.mapReportMarks = { { kind = "wall", map = 1415, x = 0.5, y = 0.5, world = { 0, 0, 0 } } }
+mapID = 1429
+mapTick()
+mapID = 1415
+mapTick()
+local mark = assert(pool("mapReport").active[1], "the map has a report mark")
+local interest = WorldMapFrame:GetPinFrameLevelsManager():GetValidFrameLevel("PIN_FRAME_LEVEL_AREA_POI", 1)
+local given
+function mark.SetFrameLevel(_, level)
+	given = level
+end
+mark:ApplyFrameLevel()
+assert(given == interest, "a report mark sits at the point of interest level")
 assert(#errors == 0, table.concat(errors, "\n"))
 print("api map pins ok")
 ]], "api_map_pins_spec"))()

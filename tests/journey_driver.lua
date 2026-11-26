@@ -234,6 +234,7 @@ local coreNs = ForeverCore.load(env, "ForeverCore", {
 	"Core/Text.lua",
 	"Core/APIKit.lua",
 	"UI/Art.lua",
+	"UI/MapCanvas.lua",
 })
 env.ForeverCore = { Text = coreNs.Text, APIKit = coreNs.APIKit, Art = coreNs.Art }
 local safe = coreNs.SafeCallFor("ShortestPathForever")
@@ -247,6 +248,7 @@ ns.core = {
 	CaughtErrors = function()
 		return safe:CaughtErrors()
 	end,
+	MapCanvas = coreNs.MapCanvasFor("ShortestPathForever"),
 }
 local function load(file)
 	setfenv(assert(loadfile(root .. "/" .. file)), env)("ShortestPathForever", ns)
