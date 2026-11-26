@@ -67,6 +67,11 @@ local function TomTomArrowEnabled()
 	if not (ns.db and ns.db.tomtomArrow == true and ns.db.arrow ~= false) then
 		return false
 	end
+	-- The bridge pauses when TomTom selects an unowned waypoint and waits for all foreign waypoints to go away.
+	-- Let it point TomTom during RestedXP journeys, including when the player sets a manual TomTom waypoint.
+	if ns.JourneyOwner and ns.JourneyOwner() == "RestedXP" and C_AddOns.IsAddOnLoaded("RestedXP-TomTom") then
+		return false
+	end
 	local tomtom = ns.RealTomTom and ns.RealTomTom()
 	return tomtom ~= nil and TomTomCrazyArrowEnabled(tomtom)
 end

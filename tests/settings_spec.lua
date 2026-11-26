@@ -692,14 +692,14 @@ assert(
 	"the tooltip names the Questie quest-start gesture and destination"
 )
 assert(Row("journey").setting.name == "Enable journeys", "the journey switch does not name a key")
--- Route to the focused quest is opt-in: focusing a quest or flight point plans a journey on its own. A pin always does.
+-- Route to the focused quest is opt-in for quests, flight points and map pins.
 local focused = Row("focusedQuest")
 assert(focused.kind == "checkbox" and focused.setting.default == false, "focused routing is off by default")
 assert(focused.setting.variable == "ShortestPathForever_focusedQuest", "the switch is saved")
 assert(focused.setting.name == "Route to the focused quest", "the switch names the focused quest")
 assert(
-	focused.tooltip:find("flight point", 1, true) and focused.tooltip:find("map click", 1, true),
-	"the tooltip says a flight point counts and a controller needs no map click"
+	focused.tooltip:find("flight point", 1, true) and focused.tooltip:find("map pin", 1, true),
+	"the tooltip names flight points and map pins"
 )
 -- The journey's own block has its switch in Guidance, on by default, and turning it off redraws the tracker.
 local journeySteps = Row("journeyTracker")

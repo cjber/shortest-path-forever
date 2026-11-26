@@ -7,6 +7,7 @@ local Fake = assert(loadfile("tests/tomtom_fake.lua"))()
 ---@field arrow? boolean
 ---@field installed? boolean
 ---@field withArrow? boolean
+---@field restedXPBridge? boolean
 
 ---@param opts SPFTomTomArrowTestOptions
 ---@param restoredGuide? boolean
@@ -115,7 +116,8 @@ return function(opts, restoredGuide)
 			return hasTomTom and name == "TomTom"
 		end,
 		IsAddOnLoaded = function(name)
-			return hasTomTom and name == "TomTom" and e.TomTom ~= nil
+			return (hasTomTom and name == "TomTom" and e.TomTom ~= nil)
+				or (name == "RestedXP-TomTom" and opts.restedXPBridge == true)
 		end,
 		GetAddOnEnableState = function(name)
 			return hasTomTom and name == "TomTom" and 2 or 0
@@ -140,7 +142,7 @@ return function(opts, restoredGuide)
 
 	local fake
 	if hasTomTom then
-		fake = Fake.New(nil, crazy)
+		fake = Fake.New(nil, crazy, opts.restedXPBridge)
 		function fake:ShowHideCrazyArrow()
 			crazy:Show()
 			crazy:SetAlpha(self.arrowAlpha or 0.7)
@@ -155,6 +157,33 @@ return function(opts, restoredGuide)
 		timers = {}
 		for _, fn in ipairs(due) do
 			fn()
+		end
+	end
+	-- RestedXP-TomTom 1.5.2 selects only its own waypoints. A foreign selection pauses it until no foreign
+	-- waypoints remain, even across step changes. The tests drive its ticks directly.
+	local bridgeStep
+	if opts.restedXPBridge then
+		local waypoint
+		local paused = false
+		e.hooksecurefunc(fake, "SetCrazyArrow", function(_, uid)
+			if uid ~= waypoint then
+				paused = true
+			end
+		end)
+		bridgeStep = function(index)
+			if waypoint then
+				fake:RemoveWaypoint(waypoint)
+			end
+			waypoint = fake:AddWaypoint(1, 0.5 + index / 20, 0.5, {
+				title = "RXP Step " .. index,
+				source = "RXPGuides",
+				crazy = false,
+				persistent = false,
+			})
+			if not paused then
+				fake:SetCrazyArrow(waypoint, 15, waypoint.title)
+			end
+			return waypoint
 		end
 	end
 	if restoredGuide then
@@ -200,6 +229,7 @@ return function(opts, restoredGuide)
 		tomtom = fake,
 		crazy = crazy,
 		runTimers = RunTimers,
+		bridgeStep = bridgeStep,
 		arrowFrame = function()
 			return arrowFrame
 		end,

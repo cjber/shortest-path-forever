@@ -26,10 +26,11 @@ local Fake = {}
 
 ---@param saved? table[] the waypoints TomTom saved last session: {map, x, y, title = ...}
 ---@param wayframe? table the arrow frame, when a spec observes its visibility
-function Fake.New(saved, wayframe)
+---@param clearTargetOnRemoval? boolean TomTom 4.4.1 clears the target before its next OnUpdate picks the closest
+function Fake.New(saved, wayframe, clearTargetOnRemoval)
 	local tomtom = { profile = { stickycorpse = false, setclosest = true } }
 	local waypoints, valid, profile = {}, {}, {}
-	local arrow
+	local arrow, closestPending
 	local hijacked = false
 	tomtom.waypoints = waypoints
 
@@ -41,7 +42,7 @@ function Fake.New(saved, wayframe)
 		if arrow and arrow.corpse and self.profile.stickycorpse then
 			return
 		end
-		arrow = uid
+		arrow, closestPending = uid, false
 		if wayframe then
 			wayframe:Show()
 		end
@@ -68,6 +69,9 @@ function Fake.New(saved, wayframe)
 
 	function tomtom.ClearWaypoint(_, uid)
 		valid[uid] = nil
+		if clearTargetOnRemoval and arrow == uid then
+			arrow, closestPending = nil, true
+		end
 	end
 
 	function tomtom.IsValidWaypoint(_, uid)
@@ -166,11 +170,17 @@ function Fake.New(saved, wayframe)
 	-- The arrow's next update: a waypoint that is gone is dropped, and the closest one left is taken.
 	---@param closest? table the waypoint GetClosestWaypoint would find, if any
 	function tomtom:ArrowUpdate(closest)
-		if arrow and not valid[arrow] then
-			arrow = nil
+		if wayframe and (wayframe.hidden or hijacked) then
+			return
+		end
+		if closestPending or (arrow and not valid[arrow]) then
+			arrow, closestPending = nil, false
 			if self.profile.setclosest and closest and valid[closest] then
 				self:SetCrazyArrow(closest, 15, closest.title)
 			end
+		end
+		if not arrow and wayframe then
+			wayframe:Hide()
 		end
 	end
 

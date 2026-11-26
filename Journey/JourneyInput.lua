@@ -549,7 +549,7 @@ function ns.FocusedTrackingChanged(event)
 			if previousGoal and ns.JourneyGoal() == previousGoal then
 				focusedWaypointGoal = previousGoal
 			end
-		elseif ns.JourneyToUserWaypoint() then
+		elseif ns.db.focusedQuest and ns.JourneyToUserWaypoint() then
 			focusedWaypointGoal = ns.JourneyGoal()
 		end
 	elseif previousGoal and not GuideLeads() and ns.JourneyGoal() == previousGoal then

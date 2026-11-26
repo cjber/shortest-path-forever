@@ -57,7 +57,8 @@ assert(env.C_Map.GetUserWaypoint(), "the quest route has a guide waypoint for Op
 clearPin()
 assert(not ns.HasJourney(), "clearing the borrowed guide waypoint ends the quest route")
 
--- Placing a map pin starts a journey (even with focusedQuest off); deleting that pin ends the route (#1348).
+-- With focused routing on, placing a map pin starts a journey and deleting it ends the route (#1348).
+ns.db.focusedQuest = true
 ns.db.guideStops = true
 pin(1, 0.4, 0.6)
 assert(ns.HasJourney(), "placing a map pin starts a journey")

@@ -248,8 +248,8 @@ L["Sizes flight master icons on the world map."] =
 L["Sizes transport icons on the minimap."] =
 	"Размер значков транспорта на мини-карте."
 L["Stable master"] = "Хозяин стойл"
-L["Starts a journey when you super-track a quest or a flight point, so a controller needs no map click. A guide addon's own journey is left alone."] =
-	"Начинает маршрут, когда вы выбираете задание или пункт полёта, так что геймпаду не нужен щелчок по карте. Маршрут аддона-гида не затрагивается."
+L["Starts a journey when you super-track a quest or flight point or place a map pin. The journey key still works when this is off."] =
+	"Начинает путешествие при выборе задания или точки полёта для отслеживания либо при установке метки на карте. Клавиша путешествия работает и при выключенной настройке."
 L["Stop %d of %d"] = "Остановка %d из %d" -- mt
 L["Stop %d of %d: %s"] = "Остановка %d из %d: %s"
 L["Teleport to %s"] = "Телепорт: %s"
