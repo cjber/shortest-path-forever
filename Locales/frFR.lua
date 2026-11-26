@@ -164,10 +164,13 @@ L["Choose which arrows to show when following a standalone RestedXP guide."] =
 	"Choisissez les flèches à afficher lorsque vous suivez un guide RestedXP autonome." -- mt
 L["RestedXP arrow"] = "Flèche RestedXP" -- mt
 L["RestedXP's arrow"] = "Flèche de RestedXP" -- mt
+L["Route to your map pin"] = "Voyager vers votre repère de carte" -- mt
 L["Shortest Path's arrow"] = "Flèche de Shortest Path" -- mt
 L["Shortest Path pins and route lines on the world map."] =
 	"Repères et tracés de Shortest Path sur la carte du monde." -- mt
 L["Show Shortest Path marks"] = "Afficher les repères de Shortest Path" -- mt
+L["Starts a journey when you place the game's map pin. The journey key still works when this is off."] =
+	"Lance un trajet quand vous placez le repère de carte du jeu. La touche de trajet fonctionne aussi lorsque cette option est désactivée." -- mt
 L["The travel action will update after combat."] = "L’action de voyage sera mise à jour après le combat." -- mt
 L["Rides to spend less time walking through %s (level %s)"] =
 	"Prend un transport pour moins marcher dans %s (niveau %s)" -- mt
@@ -237,8 +240,8 @@ L["Sizes boat, lift, tram and portal icons on the world map."] =
 L["Sizes flight master icons on the world map."] = "Taille des icônes des maîtres de vol sur la carte du monde." -- mt
 L["Sizes transport icons on the minimap."] = "Taille des icônes de transport sur la minicarte." -- mt
 L["Stable master"] = "Maître des écuries" -- mt
-L["Starts a journey when you super-track a quest or flight point or place a map pin. The journey key still works when this is off."] =
-	"Lance un trajet quand vous suivez une quête ou un point de vol, ou quand vous placez un repère sur la carte. La touche de trajet fonctionne aussi lorsque cette option est désactivée." -- mt
+L["Starts a journey when you super-track a quest or a flight point, so a controller needs no map click. A guide addon's own journey is left alone."] =
+	"Lance un trajet quand vous suivez une quête ou un point de vol, ainsi une manette n'a pas besoin de clic sur la carte. Le trajet propre à un addon de guide n'est pas touché." -- mt
 L["Stop %d of %d"] = "Arrêt %d sur %d" -- mt
 L["Stop %d of %d: %s"] = "Arrêt %d sur %d : %s" -- mt
 L["Teleport to %s"] = "Téléportation vers %s" -- mt

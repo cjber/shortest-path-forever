@@ -166,10 +166,13 @@ L["Choose which arrows to show when following a standalone RestedXP guide."] =
 	"RestedXP 가이드를 단독으로 따라갈 때 표시할 화살표를 선택합니다." -- mt
 L["RestedXP arrow"] = "RestedXP 화살표 설정" -- mt
 L["RestedXP's arrow"] = "RestedXP 화살표" -- mt
+L["Route to your map pin"] = "지도 핀으로 여정 시작"
 L["Shortest Path's arrow"] = "Shortest Path 화살표" -- mt
 L["Shortest Path pins and route lines on the world map."] =
 	"세계 지도에 표시되는 Shortest Path의 핀과 경로선입니다." -- mt
 L["Show Shortest Path marks"] = "Shortest Path 표시 보기" -- mt
+L["Starts a journey when you place the game's map pin. The journey key still works when this is off."] =
+	"게임의 지도 핀을 놓으면 여정을 시작합니다. 이 옵션을 꺼도 여정 키는 사용할 수 있습니다."
 L["The travel action will update after combat."] = "전투가 끝나면 이동 행동이 갱신됩니다."
 L["Rides to spend less time walking through %s (level %s)"] =
 	"이동 수단을 이용해 %s (레벨 %s)에서 걷는 구간을 줄임"
@@ -240,8 +243,8 @@ L["Sizes flight master icons on the world map."] =
 	"세계 지도의 비행 조련사 아이콘 크기를 조절합니다."
 L["Sizes transport icons on the minimap."] = "미니맵의 교통수단 아이콘 크기를 조절합니다."
 L["Stable master"] = "야수 관리인"
-L["Starts a journey when you super-track a quest or flight point or place a map pin. The journey key still works when this is off."] =
-	"퀘스트나 비행 지점을 집중 추적하거나 지도에 핀을 놓으면 여정을 시작합니다. 이 옵션을 꺼도 여정 키는 사용할 수 있습니다."
+L["Starts a journey when you super-track a quest or a flight point, so a controller needs no map click. A guide addon's own journey is left alone."] =
+	"퀘스트나 비행 지점을 집중하면 여정을 시작하므로 컨트롤러에서 지도 클릭이 필요 없습니다. 가이드 애드온의 자체 여정은 그대로 둡니다."
 L["Stop %d of %d"] = "정거장 %d/%d" -- mt
 L["Stop %d of %d: %s"] = "정거장 %d/%d: %s"
 L["Teleport to %s"] = "%s(으)로 순간이동"

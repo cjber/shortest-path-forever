@@ -59,7 +59,6 @@ scenario("deleting the focused map pin cancels its journey (#1348)", {
 		end
 	end
 	assert(ns, "full addon namespace loaded")
-	ns.db.focusedQuest = true
 
 	-- Player drops a map pin: Shortest Path plans a journey to it.
 	sim:input(function()

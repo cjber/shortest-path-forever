@@ -160,10 +160,13 @@ L["Choose which arrows to show when following a standalone RestedXP guide."] =
 	"Escolha quais setas mostrar ao seguir um guia do RestedXP de forma independente." -- mt
 L["RestedXP arrow"] = "Seta do RestedXP" -- mt
 L["RestedXP's arrow"] = "Seta do RestedXP" -- mt
+L["Route to your map pin"] = "Viajar até seu marcador no mapa"
 L["Shortest Path's arrow"] = "Seta do Shortest Path" -- mt
 L["Shortest Path pins and route lines on the world map."] =
 	"Marcadores e linhas de rota do Shortest Path no mapa-múndi." -- mt
 L["Show Shortest Path marks"] = "Mostrar marcas do Shortest Path" -- mt
+L["Starts a journey when you place the game's map pin. The journey key still works when this is off."] =
+	"Inicia uma jornada quando você coloca o marcador de mapa do jogo. A tecla de jornada funciona mesmo com esta opção desativada."
 L["The travel action will update after combat."] = "A ação de viagem será atualizada após o combate."
 L["Rides to spend less time walking through %s (level %s)"] = "Usa transporte para caminhar menos por %s (nível %s)"
 L["Walk less in zones with a minimum level 5 or more above yours, and less still the higher it is, even at your destination."] =
@@ -232,8 +235,8 @@ L["Sizes boat, lift, tram and portal icons on the world map."] =
 L["Sizes flight master icons on the world map."] = "Tamanho dos ícones de mestre de voo no mapa-múndi."
 L["Sizes transport icons on the minimap."] = "Tamanho dos ícones de transporte no minimapa."
 L["Stable master"] = "Mestre de estábulo"
-L["Starts a journey when you super-track a quest or flight point or place a map pin. The journey key still works when this is off."] =
-	"Inicia uma jornada ao destacar uma missão ou um ponto de voo ou ao colocar um marcador no mapa. A tecla de jornada funciona mesmo com esta opção desativada."
+L["Starts a journey when you super-track a quest or a flight point, so a controller needs no map click. A guide addon's own journey is left alone."] =
+	"Inicia uma jornada quando você foca uma missão ou um ponto de voo, então um controle não precisa de clique no mapa. A jornada de um addon de guia não é alterada."
 L["Stop %d of %d"] = "Parada %d de %d" -- mt
 L["Stop %d of %d: %s"] = "Parada %d de %d: %s"
 L["Teleport to %s"] = "Teleporte para %s"

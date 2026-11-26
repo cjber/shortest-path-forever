@@ -66,7 +66,7 @@ Credit for the reports and requests behind the addon.
 | Who | What | Notes |
 |---|---|---|
 | forleong | TomTom arrow handoff with the RestedXP bridge | CurseForge thread 100011835, #1390 |
-| xh43k | Automatic map pin routing respects the setting | Discord, #1391 |
+| xh43k | A switch for routing to the map pin | Discord, #1391 |
 | Nedula | Minimap walking route size | CurseForge thread 8778371; #1281 |
 | alexaroth | One destination pin on OpenMap | Discord; #1267 |
 | alexaroth | Routes to the zone clicked in OpenMap | Discord; #1268 |

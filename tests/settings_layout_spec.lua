@@ -26,6 +26,7 @@ local expected = {
 	"journeyHint",
 	"minimapHint",
 	"focusedQuest",
+	"mapPinRoutes",
 	"#Destination",
 	"destinationPin",
 	"destinationPinSize",

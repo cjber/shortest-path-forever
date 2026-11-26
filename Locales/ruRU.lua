@@ -170,10 +170,13 @@ L["Choose which arrows to show when following a standalone RestedXP guide."] =
 	"Выберите, какие стрелки показывать, если руководство RestedXP используется отдельно." -- mt
 L["RestedXP arrow"] = "Стрелка RestedXP" -- mt
 L["RestedXP's arrow"] = "Стрелка RestedXP" -- mt
+L["Route to your map pin"] = "Маршрут к вашей метке на карте"
 L["Shortest Path's arrow"] = "Стрелка Shortest Path" -- mt
 L["Shortest Path pins and route lines on the world map."] =
 	"Метки и линии маршрута Shortest Path на карте мира." -- mt
 L["Show Shortest Path marks"] = "Показывать отметки Shortest Path" -- mt
+L["Starts a journey when you place the game's map pin. The journey key still works when this is off."] =
+	"Начинает путешествие, когда вы ставите игровую метку на карте. Клавиша путешествия работает и при выключенной настройке."
 L["The travel action will update after combat."] =
 	"Действие для путешествия обновится после боя."
 L["Rides to spend less time walking through %s (level %s)"] =
@@ -248,8 +251,8 @@ L["Sizes flight master icons on the world map."] =
 L["Sizes transport icons on the minimap."] =
 	"Размер значков транспорта на мини-карте."
 L["Stable master"] = "Хозяин стойл"
-L["Starts a journey when you super-track a quest or flight point or place a map pin. The journey key still works when this is off."] =
-	"Начинает путешествие при выборе задания или точки полёта для отслеживания либо при установке метки на карте. Клавиша путешествия работает и при выключенной настройке."
+L["Starts a journey when you super-track a quest or a flight point, so a controller needs no map click. A guide addon's own journey is left alone."] =
+	"Начинает маршрут, когда вы выбираете задание или пункт полёта, так что геймпаду не нужен щелчок по карте. Маршрут аддона-гида не затрагивается."
 L["Stop %d of %d"] = "Остановка %d из %d" -- mt
 L["Stop %d of %d: %s"] = "Остановка %d из %d: %s"
 L["Teleport to %s"] = "Телепорт: %s"

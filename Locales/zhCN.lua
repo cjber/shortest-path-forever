@@ -160,9 +160,12 @@ L["Choose which arrows to show when following a standalone RestedXP guide."] =
 	"选择单独使用 RestedXP 指南时要显示的箭头。" -- mt
 L["RestedXP arrow"] = "RestedXP 箭头设置" -- mt
 L["RestedXP's arrow"] = "RestedXP 的箭头" -- mt
+L["Route to your map pin"] = "前往你的地图标记"
 L["Shortest Path's arrow"] = "Shortest Path 的箭头" -- mt
 L["Shortest Path pins and route lines on the world map."] = "世界地图上的 Shortest Path 图钉和路线。" -- mt
 L["Show Shortest Path marks"] = "显示 Shortest Path 标记" -- mt
+L["Starts a journey when you place the game's map pin. The journey key still works when this is off."] =
+	"放置游戏的地图标记时开始旅程。关闭此选项后仍可使用旅程按键。"
 L["The travel action will update after combat."] = "旅行操作将在战斗结束后更新。"
 L["Rides to spend less time walking through %s (level %s)"] =
 	"搭乘交通工具以减少在%s（等级%s）内步行的路程"
@@ -231,8 +234,8 @@ L["Sizes boat, lift, tram and portal icons on the world map."] =
 L["Sizes flight master icons on the world map."] = "调整世界地图上飞行管理员图标的大小。"
 L["Sizes transport icons on the minimap."] = "调整微缩地图上交通图标的大小。"
 L["Stable master"] = "兽栏管理员"
-L["Starts a journey when you super-track a quest or flight point or place a map pin. The journey key still works when this is off."] =
-	"重点追踪任务或飞行点，或放置地图标记时开始旅程。关闭此选项后仍可使用旅程按键。"
+L["Starts a journey when you super-track a quest or a flight point, so a controller needs no map click. A guide addon's own journey is left alone."] =
+	"当您聚焦任务或飞行点时开始旅程，因此控制器无需 地图点击。指南插件的自有旅程不受影响。"
 L["Stop %d of %d"] = "第%d站，共%d站" -- mt
 L["Stop %d of %d: %s"] = "第%d站，共%d站：%s"
 L["Teleport to %s"] = "传送到%s"
