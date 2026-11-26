@@ -95,7 +95,11 @@ assert(
 -- gives the shared object back once the addon stops shrinking it.
 do
  local function face(size)
-  return { size = size, GetFont = function(self) return "", self.size, "" end }
+  return { size = size, GetFont = function(self) return "", self.size, "" end,
+   GetShadowOffset = function(self) return self.shadowX, self.shadowY end,
+   GetShadowColor = function(self) return 0, 0, 0, self.shadowA end,
+   SetShadowOffset = function(self, x, y) self.shadowX, self.shadowY = x, y end,
+   SetShadowColor = function(self, _, _, _, a) self.shadowA = a end }
  end
  _G.ChatFontNormal = face(12)
  _G.CreateFont = function(name)
@@ -117,6 +121,10 @@ do
   dash = first.Dash, flight = second.Text }) do
   assert(select(2, text:GetFont()) >= (minimum[name] or 12), name .. " keeps a readable size beside a shrinking addon")
   assert(text.justifyH == "LEFT" and text.justifyV == "TOP", name .. " keeps the shared font's alignment")
+ end
+ for _, name in ipairs({ "ShortestPathForeverLineFont", "ShortestPathForeverHeaderFont" }) do
+  local x, y = _G[name]:GetShadowOffset()
+  assert(x == 1 and y == -1 and select(4, _G[name]:GetShadowColor()) == 1, name .. " keeps a text shadow (#1357)")
  end
  local total = 0
  for key in pairs(block.lines) do total = total + block.lines[key]:GetHeight() end
