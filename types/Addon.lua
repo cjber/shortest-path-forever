@@ -162,6 +162,7 @@
 ---@field routeCount? integer -- stops in a multi-stop routeTitle (API.lua)
 ---@field stopLabel? string -- what to do at a multi-stop stop, without its count (API.lua)
 ---@field number? integer -- the stop's place in a multi-stop itinerary (API.lua)
+---@field unmarked? boolean -- draws no stop pin on the world map: the route's stopMarkers option was false (API.lua)
 ---@field hold? boolean -- remain visible at the destination until the caller submits an updated route
 ---@field radius? number -- yards around a held stop where travel cues pause; finite and nonnegative
 ---@field shapes? SPFAreaShape[] -- objective areas the stop stands for, in world coordinates
