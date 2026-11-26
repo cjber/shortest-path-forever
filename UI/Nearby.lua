@@ -570,14 +570,20 @@ local function Assemble(read)
 			coroutine.yield()
 		end
 		for _, mailbox in ipairs(ns.Mailboxes or {}) do
-			local world = ns.WorldPoint(mailbox.map, mailbox.x, mailbox.y)
+			-- Mailboxes are continent world yards; the zone map under each gives the place its map position.
+			local uiMap, position = ns.ZoneMap(mailbox.map, mailbox.x, mailbox.y)
+			local x, y
+			if position then
+				x, y = position:GetXY()
+			end
+			local world = uiMap and ns.WorldPoint(uiMap, x, y)
 			if world then
 				local place = {
 					id = mailbox.id,
 					name = L["Mailbox"],
-					map = mailbox.map,
-					x = mailbox.x,
-					y = mailbox.y,
+					map = uiMap,
+					x = x,
+					y = y,
 					world = world,
 				}
 				index.mailbox = index.mailbox or {}

@@ -17,6 +17,7 @@
 ---@field ProfessionIcons table<number, integer> profession skill line -> client icon file ID
 ---@field WeaponMasters table<number, number[]> NPC -> taught weapon skill lines
 ---@field ProfessionTrainers table<number, number> trainer NPC -> its profession skill line (Data/Services.lua)
+---@field Mailboxes {id: integer, map: integer, x: number, y: number}[] mailbox spawns in continent world yards (Data/Services.lua)
 ---@field ClassTrainers table<number, number> class trainer NPC -> its class (Data/Services.lua)
 ---@field ClassTrainerCaps table<number, number>? class trainer NPC -> its highest required level (Data/Services.lua)
 ---@field PortalTrainers table<number, number> portal trainer NPC -> its class (Data/Services.lua)

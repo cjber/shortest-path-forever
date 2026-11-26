@@ -666,6 +666,14 @@ local function fresh(questie, away, L, mailboxes)
 		WorldPoint = function(_, x, y)
 			return { map = elsewhere and 2 or 1, x = x * 1000, y = y * 1000 }
 		end,
+		-- Static places are continent yards; the zone map under one answers map 100 and a 0-1 position.
+		ZoneMap = function(_, x, y)
+			return 100, {
+				GetXY = function()
+					return x / 1000, y / 1000
+				end,
+			}
+		end,
 		OpenWorldMap = ns.OpenWorldMap,
 		GamepadUI = ns.GamepadUI,
 		Notice = ns.Notice,
@@ -689,7 +697,7 @@ local function fresh(questie, away, L, mailboxes)
 	end
 	return copy
 end
-local mailboxCopy = fresh(lib, false, nil, { { id = 9001, map = 100, x = 0.25, y = 0.75 } })
+local mailboxCopy = fresh(lib, false, nil, { { id = 9001, map = 0, x = 250, y = 750 } })
 local mailboxGroups = mailboxCopy.NearbyServices.Groups()
 local mailboxGroup
 for _, item in ipairs(mailboxGroups) do
@@ -701,7 +709,9 @@ assert(mailboxGroup.key == "mailbox" and mailboxGroup.label == "Mailbox", "mailb
 assert(
 	mailboxCopy.NearbyServices.Index().mailbox[1].id == 9001
 		and mailboxCopy.NearbyServices.Index().mailbox[1].name == "Mailbox"
-		and mailboxCopy.NearbyServices.Index().mailbox[1].npc == nil,
+		and mailboxCopy.NearbyServices.Index().mailbox[1].npc == nil
+		and mailboxCopy.NearbyServices.Index().mailbox[1].map == 100
+		and mailboxCopy.NearbyServices.Index().mailbox[1].x == 0.25,
 	"mailbox spawns become static Nearby places without an NPC target"
 )
 -- A zone QuestieDB has nothing for: every group, the services too, reads as unavailable here.
