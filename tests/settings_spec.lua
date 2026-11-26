@@ -977,27 +977,6 @@ assert(trackerState.locked == true and lock:GetValue(), "locking writes the shar
 lock:SetValue(false)
 assert(trackerState.locked == false and not lock:GetValue(), "unlocking writes them back")
 
-local waterWalking = Row("useWaterWalking")
-assert(waterWalking.kind == "checkbox", "water walking uses a native Settings checkbox initializer")
-assert(waterWalking.setting.default == true, "water walking stays enabled by default")
-assert(waterWalking.setting.category.name == "Guidance", "water walking belongs to Guidance")
-assert(waterWalking.tooltip:find("may still cross water", 1, true), "the tooltip does not promise a dry route")
-local policies = policyChanged
-waterWalking.setting:SetValue(false)
-waterWalking.setting:SetValue(true)
-assert(policyChanged == policies + 2, "both checkbox transitions invalidate travel policy")
-
-local roadDetour = Row("roadDetour")
-assert(roadDetour.kind == "slider" and roadDetour.setting.default == 50, "the road allowance preserves 50%")
-assert(roadDetour.setting.variable == "ShortestPathForever_roadDetour", "the allowance is saved")
-assert(roadDetour.setting.category.name == "Guidance", "the allowance belongs beside Follow roads")
-assert(roadDetour.options.minValue == 0 and roadDetour.options.maxValue == 200 and roadDetour.options.step == 25)
-assert(roadDetour.options.format(0) == "0%" and roadDetour.options.format(200) == "200%")
-assert(roadDetour.tooltip:find("not a limit on the whole walk", 1, true), "the preference is no hard detour cap")
-local roadPolicies = policyChanged
-roadDetour.setting:SetValue(200)
-assert(policyChanged == roadPolicies + 1, "changing the allowance replans the current journey")
-
 -- tests/settings_layout_spec.lua reuses this harness for the heading order and the reduced clients.
 return {
 	env = env,
@@ -1006,4 +985,7 @@ return {
 	buttons = buttons,
 	settings = settings,
 	registered = registered,
+	getPolicyChanged = function()
+		return policyChanged
+	end,
 }

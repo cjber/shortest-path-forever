@@ -359,6 +359,7 @@ for _, file in ipairs({
 	"UI/NearbyRoles.lua",
 	"UI/NearbyProfessions.lua",
 	"UI/NearbyRank.lua",
+	"UI/NearbyIndex.lua",
 	"UI/Nearby.lua",
 }) do
 	setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
@@ -681,6 +682,7 @@ local function fresh(questie, away, L, mailboxes)
 	}, { __index = ns })
 	setfenv(assert(loadfile("UI/NearbyGroups.lua")), env)("ShortestPathForever", copy)
 	setfenv(assert(loadfile("UI/NearbyQuestie.lua")), env)("ShortestPathForever", copy)
+	setfenv(assert(loadfile("UI/NearbyIndex.lua")), env)("ShortestPathForever", copy)
 	setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", copy)
 	for _, fn in ipairs(starts) do
 		fn()
@@ -739,41 +741,7 @@ assert(
 		and menuEntries[1].text == "Nearby services"
 		and menuEntries[1].children[2].text == "Nearby services need the QuestieDB addon."
 )
-local broken = setmetatable({}, { __index = lib })
-for _, private in ipairs({
-	{ areaIdToUiMapId = { [10] = 100 }, subZoneToParentZone = "return {[11]=10}" },
-	{ areaIdToUiMapId = "return {[10]=100}", subZoneToParentZone = "return {" },
-	{ areaIdToUiMapId = "error('gone')", subZoneToParentZone = "return {[11]=10}" },
-}) do
-	broken.Support = {
-		Get = function()
-			return { private = private }
-		end,
-	}
-	assert(fresh(broken).NearbyServices.State() == "failed")
-	assert(
-		#menuEntries == 1
-			and menuEntries[1].text == "Nearby services"
-			and menuEntries[1].children[2].text == "Nearby services could not read QuestieDB."
-	)
-end
 env.LibQuestieDB = lib
--- Under the gamepad interface the services menu never opens the world map or a menu itself, even over a map the game
--- opened: the game's own menus carry none of our entries there (#645), so the player is told it needs mouse and
--- keyboard.
-gamepad = true
-local opens, entries = mapOpens, menuEntries
-env.SlashCmdList.SPFNEAR("")
-assert(mapOpens == opens and menuEntries == entries, "no map or menu opened by us under the gamepad interface")
-env.WorldMapFrame = {
-	IsShown = function()
-		return true
-	end,
-}
-env.SlashCmdList.SPFNEAR("")
-assert(mapOpens == opens and menuEntries == entries, "over an open map no menu of ours opens either")
-assert(printed[#printed]:find("mouse and keyboard", 1, true), "it says what the services need")
-gamepad, env.WorldMapFrame = false, nil
 -- The planner's own travel cost chooses between the shortlist: an Alliance hunter in Auberdine takes the Teldrassil
 -- boat to Darnassus rather than walk to Kaerbrus, though Kaerbrus is the closest by straight line.
 do
@@ -921,6 +889,7 @@ do
 		"UI/NearbyRoles.lua",
 		"UI/NearbyProfessions.lua",
 		"UI/NearbyRank.lua",
+		"UI/NearbyIndex.lua",
 		"UI/Nearby.lua",
 	}) do
 		driver.load(file)
@@ -1007,7 +976,20 @@ do
 	worldNs.JourneyGoal = journeyGoal
 	assert(routed == nil, "a destination set during the ranking is kept")
 end
-print(
-	"nearby: installed QuestieDB contract, sliced loading, faction/class/profession grouping, "
-		.. "real map-menu callbacks, UI-coordinate dispatch and travel-cost choice: ok"
-)
+return {
+	env = env,
+	getMapOpens = function()
+		return mapOpens
+	end,
+	getMenuEntries = function()
+		return menuEntries
+	end,
+	getPrinted = function()
+		return printed
+	end,
+	fresh = fresh,
+	lib = lib,
+	setGamepad = function(value)
+		gamepad = value
+	end,
+}
