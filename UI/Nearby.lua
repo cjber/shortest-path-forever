@@ -487,7 +487,6 @@ KEEP_FLAGS[#KEEP_FLAGS + 1] = "TRAINER"
 
 -- The index, from QuestieDB's rows: the vendor groups, the level tiers, and every service NPC's spawns, a slice a
 -- frame. The rows are read in UI/NearbyQuestie.lua, which checks what QuestieDB answers.
----@param read SPFNearbyQuestieRead
 local function Finish(newNames, newLevels, newIndex, newVendorItems)
 	itemNames, itemLevels, index, vendorItems = newNames, newLevels, newIndex, newVendorItems
 	tierLevel, tierCache = nil, {}
