@@ -10,6 +10,18 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.48.0] - 2026-11-26
+
+<!-- discord-image: docs/screenshots/tracker.png -->
+
+### Added
+
+- On a farming tour, right-click the current journey step and choose **Skip this stop** to pass a node and continue. Thanks to user_a6yc8131n90u9fms for the idea (#1394).
+
+### Fixed
+
+- Completing the last step of a farming stop by hand no longer ends the farming tour.
+
 ## [1.47.0] - 2026-11-26
 
 <!-- discord-image: docs/screenshots/darkshore.png -->
