@@ -635,8 +635,6 @@ L["You've taken %s flights."] = "Has tomado %s vuelos." -- mt
 L["You've taken your first flight."] = "Has tomado tu primer vuelo." -- mt
 L["You've used %s portals or passages."] = "Has usado %s portales o pasadizos." -- mt
 L["You've used your first portal or passage."] = "Has usado un portal o un pasadizo por primera vez." -- mt
-L["Walks reach Undercity's Royal Quarter, War Quarter and Apothecarium."] =
-	"Las rutas a pie llegan al Barrio Real, al Barrio de la Guerra y al Apothecarium de Entrañas." -- mt
 L["Minimap walking route size"] = "Tamaño de la ruta a pie en el minimapa" -- mt
 L["Sizes the walking dots on the minimap."] = "Ajusta el tamaño de los puntos de la ruta a pie en el minimapa." -- mt
 L["Descend underground"] = "Desciende al subsuelo" -- mt
@@ -651,3 +649,5 @@ L["Right-click to choose map services."] = "Clic derecho para elegir los servici
 L["Use TomTom's arrow"] = "Usar la flecha de TomTom" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"Con TomTom instalado, apunta la flecha de TomTom a cada paso en lugar de nuestra flecha y el marcador del juego." -- mt
+L["A guide step on another continent keeps the old route on screen while the new one plans."] =
+	"Un paso de guía en otro continente mantiene la ruta anterior en pantalla mientras se planea la nueva." -- mt
