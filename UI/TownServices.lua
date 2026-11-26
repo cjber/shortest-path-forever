@@ -421,7 +421,7 @@ local function Spread(map, points)
 	local size = PIN_SIZE * scale / map:GetCanvasScale()
 	local reachX, reachY = size / canvas:GetWidth(), size / canvas:GetHeight()
 	local clusters = {}
-	for _, group in ipairs(ns.OverlapGroups(map, points, PIN_SIZE * scale)) do
+	for _, group in ipairs(ns.core.MapCanvas.OverlapGroups(map, points, PIN_SIZE * scale)) do
 		if #group == 1 then
 			local point = group[1]
 			clusters[#clusters + 1] = { services = { point }, x = point.x, y = point.y, key = point.id }
@@ -446,9 +446,9 @@ local function Spread(map, points)
 	return clusters
 end
 
--- The service pins that would overlap at this zoom share one service pin, at their middle, through the same grouping
--- UI/Map.lua uses for docks. Pins of the same service merge first, at a margin that shrinks as the map is zoomed in,
--- so three leatherworking trainers become one leatherworking icon. Different services then merge only where their
+-- The service pins that would overlap at this zoom share one service pin, at their middle, through ForeverCore's
+-- overlap grouping, as docks do. Pins of the same service merge first, at a margin that shrinks as the map is zoomed
+-- in, so three leatherworking trainers become one leatherworking icon. Different services then merge only where their
 -- pins truly overlap, at the plain pin size when zoomed out and less as the map closes in, so they stay apart while
 -- they fit side by side. Both reaches fall to nothing at full zoom, where every NPC is shown apart.
 ---@param map SPFMapCanvas
@@ -474,7 +474,7 @@ local function Clusters(map, points)
 	local merged = {}
 	local sameReach = PIN_SIZE * scale * Lerp(1.2, 0, zoom)
 	for _, same in ipairs(services) do
-		for _, group in ipairs(ns.OverlapGroups(map, same.points, sameReach)) do
+		for _, group in ipairs(ns.core.MapCanvas.OverlapGroups(map, same.points, sameReach)) do
 			local x, y = 0, 0
 			for _, point in ipairs(group) do
 				x, y = x + point.x, y + point.y
@@ -488,7 +488,7 @@ local function Clusters(map, points)
 	end
 	local clusters = {}
 	local mixedReach = PIN_SIZE * scale * Lerp(1, 0, zoom)
-	for i, group in ipairs(ns.OverlapGroups(map, merged, mixedReach)) do
+	for i, group in ipairs(ns.core.MapCanvas.OverlapGroups(map, merged, mixedReach)) do
 		local member = {}
 		for _, same in ipairs(group) do
 			for _, point in ipairs(same.services) do

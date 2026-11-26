@@ -105,7 +105,10 @@ local clicks
 function View:Level(levelType, index)
 	local map = self.map
 	local levels = map.GetPinFrameLevelsManager and map:GetPinFrameLevelsManager()
-	local level = levelType and levels and levels.GetValidFrameLevel and levels:GetValidFrameLevel(levelType, index)
+	-- A pin without a type is a point of interest: the map's explored-area art lies above the canvas.
+	local level = levels
+		and levels.GetValidFrameLevel
+		and levels:GetValidFrameLevel(levelType or "PIN_FRAME_LEVEL_AREA_POI", index)
 	level = level or self.canvas:GetFrameLevel() + 1
 	-- OpenMap's stitched art reaches over Blizzard's pin levels: over the stitched map a pin has to be above it to show.
 	local art = ns.OpenMapAddon.TopLevel()
