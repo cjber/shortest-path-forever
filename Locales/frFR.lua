@@ -660,3 +660,4 @@ L["With TomTom installed, point TomTom's arrow at each step instead of our arrow
 	"Avec TomTom installé, pointe la flèche de TomTom vers chaque étape au lieu de notre flèche et du marqueur du jeu." -- mt
 L["A guide step on another continent keeps the old route on screen while the new one plans."] =
 	"Une étape de guide sur un autre continent garde l’ancien itinéraire affiché pendant le calcul du nouveau." -- mt
+L["Mailbox"] = "Boîte aux lettres" -- mt

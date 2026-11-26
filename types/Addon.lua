@@ -112,7 +112,7 @@
 ---@field tracking string the client's minimap tracking atlas the world map's pins wear for the group
 ---@class SPFServiceGroup
 ---@field key string
----@field flag string the QuestieDB NPC flag that puts an NPC in the group
+---@field flag? string the QuestieDB NPC flag that puts an NPC in the group
 ---@field label string
 ---@field icon string the client's own tracking atlas
 ---@field tracking string the client's minimap tracking atlas the world map's pins wear for the group
@@ -350,6 +350,7 @@
 ---@field townServiceStable? boolean whether stable master pins show
 ---@field townServiceRepair? boolean whether repair pins show; off by default
 ---@field townServiceBank? boolean whether bank pins show
+---@field townServiceMailbox? boolean whether mailbox pins show
 ---@field townServiceTransmog? boolean whether transmogrifier pins show
 ---@field townServiceAuction? boolean whether auction house pins show
 ---@field townServiceBattlemaster? boolean whether battlemaster pins show

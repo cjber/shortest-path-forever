@@ -59,6 +59,7 @@ local DEFAULTS = {
 	townServiceStable = true,
 	townServiceRepair = false,
 	townServiceBank = true,
+	townServiceMailbox = true,
 	townServiceAuction = true,
 	townServiceTransmog = true,
 	townServiceBattlemaster = true,

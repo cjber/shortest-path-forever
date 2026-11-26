@@ -71,3 +71,4 @@ L["Right-click to choose map services."] = "Right-click to choose map services."
 L["Use TomTom's arrow"] = "Use TomTom's arrow"
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."
+L["Mailbox"] = "Mailbox"

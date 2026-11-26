@@ -5,7 +5,7 @@ if ns.broken then
 	return
 end
 local L = ns.L
--- The groups' labels and icons, and the service flags, live in UI/NearbyGroups.lua so the world map's town services
+-- The groups' labels and icons, and the service kinds, live in UI/NearbyGroups.lua so the world map's town services
 -- draw the same ones.
 local GROUPS = ns.NearbyGroups
 local ROLES = ns.NearbyRoles
@@ -282,8 +282,8 @@ local function Navigate(key, place)
 	if place.entrance then
 		return ns.NearbyEntrances.Navigate(place)
 	end
-	-- The stop carries the NPC id, so the nameplate arrows can point at the NPC the journey walks to.
-	local stop = { map = place.map, x = place.x, y = place.y, title = place.name, kind = Kind(key), npc = place.id }
+	-- NPC stops carry their NPC id, so nameplate arrows can point at the NPC the journey walks to.
+	local stop = { map = place.map, x = place.x, y = place.y, title = place.name, kind = Kind(key), npc = place.npc }
 	return ShortestPathForever.API.NavigateRoute("Shortest Path Forever", { stop })
 end
 -- A service button's response: one that starts a journey closes every menu, one that cannot keeps the menu open.
@@ -493,7 +493,9 @@ end
 -- names as taught by an NPC this addon's own trainer list does not hold.
 local KEEP_FLAGS = {}
 for _, service in ipairs(SERVICES) do
-	KEEP_FLAGS[#KEEP_FLAGS + 1] = service.flag
+	if service.flag then
+		KEEP_FLAGS[#KEEP_FLAGS + 1] = service.flag
+	end
 end
 KEEP_FLAGS[#KEEP_FLAGS + 1] = "TRAINER"
 
@@ -547,8 +549,16 @@ local function Assemble(read)
 					local map, x, y = spawn[1], spawn[2], spawn[3]
 					local world = ns.WorldPoint(map, x, y)
 					if world then
-						local place =
-							{ id = id, name = row.name, title = row.title, map = map, x = x, y = y, world = world }
+						local place = {
+							id = id,
+							npc = id,
+							name = row.name,
+							title = row.title,
+							map = map,
+							x = x,
+							y = y,
+							world = world,
+						}
 						for _, key in ipairs(keys) do
 							index[key] = index[key] or {}
 							index[key][#index[key] + 1] = place
@@ -556,6 +566,22 @@ local function Assemble(read)
 					end
 					coroutine.yield()
 				end
+			end
+			coroutine.yield()
+		end
+		for _, mailbox in ipairs(ns.Mailboxes or {}) do
+			local world = ns.WorldPoint(mailbox.map, mailbox.x, mailbox.y)
+			if world then
+				local place = {
+					id = mailbox.id,
+					name = L["Mailbox"],
+					map = mailbox.map,
+					x = mailbox.x,
+					y = mailbox.y,
+					world = world,
+				}
+				index.mailbox = index.mailbox or {}
+				index.mailbox[#index.mailbox + 1] = place
 			end
 			coroutine.yield()
 		end
@@ -814,6 +840,7 @@ end
 ---@field Open fun()
 ---@class SPFNearbyPlace
 ---@field id integer
+---@field npc? integer the NPC this place reaches; static services have no NPC
 ---@field name string
 ---@field title? string
 ---@field map integer

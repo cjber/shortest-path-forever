@@ -643,3 +643,4 @@ L["With TomTom installed, point TomTom's arrow at each step instead of our arrow
 	"安装 TomTom 时，用 TomTom 的箭头指向每一步，替代本插件箭头和游戏标记。" -- mt
 L["A guide step on another continent keeps the old route on screen while the new one plans."] =
 	"另一块大陆上的指南步骤会在规划新路线时保留旧路线显示。" -- mt
+L["Mailbox"] = "邮箱" -- mt

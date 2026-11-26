@@ -9,6 +9,7 @@ from gen_services import (
     battlemasters,
     class_trainers,
     food_and_drink,
+    mailboxes,
     portal_trainers,
     profession_items,
     profession_skill_spells,
@@ -86,6 +87,27 @@ class FoodDrinkTest(unittest.TestCase):
         food, drink = food_and_drink(items, use, spells)
         self.assertEqual(food, [1])
         self.assertEqual(drink, [2, 3])
+
+
+class MailboxTest(unittest.TestCase):
+    def test_only_mailbox_templates_name_sorted_spawns(self):
+        templates = [
+            {"entry": "20", "type": "5"},
+            {"entry": "10", "type": "19"},
+            {"entry": "30", "type": "19"},
+        ]
+        spawns = [
+            {"guid": "2", "id": "20", "map": "0", "position_x": "1", "position_y": "2"},
+            {"guid": "3", "id": "30", "map": "1", "position_x": "3.5", "position_y": "4.5"},
+            {"guid": "1", "id": "10", "map": "1", "position_x": "5", "position_y": "6"},
+        ]
+        self.assertEqual(
+            mailboxes(templates, spawns),
+            [
+                {"id": 1, "map": 1, "x": 5.0, "y": 6.0},
+                {"id": 3, "map": 1, "x": 3.5, "y": 4.5},
+            ],
+        )
 
 
 class SkillTest(unittest.TestCase):

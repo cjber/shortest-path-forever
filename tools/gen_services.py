@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate food, drink, trainer and battlemaster tables for the pinned Forever client (stdlib)."""
+"""Generate food, drink, trainer, battlemaster and mailbox tables for the pinned Forever client (stdlib)."""
 
 import argparse
 import csv
@@ -38,6 +38,8 @@ PROFESSION_CATEGORIES = {11, 9}
 LEARNABLE_PROFESSIONS = (129, 164, 165, 171, 182, 185, 186, 197, 202, 333, 356, 393)
 # Mage, whose portal trainers teach only the teleport spells that land at a fixed place.
 MAGE = 8
+# gameobject_template.type: GAMEOBJECT_TYPE_MAILBOX.
+MAILBOX_TYPE = 19
 # Forever's own trainers, which classic-db does not hold and no client table names: the NPCs QuestieDB's Forever store
 # flags as trainers (npcFlags TRAINER) that are absent from classic-db, each typed with the role it trains (facts, no
 # text copied). Without them Zephras Isle, its own world map, lists no trainer at all (#1082). NPCs whose role is not
@@ -148,6 +150,8 @@ CLASSIC_TABLES = (
     "npc_vendor",
     "spell_template",
     "spell_target_position",
+    "gameobject_template",
+    "gameobject",
 )
 TUPLES = re.compile(r"\(((?:'(?:\\.|[^'\\])*'|[^()'])*)\)")
 
@@ -226,6 +230,21 @@ def food_and_drink(item_x_item_effect, item_effect, spell_effect):
         if DRINK_AURA in found:
             drink.add(int(row["ItemID"]))
     return sorted(food), sorted(drink)
+
+
+def mailboxes(template_rows, spawn_rows):
+    """Mailbox gameobject spawns, joined to templates by the classic-db object entry."""
+    mailbox_entries = {int(row["entry"]) for row in template_rows if int(row["type"]) == MAILBOX_TYPE}
+    return [
+        {
+            "id": int(row["guid"]),
+            "map": int(row["map"]),
+            "x": float(row["position_x"]),
+            "y": float(row["position_y"]),
+        }
+        for row in sorted(spawn_rows, key=lambda row: int(row["guid"]))
+        if int(row["id"]) in mailbox_entries
+    ]
 
 
 def skill_line_categories(skill_line):
@@ -503,6 +522,7 @@ def main():
     creatures = db["creature_template"]
     trainers = db["npc_trainer"]
     templates = db["npc_trainer_template"]
+    mailbox_spawns = mailboxes(db["gameobject_template"], db["gameobject"])
     food, drink = food_and_drink(tables["ItemXItemEffect"], tables["ItemEffect"], tables["SpellEffect"])
     categories = skill_line_categories(tables["SkillLine"])
     skill_spells = profession_skill_spells(tables["SkillLineAbility"], categories)
@@ -531,7 +551,7 @@ def main():
     )
     supplies = vendor_item_professions(db["npc_vendor"], item_professions)
     lines = header(
-        "DB2 item, spell and skill-line tables; classic-db creature, trainer, battlemaster, vendor and spell tables."
+        "DB2 item, spell and skill-line tables; classic-db creature, gameobject, trainer, battlemaster, vendor and spell tables."
     )
     lines += [
         "-- Food: items whose use spell has a MOD_REGEN aura (84); Drink: MOD_POWER_REGEN (85), one TRIGGER_SPELL",
@@ -544,6 +564,7 @@ def main():
         "-- ClassTrainerCaps: [npc] = highest spell level a classic-db class trainer requires, where known.",
         "-- PortalTrainers: [npc] = class of a mage trainer whose every taught spell opens or lands at a destination.",
         "-- Battlemasters: [npc] = battleground template, from classic-db battlemaster_entry.",
+        "-- Mailboxes: [spawn] = classic-db gameobject spawns whose template type is GAMEOBJECT_TYPE_MAILBOX (19).",
         "-- ItemProfessions: [item] = the profession skill lines its goods supply, from a recipe's RequiredSkill and",
         "-- the reagents and tools or totems a profession's spells use, for the items a vendor sells. An item with",
         "-- none is absent: it serves every character.",
@@ -558,13 +579,15 @@ def main():
     lines += assignment("ns.ClassTrainerCaps", render(class_caps))
     lines += assignment("ns.PortalTrainers", render(portals))
     lines += assignment("ns.Battlemasters", render(battlemasters_by_npc))
+    lines += assignment("ns.Mailboxes", render(mailbox_spawns))
     lines += assignment("ns.ItemProfessions", render_lists(supplies))
     publish({ROOT / "Data" / "Services.lua": "\n".join(lines)})
     print(
         f"Services: {len(food)} food, {len(drink)} drink, {len(professions)} profession trainers, "
         f"{len(icons)} profession icons, {len(weapons)} weapon masters, "
         f"{len(classes)} class trainers, {len(portals)} portal trainers, "
-        f"{len(battlemasters_by_npc)} battlemasters, {len(supplies)} vendor items for professions"
+        f"{len(battlemasters_by_npc)} battlemasters, {len(mailbox_spawns)} mailboxes, "
+        f"{len(supplies)} vendor items for professions"
     )
 
 

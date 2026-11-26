@@ -607,6 +607,21 @@ check(find(270582) == nil, "the checkbox hides the transmogrifier pin")
 ns.SetTownServiceGroupShown(transmog, true)
 check(find(270582) ~= nil, "the checkbox restores the transmogrifier pin")
 
+-- Mailboxes are static world objects, but use the same filter and map art path as NPC services.
+local mailbox = group("services", "mailbox", "Mailbox", "Mailbox")
+groups = { mailbox }
+index = { mailbox = { place(9001, "Mailbox", 1800, -4900) } }
+ns.db.townServiceKinds = nil
+ns.db.townServices = "all"
+ns.RefreshTownServices()
+check(ns.Defaults.townServiceMailbox == true, "mailboxes show by default")
+check(ns.TownServiceFilterable(mailbox), "mailboxes have their own map checkbox")
+check(find(9001) and find(9001).Texture.atlas == "Mailbox", "a mailbox pin wears the client's mailbox atlas")
+ns.SetTownServiceGroupShown(mailbox, false)
+check(find(9001) == nil, "the mailbox checkbox hides its pins")
+ns.SetTownServiceGroupShown(mailbox, true)
+check(find(9001) ~= nil, "checking the mailbox checkbox restores its pin")
+
 check(#errors == 0, table.concat(errors, "\n"))
 
 print(

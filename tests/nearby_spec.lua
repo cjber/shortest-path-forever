@@ -348,6 +348,7 @@ env.EventUtil = {
 }
 setfenv(assert(loadfile("Locales/enUS.lua")), env)("ShortestPathForever", ns)
 setfenv(assert(loadfile("Data/Services.lua")), env)("ShortestPathForever", ns)
+ns.Mailboxes = {}
 -- The fixture class trainers for the player's class, beside the companion addon's own list.
 ns.ClassTrainers = { [7] = 1 }
 for _, file in ipairs({
@@ -642,7 +643,7 @@ env.SlashCmdList.SPFNEAR("repair")
 assert(navigated[#navigated][5] == "Neutral repairs")
 
 -- A fresh copy of the menu over another QuestieDB, read to the end, then opened here or on another continent.
-local function fresh(questie, away, L)
+local function fresh(questie, away, L, mailboxes)
 	local elsewhere = false
 	env.LibQuestieDB = questie
 	local starts = {}
@@ -658,6 +659,7 @@ local function fresh(questie, away, L)
 		ClassTrainers = ns.ClassTrainers,
 		PortalTrainers = ns.PortalTrainers,
 		Battlemasters = ns.Battlemasters,
+		Mailboxes = mailboxes or {},
 		Init = function(fn)
 			starts[#starts + 1] = fn
 		end,
@@ -687,6 +689,21 @@ local function fresh(questie, away, L)
 	end
 	return copy
 end
+local mailboxCopy = fresh(lib, false, nil, { { id = 9001, map = 100, x = 0.25, y = 0.75 } })
+local mailboxGroups = mailboxCopy.NearbyServices.Groups()
+local mailboxGroup
+for _, item in ipairs(mailboxGroups) do
+	if item.key == "mailbox" then
+		mailboxGroup = item
+	end
+end
+assert(mailboxGroup.key == "mailbox" and mailboxGroup.label == "Mailbox", "mailboxes are a Nearby service group")
+assert(
+	mailboxCopy.NearbyServices.Index().mailbox[1].id == 9001
+		and mailboxCopy.NearbyServices.Index().mailbox[1].name == "Mailbox"
+		and mailboxCopy.NearbyServices.Index().mailbox[1].npc == nil,
+	"mailbox spawns become static Nearby places without an NPC target"
+)
 -- A zone QuestieDB has nothing for: every group, the services too, reads as unavailable here.
 local away = fresh(lib, true)
 assert(away.NearbyServices.State() == "ready")
