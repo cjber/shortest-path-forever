@@ -261,6 +261,13 @@ local function JourneysOff()
 	return true
 end
 
+-- A destination picked mid-fight plots when the fight ends: say so, or the pick looks refused (#1413).
+function ns.NoticeQueuedDestination()
+	if InCombatLockdown() and ns.db.journey then
+		ns.Notice(L["Destination queued until combat ends."])
+	end
+end
+
 local function PlanQuest(questID, clickedMap, isWaypoint)
 	if JourneysOff() then
 		return false
@@ -307,6 +314,7 @@ local function PlanQuest(questID, clickedMap, isWaypoint)
 	point.label, point.questID = location.label, questID
 	-- The goal's live objectives: the arrow and any pin read them from the client's quest log.
 	point.questIDs = { questID }
+	ns.NoticeQueuedDestination()
 	ns.StartJourney(point)
 	return true
 end
@@ -345,6 +353,7 @@ function ns.JourneyToMapPoint(uiMapID, x, y, label)
 		return false
 	end
 	point.label = label
+	ns.NoticeQueuedDestination()
 	ns.StartJourney(point)
 	return true
 end
@@ -601,6 +610,7 @@ local function OnMinimapClick(_, button)
 	end
 	local point = ns.MinimapPoint()
 	if point then
+		ns.NoticeQueuedDestination()
 		ns.StartJourney(point)
 	else
 		ns.Notice(L["no journey can be planned to that spot."])
@@ -627,6 +637,7 @@ function JourneyToPin(mapID, info, flight, x, y)
 		return false
 	end
 	point.label = info and info.name
+	ns.NoticeQueuedDestination()
 	ns.StartJourney(point)
 	return true
 end
@@ -860,6 +871,7 @@ ns.Init(function()
 			point.z = ns.SpawnHeight(point.map, point.x, point.y, QUESTIE_ICON_REACH)
 		end
 		if point and OnZone(ns.InstanceEntrance(point)) then
+			ns.NoticeQueuedDestination()
 			ns.StartJourney(point)
 		end
 	end)

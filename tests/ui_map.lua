@@ -61,6 +61,9 @@ Enum.SuperTrackingMapPinType = { TaxiNode = 2 }
 -- The map's canvas, a frame the addon's own pins sit on (UI/Canvas.lua).
 local canvas = frameExtras(stubframe())
 canvas.width, canvas.height = 1000, 700
+function canvas:GetSize()
+	return self.width, self.height
+end
 -- The canvas shows and hides with the map; the client runs OnUpdate only on a visible frame.
 function canvas.IsShown()
 	return visible
@@ -69,8 +72,11 @@ function canvas.IsVisible()
 	return visible
 end
 -- The scroll container scales the canvas by the zoom (MapCanvasScrollControllerMixin:SetCanvasScale).
+function canvas.GetScale()
+	return 0.5 + zoom * 1.5
+end
 function canvas.GetEffectiveScale()
-	return uiScale * (0.5 + zoom * 1.5)
+	return uiScale * canvas:GetScale()
 end
 -- The canvas is the map's rectangle, its left edge at the screen's; the cursor is where its map fractions place it.
 function canvas:GetRect()
@@ -86,9 +92,22 @@ local map = setmetatable({
 	GetMapID = function()
 		return mapID
 	end,
-	GetViewRect = function()
-		return viewRect
-	end,
+	ScrollContainer = {
+		GetScrollChild = function()
+			return canvas
+		end,
+		GetSize = function()
+			local scale = canvas:GetScale()
+			return (viewRect.right - viewRect.left) * canvas.width * scale,
+				(viewRect.bottom - viewRect.top) * canvas.height * scale
+		end,
+		GetHorizontalScroll = function()
+			return viewRect.left * canvas.width
+		end,
+		GetVerticalScroll = function()
+			return viewRect.top * canvas.height
+		end,
+	},
 	IsVisible = function()
 		return visible
 	end,
@@ -104,7 +123,7 @@ local map = setmetatable({
 	end,
 	GetCanvasScale = function()
 		assert(visible, "zoomLevels nil")
-		return 0.5 + zoom * 1.5
+		return canvas:GetScale()
 	end,
 	GetNormalizedCursorPosition = function()
 		return cursorX, cursorY

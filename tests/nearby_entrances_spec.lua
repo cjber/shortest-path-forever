@@ -158,6 +158,7 @@ local function load()
 				stop = point,
 			}
 		end,
+		NoticeQueuedDestination = function() end,
 		StartJourney = function(point)
 			journeys[#journeys + 1] = point
 			return true

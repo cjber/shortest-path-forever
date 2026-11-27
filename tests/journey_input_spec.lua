@@ -110,6 +110,9 @@ local env = setmetatable({
 			end,
 		}
 	end,
+	InCombatLockdown = function()
+		return false
+	end,
 	IsAltKeyDown = function()
 		return alt
 	end,

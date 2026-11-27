@@ -284,6 +284,9 @@ local function Navigate(key, place)
 	end
 	-- NPC stops carry their NPC id, so nameplate arrows can point at the NPC the journey walks to.
 	local stop = { map = place.map, x = place.x, y = place.y, title = place.name, kind = Kind(key), npc = place.npc }
+	if InCombatLockdown() then
+		return ns.PickInCombat(stop)
+	end
 	return ShortestPathForever.API.NavigateRoute("Shortest Path Forever", { stop })
 end
 -- A service button's response: one that starts a journey closes every menu, one that cannot keeps the menu open.
@@ -576,6 +579,10 @@ local function Travel(key, world, query, tier)
 	end
 	-- A destination chosen while the choice runs is the newer request: the choice then starts nothing.
 	local goal = ns.JourneyGoal()
+	if InCombatLockdown() then
+		-- The choice's searches wait for the fight to end.
+		ns.NoticeQueuedDestination()
+	end
 	local stop
 	stop = Choose(candidates, map, x, y, function(place)
 		if stopTravel == stop then

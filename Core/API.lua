@@ -506,7 +506,7 @@ function ns.OnSpawnFloor(point)
 end
 
 local function NavigateRoute(owner, stops, policy, markers, fade, tour)
-	if not Owner(owner) or not Ready() or not ns.db.journey or type(stops) ~= "table" then
+	if not Owner(owner) or not Loaded() or not ns.db.journey or type(stops) ~= "table" then
 		return false
 	end
 	local count = #stops
@@ -668,11 +668,23 @@ function API.NavigateRoute(owner, stops, options)
 	if not policy then
 		return APIKit.Invalid()
 	end
-	return NavigateRoute(owner, stops, policy, markers, fade, tour)
+	return not InCombatLockdown() and NavigateRoute(owner, stops, policy, markers, fade, tour)
 end
 
 function API.Navigate(owner, map, x, y, title, kind)
-	return NavigateRoute(owner, { { map = map, x = x, y = y, title = title, kind = kind } }, "normal", true, true)
+	return API.NavigateRoute(owner, { { map = map, x = x, y = y, title = title, kind = kind } })
+end
+
+-- The player's own pick of a place mid-fight (UI/Nearby.lua), planned when the fight ends. The public calls are
+-- refused then (docs/api.md).
+---@param stop SPFAPIStop
+---@return boolean
+function ns.PickInCombat(stop)
+	local accepted = NavigateRoute("Shortest Path Forever", { stop }, "normal", true, true)
+	if accepted then
+		ns.NoticeQueuedDestination()
+	end
+	return accepted
 end
 
 function API.CurrentStop(owner)
