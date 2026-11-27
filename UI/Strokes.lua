@@ -23,6 +23,10 @@ ns.LaterAlpha = LATER_ALPHA
 -- many screen pixels, never past this share of either side, and bridged by this many segments: enough to soften a
 -- corner without moving the line off the walk.
 local TOUR_LATER_ALPHA, TOUR_CUT, TOUR_CUT_SHARE, TOUR_STEPS = 0.6, 3.5, 0.4, 4
+-- Screen pixels. The client draws nothing for a sliver of a line, so a flight or a solid walk passes over points
+-- closer than these (five leaves a pixel of a walk's segment cut at both ends), and a bend's curve takes no more
+-- steps than its cut has room for at TOUR_STEP each.
+local FLIGHT_APART, WALK_APART, TOUR_STEP = 3, 5, 0.75
 -- Breadcrumbs stop short of each stop's mark, so the way runs up to a stop rather than under it: a dot is left out when
 -- its rim would come within STOP_GAP of the mark, on screen, at either end of a leg.
 local STOP_GAP = 2
@@ -394,8 +398,9 @@ local function Soft(x1, y1, x2, y2, color)
 			held = false
 			Line(hx1, hy1, ax, ay, color)
 			local px, py = ax, ay
-			for step = 1, TOUR_STEPS do
-				local t = step / TOUR_STEPS
+			local steps = math.max(1, math.min(TOUR_STEPS, math.floor(cut * scale / TOUR_STEP)))
+			for step = 1, steps do
+				local t = step / steps
 				local x = (1 - t) ^ 2 * ax + 2 * (1 - t) * t * x1 + t ^ 2 * startX
 				local y = (1 - t) ^ 2 * ay + 2 * (1 - t) * t * y1 + t ^ 2 * startY
 				Line(px, py, x, y, color)
@@ -547,14 +552,15 @@ function Strokes.Map(buffer, paths, view)
 		local previous, px, py
 		local points = ns.FlightLinePoints(path)
 		local crossing = OverviewCrossing(view, path, color)
+		local apart = path.mode == "flight" and not path.preview and FLIGHT_APART
+			or path.mode == "walk" and not WalkingRouteDotted(view.tour) and WALK_APART
 		for index = 1, crossing and 0 or #points do
 			local point = points[index]
 			local x, y = position(point, mapID)
 			local after = points[index + 1]
-			-- Smoothed flight points can be less than a pixel apart when the map is zoomed out.
+			-- Smoothed flight points and terrain walk steps can be about a pixel apart or less on the world map.
 			-- Keep longer connected strokes, retaining endpoints and loading boundaries.
-			local short = path.mode == "flight"
-				and not path.preview
+			local short = apart
 				and after
 				and previous
 				and not previous.jump
@@ -565,7 +571,7 @@ function Strokes.Map(buffer, paths, view)
 				and py
 				and x
 				and y
-				and ((x - px) * width) ^ 2 + ((y - py) * height) ^ 2 < (3 / scale) ^ 2
+				and ((x - px) * width) ^ 2 + ((y - py) * height) ^ 2 < (apart / scale) ^ 2
 			if not short then
 				if path.mode == "portal" or path.mode == "passage" then
 					Mark(x, y, color)

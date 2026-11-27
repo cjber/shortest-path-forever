@@ -189,9 +189,9 @@ do
 	check(close(strokes.x1[each], 300) and close(strokes.y1[each], -503.5))
 	Strokes.Map(strokes, { { mode = "walk", points = ends } }, mapView({ tour = true, scale = 2 }))
 	check(close(strokes.x2[1], 300 - 1.75), "the cut is screen pixels")
-	local short = { point(0.1, 0.5), point(0.105, 0.5), point(0.105, 0.7) }
+	local short = { point(0.1, 0.5), point(0.106, 0.5), point(0.106, 0.7) }
 	Strokes.Map(strokes, { { mode = "walk", points = short } }, mapView({ tour = true }))
-	check(close(strokes.x2[1], 103), "never more than two fifths of a side")
+	check(close(strokes.x2[1], 103.6), "never more than two fifths of a side")
 	local straight = { point(0.1, 0.5), point(0.2, 0.5), point(0.3, 0.5) }
 	Strokes.Map(strokes, { { mode = "walk", points = straight } }, mapView({ tour = true }))
 	check(strokes.n == 2, "a straight run gains no strokes")
@@ -230,6 +230,37 @@ do
 	local approach = { mode = "walk", points = { player, beside } }
 	Strokes.Minimap(strokes, { approach }, minimapView(player, { tour = true, goal = beside }))
 	check(strokes.n == 0, "nothing runs through a held stop's ring: " .. strokes.n)
+end
+
+-- Terrain walks step about a pixel at a time on a zone map, and the client draws nothing for a sliver of one: a
+-- solid walk, a tour's or the player's own style, is one unbroken line with no stroke under a pixel short of its end.
+do
+	local stairs = { point(0.1, 0.5) }
+	for i = 1, 120 do
+		local last, along, aside = stairs[i], 0.0011, i % 6 == 0 and 0.0011 or 0
+		-- A shallow run, then a steep one that turns at every step.
+		if i > 60 then
+			along, aside = i % 2 == 0 and 0.0011 or 0, i % 2 == 1 and 0.0011 or 0
+		end
+		stairs[i + 1] = point(last.x + along, last.y + aside)
+	end
+	local finish = stairs[#stairs]
+	for _, tour in ipairs({ true, false }) do
+		ns.db = { routeStyle = "solid" }
+		Strokes.Map(strokes, { { mode = "walk", points = stairs } }, mapView({ tour = tour }))
+		ns.db = nil
+		for i = 1, strokes.n do
+			local left = math.sqrt((strokes.x2[i] - finish.x * CANVAS) ^ 2 + (strokes.y2[i] + finish.y * CANVAS) ^ 2)
+			check(left < 8 or length(strokes, i) >= 1, "a sliver the client drops: " .. i .. " " .. length(strokes, i))
+			check(
+				i == 1 or close(strokes.x1[i], strokes.x2[i - 1]) and close(strokes.y1[i], strokes.y2[i - 1]),
+				"unbroken"
+			)
+		end
+		check(close(strokes.x1[1], 100) and close(strokes.y1[1], -500), "from the first point")
+		check(close(strokes.x2[strokes.n], finish.x * CANVAS), "to the last")
+		check(close(strokes.y2[strokes.n], -finish.y * CANVAS), "to the last, down")
+	end
 end
 
 -- Every other mode is a solid line in its colour, inside a darker outline two pixels wider.
