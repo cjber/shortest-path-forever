@@ -94,13 +94,45 @@ local function Nearest(path, map, x, y)
 	return off
 end
 
--- The player stands this near the path's last point: the hop arrived at its flight point.
+-- Cumulative yards at each point of a hop's drawn path.
+local lengths = setmetatable({}, { __mode = "k" })
+---@param hop SPFTaxiPath
+---@return number[]
+local function Distances(hop)
+	local distances = lengths[hop]
+	if distances then
+		return distances
+	end
+	local points, length = hop.points, 0
+	distances = { 0 }
+	for point = 1, #points / 3 - 1 do
+		local dx = points[point * 3 + 2] - points[point * 3 - 1]
+		local dy = points[point * 3 + 3] - points[point * 3]
+		length = length + math.sqrt(dx * dx + dy * dy)
+		distances[point + 1] = length
+	end
+	lengths[hop] = distances
+	return distances
+end
+
+-- Yards travelled along one hop, from the nearest segment to the player.
+---@param hop SPFTaxiPath
+---@param map number
+---@param x number
+---@param y number
+---@return number? yards
+local function Along(hop, map, x, y)
+	local _, yards = Project(hop.points, map, x, y, Distances(hop))
+	return yards
+end
+
+-- The player stands this near the path's last point.
 ---@param path SPFTaxiPath
 ---@param map number
 ---@param x number
 ---@param y number
 ---@return boolean
-local function Arrived(path, map, x, y)
+local function AtEnd(path, map, x, y)
 	local points = path.points
 	local last = #points - 2
 	if points[last] ~= map then
@@ -108,6 +140,21 @@ local function Arrived(path, map, x, y)
 	end
 	local dx, dy = points[last + 1] - x, points[last + 2] - y
 	return dx * dx + dy * dy <= AT_NODE * AT_NODE
+end
+
+-- In the air, the hop is over at its end only with as little of the path left: some paths swing past their flight
+-- point well before they come down at it.
+---@param path SPFTaxiPath
+---@param map number
+---@param x number
+---@param y number
+---@return boolean
+local function Arrived(path, map, x, y)
+	if not AtEnd(path, map, x, y) then
+		return false
+	end
+	local distances, yards = Distances(path), Along(path, map, x, y)
+	return yards ~= nil and distances[#distances] - yards <= AT_NODE
 end
 
 ---@param map number
@@ -205,13 +252,36 @@ local function EndHop(now, arrived)
 	current.path, current.hopStart = nil, arrived and now or nil
 end
 
+-- Time the hop that came down here. One that never parted from a longer path beside it is named by the landing.
+---@param now number
+---@param map number
+---@param x number
+---@param y number
+local function Land(now, map, x, y)
+	local current = flight
+	if not current then
+		return
+	end
+	local landed = {}
+	for _, path in ipairs(current.path and { current.path } or current.candidates or {}) do
+		if AtEnd(path, map, x, y) then
+			landed[#landed + 1] = path
+		end
+	end
+	if #landed == 1 then
+		current.path = landed[1]
+		EndHop(now, true)
+	end
+end
+
 local function TaxiSample()
 	local now = GetTime()
 	if not UnitOnTaxi("player") then
-		local path = flight and flight.path
-		if path then
+		if flight then
 			local x, y, _, map = ns.JourneyPosition()
-			EndHop(now, x ~= nil and y ~= nil and map ~= nil and Arrived(path, map, x, y))
+			if x and y and map then
+				Land(now, map, x, y)
+			end
 		end
 		flight, grounded = nil, true
 		return
@@ -257,7 +327,10 @@ local function TaxiSample()
 		end
 	end
 	current.candidates = keep
-	if #keep == 1 then
+	if #keep == 0 then
+		-- The ride is on none of them: whatever it matches next, it joined part of the way.
+		current.hopStart = nil
+	elseif #keep == 1 then
 		current.path, current.candidates = keep[1], nil
 	end
 end
@@ -328,44 +401,25 @@ function TaxiTimes.CurrentPath()
 	return flight and flight.path or nil
 end
 
--- Cached per-hop geometry, keyed by the leg the planner returned.
+-- The yards before each hop of a leg and in all of it, keyed by the leg the planner returned.
 local geometry = setmetatable({}, { __mode = "k" })
 
 ---@param leg SPFLeg
----@return { before: number[], cumulative: number[][], total: number }
+---@return { before: number[], total: number }
 local function LegGeometry(leg)
 	local cached = geometry[leg]
 	if cached then
 		return cached
 	end
-	local before, cumulative, total = {}, {}, 0
+	local before, total = {}, 0
 	for index, hop in ipairs(leg.hops) do
 		before[index] = total
-		local points, distances, length = hop.points, { 0 }, 0
-		for point = 1, #points / 3 - 1 do
-			local dx = points[point * 3 + 2] - points[point * 3 - 1]
-			local dy = points[point * 3 + 3] - points[point * 3]
-			length = length + math.sqrt(dx * dx + dy * dy)
-			distances[point + 1] = length
-		end
-		cumulative[index] = distances
-		total = total + length
+		local distances = Distances(hop)
+		total = total + distances[#distances]
 	end
-	cached = { before = before, cumulative = cumulative, total = total }
+	cached = { before = before, total = total }
 	geometry[leg] = cached
 	return cached
-end
-
--- Yards travelled along one hop, from the nearest segment to the player.
----@param hop SPFTaxiPath
----@param distances number[]
----@param map number
----@param x number
----@param y number
----@return number? yards
-local function Along(hop, distances, map, x, y)
-	local _, yards = Project(hop.points, map, x, y, distances)
-	return yards
 end
 
 -- The milliseconds left of the flight leg being flown, read from where the player is on its drawn path, or nil
@@ -398,7 +452,7 @@ function TaxiTimes.Remaining(leg)
 	if span <= 0 or shape.total <= 0 then
 		return nil
 	end
-	local yards = Along(flight.path, shape.cumulative[index], map, x, y)
+	local yards = Along(flight.path, map, x, y)
 	if not yards then
 		return nil
 	end

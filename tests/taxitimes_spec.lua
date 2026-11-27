@@ -21,6 +21,8 @@ ns = {
 		-- Nighthaven's druid masters: one per faction, side by side.
 		[4] = { map = 1, x = 0, y = 5000, name = "Silva", faction = "Alliance", class = "DRUID" },
 		[5] = { map = 1, x = 0, y = 5040, name = "Bunthen", faction = "Horde", class = "DRUID" },
+		[6] = { map = 2, x = 0, y = 0, name = "D" },
+		[7] = { map = 2, x = 1000, y = 0, name = "E" },
 	},
 	Init = function(fn)
 		ns.start = fn
@@ -33,6 +35,8 @@ ns.TaxiPaths = {
 	{ from = 2, to = 3, seconds = 30, points = { 1, 1000, 0, 1, 1500, 0, 1, 2000, 0 } },
 	{ from = 4, to = 1, seconds = 30, points = { 1, 0, 5000, 1, 0, 2500, 1, 0, 0 } },
 	{ from = 5, to = 3, seconds = 30, points = { 1, 0, 5040, 1, 1000, 2500, 1, 2000, 0 } },
+	-- Passes over its flight point, then circles round to come down at it.
+	{ from = 6, to = 7, seconds = 30, points = { 2, 0, 0, 2, 1060, 0, 2, 1060, 300, 2, 1000, 0 } },
 }
 local now, onTaxi, map, x, y = 0, false, 1, 0, 0
 -- Journey.lua's guarded read of UnitPosition.
@@ -178,6 +182,42 @@ step(73, 1500, 0)
 onTaxi = false
 step(76, 2000, 0)
 equal(ns.db.flownTimes["2:3"], 6, "a landing at the end times the hop")
+
+-- A ride on none of the paths from its take-off, which then comes onto one: that one was joined part of the way.
+ns.db.flownTimes = {}
+step(80, 0, 0)
+onTaxi = true
+step(81, 0, 0)
+step(84, 700, -900)
+step(87, 1100, 0)
+assert(TaxiTimes.CurrentPath() == ns.TaxiPaths[3], "the later path is matched")
+step(90, 2000, 0)
+onTaxi = false
+step(93, 2000, 0)
+assert(next(ns.db.flownTimes) == nil, "a path joined in the air is not timed from the take-off")
+
+-- Landing before the shared opening parted: the landing names the path flown.
+step(100, 0, 0)
+onTaxi = true
+step(101, 0, 0)
+onTaxi = false
+step(110, 1000, 0)
+equal(ns.db.flownTimes["1:2"], 9, "the path that ends where the ride came down is timed")
+assert(ns.db.flownTimes["1:3"] == nil, "the longer one beside it is not")
+
+-- Over the flight point is not down at it while the path has further to go.
+map = 2
+step(120, 0, 0)
+onTaxi = true
+step(121, 0, 0)
+step(124, 500, 0)
+step(130, 990, 0)
+assert(ns.db.flownTimes["6:7"] == nil, "passing over the point early times nothing")
+step(134, 1060, 200)
+onTaxi = false
+step(141, 1000, 0)
+equal(ns.db.flownTimes["6:7"], 20, "the whole path is timed")
+map = 1
 ns.db.flownTimes = { ["1:2"] = 9 }
 
 -- A flight point's direct flights for its tooltip: your own timings first, then the shipped, quickest first, only
