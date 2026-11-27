@@ -506,6 +506,55 @@ do
 	equal(c.title(), "Journey to Picked", "a journey picked in combat is kept")
 end
 
+-- What happens later in a fight wins over a waypoint still waiting for its end.
+do
+	local c = Boot(true)
+	local tomtom = c.login()
+	c.world()
+	c.frame()
+	c.ns.IsOwnTomTomWaypoint = function(uid)
+		return uid.title == "Ours"
+	end
+	local count = 0
+	local function fight(during)
+		count = count + 1
+		c.ns.ClearJourney()
+		c.combat = true
+		tomtom:Way(1, 40 + count, 50, "Waiting")
+		during()
+		c.combat = false
+		c.watcher:OnEvent("PLAYER_REGEN_ENABLED")
+		c.driver.path.settle()
+		return c.title()
+	end
+	local picked = fight(function()
+		c.ns.PickInCombat({ map = 1, x = 0.6, y = 0.55, title = "Picked" })
+	end)
+	equal(picked, "Journey to Picked", "a destination picked in combat is kept")
+	equal(fight(c.ns.PlayerClear), nil, "a route cleared in combat stays cleared")
+	local corpse = fight(function()
+		tomtom:AddWaypoint(1, 0.3, 0.3, { title = "My Corpse", corpse = true })
+	end)
+	equal(corpse, nil, "an arrow moved to the corpse drops the waiting waypoint")
+	local polestar = fight(function()
+		tomtom:AddWaypoint(1, 0.3, 0.31, { title = "Theirs", from = "Polestar" })
+	end)
+	equal(polestar, nil, "an arrow moved to Polestar's waypoint drops the waiting one")
+	local ours = fight(function()
+		tomtom:AddWaypoint(1, 0.3, 0.32, { title = "Ours" })
+	end)
+	equal(ours, "Journey to Waiting", "our own waypoint on the arrow drops nothing")
+
+	c.ns.db.tomtomFollow = false
+	c.ns.RefreshTomTomFollow(true)
+	local cleared = fight(function()
+		c.ns.db.tomtomFollow = true
+		c.ns.RefreshTomTomFollow(true)
+		c.ns.PlayerClear()
+	end)
+	equal(cleared, nil, "a route cleared after turning Follow on in combat stays cleared")
+end
+
 -- With the setting off, TomTom's own waypoints plan nothing, at login or after it.
 do
 	local c = Boot(false)

@@ -49,11 +49,6 @@ local function Key(map, x, y)
 	return string.format("%d:%d:%d", map, math.floor(x * 10 + 0.5), math.floor(y * 10 + 0.5))
 end
 
--- A position keyed from the 0-1 point TomTom stores, so one on a rounding edge keys the same on both sides.
-local function PointKey(map, x, y)
-	return Key(map, x * 100, y * 100)
-end
-
 -- The element tags RestedXP parses a quest into; the two action tags replace the quest's objectives with the action.
 local QUEST_TAGS = { accept = true, complete = true, turnin = true, daily = true, dailyturnin = true, collect = true }
 
@@ -245,28 +240,23 @@ local function Sync()
 		return
 	end
 	if key ~= target then
-		-- A journey already following TomTom's arrow to this step stays with it: after a fight the arrow's waypoint can
-		-- be planned before this step. Resume guide still takes it back.
-		local uid = not resuming and ns.TomTomFollowedBridgeStep and ns.TomTomFollowedBridgeStep()
-		if not (uid and PointKey(uid[1], uid[2], uid[3]) == PointKey(map, x / 100, y / 100)) then
-			-- RestedXP decides when an interaction or waypoint is complete, including large arrival radii.
-			navigating = true
-			local started = API.NavigateRoute(OWNER, {
-				{
-					map = map,
-					x = x / 100,
-					y = y / 100,
-					title = title,
-					hold = true,
-					questIDs = quests,
-					tooltip = actions and table.concat(actions, "\n") or nil,
-				},
-			})
-			navigating = false
-			if not started then
-				Clear()
-				return
-			end
+		-- RestedXP decides when an interaction or waypoint is complete, including large arrival radii.
+		navigating = true
+		local started = API.NavigateRoute(OWNER, {
+			{
+				map = map,
+				x = x / 100,
+				y = y / 100,
+				title = title,
+				hold = true,
+				questIDs = quests,
+				tooltip = actions and table.concat(actions, "\n") or nil,
+			},
+		})
+		navigating = false
+		if not started then
+			Clear()
+			return
 		end
 		target, targetTitle, targetQuests = key, title, questKey
 	end
@@ -283,6 +273,12 @@ local function Sync()
 	HoldArrow()
 end
 
+-- Forgets the step planned, so the guide plans its current one again.
+function ns.ReplanRestedXP()
+	target, targetTitle, targetQuests = nil, nil, nil
+	Sync()
+end
+
 -- Let the player hand control back after pausing a guide, without waiting for its next native update. Returns whether
 -- a guide is followed now, which the public API answers with.
 ---@return boolean
@@ -291,9 +287,8 @@ function ns.ResumeRestedXP()
 	if frontend and Integrated() and type(frontend.ResumeRestedXP) == "function" then
 		return frontend.ResumeRestedXP() == true
 	end
-	target, targetTitle, targetQuests = nil, nil, nil
 	resuming = true
-	Sync()
+	ns.ReplanRestedXP()
 	resuming = false
 	return API.CurrentStop(OWNER) ~= nil
 end
