@@ -110,6 +110,9 @@ local env = setmetatable({
 			end,
 		}
 	end,
+	InCombatLockdown = function()
+		return false
+	end,
 	IsAltKeyDown = function()
 		return alt
 	end,
@@ -610,6 +613,43 @@ do
 	assert(not canvasClick(map, "LeftButton") and not noticed[1], "a plain click says nothing")
 	ns.db.journey, shift = true, true
 	print("journey input: journeys off says so on screen ok")
+
+	-- Mid-fight each of those clicks says the destination waits for the fight to end (#1413).
+	local combat = env.InCombatLockdown
+	env.InCombatLockdown = function()
+		return true
+	end
+	local function Queued(what, click)
+		noticed, destination = {}, nil
+		click()
+		assert(
+			destination and #noticed == 1 and noticed[1] == "Destination queued until combat ends.",
+			what .. " says the destination is queued"
+		)
+	end
+	Queued("a map pin", function()
+		handler(map, 3, "LeftButton")
+	end)
+	Queued("the map", function()
+		canvasClick(map, "LeftButton")
+	end)
+	Queued("our own icon", function()
+		ownClick(own, "LeftButton")
+	end)
+	Queued("the minimap", function()
+		shift, alt, ns.db.journeyKey = false, true, "alt"
+		minimapClick(nil, "LeftButton")
+	end)
+	_G.Questie = {}
+	env.GetMouseFoci = function()
+		return { { miniMapIcon = false, data = {}, UiMapID = 1440, x = 50, y = 50 } }
+	end
+	Queued("a Questie icon", function()
+		ns.db.journeyKey = nil
+		mouseEvent(nil, "GLOBAL_MOUSE_DOWN", "LeftButton")
+	end)
+	_G.Questie, env.GetMouseFoci, env.InCombatLockdown = nil, pinFoci, combat
+	shift, alt = true, false
 end
 
 -- A spot inside a dungeon has no walking map: from outside, the journey goes to its door, named in the game's
@@ -714,6 +754,16 @@ assert(root.label == "Plan journey" and root.onClick, "a located quest offers Pl
 destination = nil
 root.onClick()
 assert(destination and destination.questID == locatable, "the entry plans the right-clicked quest")
+do
+	local combat = env.InCombatLockdown
+	env.InCombatLockdown = function()
+		return true
+	end
+	noticed = {}
+	root.onClick()
+	assert(noticed[1] == "Destination queued until combat ends.", "a quest picked mid-fight says it is queued")
+	env.InCombatLockdown = combat
+end
 assert(destination.questIDs[1] == locatable, "the goal names its quest for the live objectives")
 
 -- No quest id anywhere on the header or block: no entry.

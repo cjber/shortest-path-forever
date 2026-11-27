@@ -77,7 +77,7 @@ local ns = {
 		resumes = resumes + 1
 		return true
 	end,
-	ClearJourney = function()
+	PlayerClear = function()
 		cleared = cleared + 1
 	end,
 	DockLocation = function(id)

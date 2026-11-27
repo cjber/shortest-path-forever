@@ -310,7 +310,7 @@ function Guide.ClearHoveredWaypointJourney()
 	for _, provider in ipairs(waypointProviders) do
 		local pin = provider.pin
 		if pin and pin:IsShown() and pin:IsMouseOver() and IsJourneyWaypoint() then
-			ns.ClearJourney()
+			ns.PlayerClear()
 			return true
 		end
 	end

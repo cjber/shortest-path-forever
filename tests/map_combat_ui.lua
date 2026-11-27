@@ -1,4 +1,4 @@
--- Combat keeps the addon's world map pins and route as last drawn and redraws them once it ends (#1151, #1302). The
+-- Combat keeps the addon's interactive map pins as last drawn and redraws them once it ends (#1151, #1302). The
 -- client is not yet in lockdown while it delivers PLAYER_REGEN_DISABLED, and no longer is at PLAYER_REGEN_ENABLED, so
 -- the handler has to go by the event, not by InCombatLockdown().
 local source = ""
@@ -24,7 +24,7 @@ assert(layer:IsShown(), "entering combat keeps the map pins")
 combat = true
 ns.RefreshMap()
 ns.RefreshMap()
-assert(redraws == 0, "nothing redraws in combat, got " .. redraws)
+assert(redraws == 0, "flight pins do not redraw in combat, got " .. redraws)
 assert(layer:IsShown(), "a refresh in combat keeps the map pins")
 -- Frozen pins take no hover, so no click reaches a waypoint, super-track or highlight call in lockdown.
 local pin
@@ -47,7 +47,7 @@ assert(not layer:IsShown(), "the frozen pins hide over another map")
 mapID = 1415
 mapTick()
 assert(layer:IsShown(), "the frozen pins show again over their own map")
--- The map turns asked each layer to redraw; in combat each only queued.
+-- The map turns queued new interactive pins until combat ends.
 redraws = 0
 combat = false
 fireEvent("PLAYER_REGEN_ENABLED")

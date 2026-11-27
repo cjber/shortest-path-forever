@@ -277,6 +277,7 @@ function Editor.new()
 			self.state = reason or "empty"
 			return false
 		end
+		ns.PlayerPicked()
 		if self.manual then
 			return self:Submit(self.stops)
 		end
@@ -354,6 +355,7 @@ function Editor.new()
 		return false
 	end
 	function controller:Stop()
+		ns.PlayerRequest()
 		self:CancelOrder()
 		self:Observe()
 		if self.owner and not api().Cancel(self.owner) then

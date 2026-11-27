@@ -336,6 +336,9 @@ function RoutePin:OnLoad()
 	self:UseFrameLevelType("PIN_FRAME_LEVEL_QUEST_BLOB")
 	self:SetIgnoreGlobalPinScale(true)
 	self.lines, self.underlines, self.dots, self.used = {}, {}, {}, 0
+	if self.pool.passive then
+		StrokeLayer(self)
+	end
 end
 
 function RoutePin:Draw()
@@ -356,7 +359,7 @@ function RoutePin:Draw()
 	mapView.zoom = map:GetCanvasScale() --[[@as number]]
 	mapView.small = info and info.mapType <= Enum.UIMapType.Continent
 	mapView.stitched = ns.OpenMapAddon.Stitched()
-	mapView.marks = journey and provider and provider.stopMarks or nil
+	mapView.marks = journey and (not self.view.frozen or self.view.layer:IsShown()) and provider.stopMarks or nil
 	-- The journey's own paths come first; Itinerary.lua's later hops recede, unless NavigateRoute asked for full strength.
 	mapView.current = journey and not (goal and (goal.stop or goal).unfaded) and #paths or math.huge
 	mapView.tour = journey and Tour()
@@ -391,9 +394,6 @@ end
 
 ---@param geometry SPFDrawPath[]
 function RoutePin:OnAcquired(geometry)
-	if not self.strokes and not self.strokeLayer then
-		StrokeLayer(self)
-	end
 	local same = self.strokes and self.paths and #self.paths == #geometry
 	if same then
 		for i, path in ipairs(geometry) do
@@ -461,37 +461,35 @@ end
 ---@class SPFRouteLayer
 ---@field stopsKey? string
 ---@field stopMarks? {x: number, y: number, radius: number}[]
+---@field drawnGoal? SPFPoint
 local Layer = {}
 
-function Layer:RemoveAllData()
-	linePins:ReleaseAll()
-	goalPins:ReleaseAll()
-	self.stopsKey, self.stopMarks, self.mirroredWaypoint = nil, nil, false
-	-- Reconcile the game's quest pins with the stops drawn now (#472).
-	ns.RefreshQuestPins()
-end
-
 function Layer:RefreshAllData()
-	if InCombatLockdown() then
-		ns.QueueMapRefresh()
-		return
-	end
-	local map = WorldMapFrame
-	-- Before the map's first show its zoom levels are unset.
-	if not (map:GetMapID() and map:IsVisible() and goal and (ns.db.journey or goal.corpse)) then
-		self:RemoveAllData()
-		return
-	end
-	-- The line is redrawn every half second while you move, and the route on every replan. The stops' buttons stay
-	-- unless what they show changed (RefreshStops): a button rebuilt under the pointer lost its hover and its press, so
-	-- a right-click to clear went unheard.
+	local map, locked = WorldMapFrame, InCombatLockdown()
+	local drawing = goal and (ns.db.journey or goal.corpse) and map:IsVisible() and map:GetMapID()
 	linePins:ReleaseAll()
-	-- The stops go first: the line leaves a gap at each.
-	self:RefreshStops()
-	if #worldPaths > 0 and ns.db.mapLine ~= false then
+	if locked then
+		-- The line is mouse-transparent. Rebuilding the stops would call SetPassThroughButtons.
+		ns.QueueMapRefresh()
+		if self.drawnGoal ~= goal then
+			for pin in goalPins:EnumerateActive() do
+				pin:Hide()
+			end
+			self.stopsKey, self.stopMarks = nil, nil
+		end
+	elseif drawing then
+		self:RefreshStops()
+	else
+		goalPins:ReleaseAll()
+		self.stopsKey, self.stopMarks, self.mirroredWaypoint = nil, nil, false
+	end
+	if drawing and #worldPaths > 0 and ns.db.mapLine ~= false then
 		linePins:Acquire(worldPaths)
 	end
-	-- Each drawn stop already marks its quest: the game's own pin for it steps aside (#472).
+	if locked then
+		return
+	end
+	self.drawnGoal = drawing and goal or nil
 	ns.RefreshQuestPins()
 	-- A button under the pointer shows its tooltip and lights its leg again, on the new line and with the time left now.
 	for pin in goalPins:EnumerateActive() do
@@ -501,9 +499,8 @@ function Layer:RefreshAllData()
 	end
 end
 
--- Stops whose buttons would overlap at this zoom share one, as the map's docks do: at their middle, faded, or at the
--- stop being guided to and at full strength when it is among them. The buttons are rebuilt only when that grouping
--- changes, and the line redrawn around them.
+-- Stops whose buttons would overlap at this zoom share one. Keep the buttons unless their group changes so
+-- a held click completes, and draw the line around them.
 function Layer:RefreshStops()
 	local map = WorldMapFrame
 	local mapID = map:GetMapID()
@@ -929,13 +926,13 @@ function ns.RefreshJourneyPin()
 end
 
 ns.Init(function()
-	linePins = MapCanvas.Pool(WorldMapFrame, LINE_TEMPLATE, RoutePin, { journey = true })
+	linePins = MapCanvas.Pool(WorldMapFrame, LINE_TEMPLATE, RoutePin, { passive = true })
 	local goalOptions = { template = GOAL_TEMPLATE, marker = "stop", journey = true }
 	goalPins = MapCanvas.Pool(WorldMapFrame, GOAL_TEMPLATE, ns.GoalPinMixin, goalOptions)
 	provider = Layer
 	ns.OpenMapAddon.WatchPinOwner(RefreshShownMap)
 	MapCanvas.Watch(WorldMapFrame, function(_, what)
-		if what == "show" or what == "map" then
+		if what == "show" or what == "map" or what == "thaw" then
 			provider:RefreshAllData()
 		elseif what == "scale" then
 			provider:OnCanvasScaleChanged()

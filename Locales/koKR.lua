@@ -670,3 +670,4 @@ L["With TomTom installed, point TomTom's arrow at each step instead of our arrow
 L["Journey stops remembers your list."] = "여정 경유지가 목록을 기억합니다." -- mt
 L["Mailbox"] = "우체통" -- mt
 L["Skip this stop"] = "이 채집 지점 건너뛰기" -- mt
+L["Destination queued until combat ends."] = "전투가 끝날 때까지 목적지가 대기합니다." -- mt

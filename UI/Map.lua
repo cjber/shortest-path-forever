@@ -751,10 +751,10 @@ ns.Init(function()
 	combat:RegisterEvent("PLAYER_REGEN_ENABLED")
 	combat:RegisterEvent("PLAYER_REGEN_DISABLED")
 	-- The event, not InCombatLockdown(): lockdown starts only after PLAYER_REGEN_DISABLED is delivered (#1151).
-	-- The world map keeps the route last drawn through combat (#1302): every refresh in combat only queues, so the
-	-- line and pins stay as they were, frozen (Canvas.SetFrozen), and leaving combat redraws them once. The minimap's
-	-- nearby-service pins sit where they were around the player, which goes stale as soon as the player moves, so
-	-- they hide until then.
+	-- The world map keeps its pins as last drawn through combat (#1302): their refreshes only queue (Canvas.SetFrozen)
+	-- and leaving combat redraws them once; the journey's line alone is redrawn meanwhile (UI/Route.lua). The
+	-- minimap's nearby-service pins sit where they were around the player, which goes stale as soon as the player
+	-- moves, so they hide until then.
 	combat:SetScript("OnEvent", function(_, event)
 		if event == "PLAYER_REGEN_DISABLED" then
 			ns.mapRefreshPending = true

@@ -313,7 +313,7 @@ ns.Init(function()
 		L["Off clears your journey, and map clicks, quests, guides and waypoints no longer start one."],
 		function()
 			if not ns.db.journey then
-				ns.ClearJourney()
+				ns.PlayerClear()
 			end
 			-- The guide follower only ticks while journeys are on; turning them back on starts it again.
 			ns.RefreshGuidelime()
