@@ -215,8 +215,8 @@ Credit for the reports and requests behind the addon.
 | [cmartin303](https://github.com/cmartin303) | Walks from a pier can start on it | GitHub; #889 |
 | [cmartin303](https://github.com/cmartin303) | Followed roads hold through bends and gaps | GitHub; #891 |
 | [cmartin303](https://github.com/cmartin303) | Faint and narrow roads stay connected | GitHub; #893 |
-| Hex_512 | TomTom switched off per character counts as off | CurseForge; #996 |
-| klessky92\_ | TomTom switched off per character counts as off | CurseForge; #996 |
+| Hex_512 | A turned-off ForeverCore is named when you try Shortest Path | CurseForge; #996 |
+| klessky92\_ | A turned-off ForeverCore is named when you try Shortest Path | CurseForge; #996 |
 | user\_nj1mf9vmj5vyv6iu | Walking directions while long routes are checked | CurseForge; #997 |
 | [ScottWilson0903](https://github.com/ScottWilson0903) | Druid flight path used for Alliance journeys | GitHub; #1010 |
 | mrhumid | Loch Modan walks use the Dun Algaz tunnel | Discord; #1011 |
@@ -228,7 +228,7 @@ Credit for the reports and requests behind the addon.
 | FalconDS9 | Only your chosen key plans a map journey | CurseForge; #1050 |
 | karrier\_user\_slouyac50poxg707 | Only your chosen key plans a map journey | CurseForge thread 8693411; #1050 |
 | kaelr1 | Boat rows show the right destinations | Discord; #1057 |
-| Marlynnie | Theramore routes no longer sail off and back | CurseForge; #1062 |
+| Marlynnie | Theramore routes no longer sail off and back | CurseForge thread 8749092; #1062 |
 | vibblez | Hinterlands walks take the direct path | Discord; #1063 |
 | dumbdavid | Journey clicks say when journeys are off | Discord; #1076 |
 | user\_8hw6almdkhj2amgo | Forever's trainers listed in Nearby services | CurseForge; #1082 |
@@ -291,8 +291,8 @@ Credit for the reports and requests behind the addon.
 | puglife_636 | The screen compass starts off | CurseForge thread 8735296; #985 |
 | markits | Each town service has its own map icon | CurseForge thread 8736988; #985 |
 | user\_h1s2g8ruvulbm6909075 | ForeverCore ships inside Shortest Path | CurseForge thread 8754508 |
-| Crazy\_Yew\_Trees | Higher-level zones are avoided harder | CurseForge thread 8716692; #1201 |
-| schmelbertina | Higher-level zones are avoided harder | CurseForge thread 8716692; #1201 |
+| Crazy\_Yew\_Trees | Routes keep out of zones far above your level | CurseForge thread 8716692; #897, #1007 |
+| schmelbertina | Routes keep out of zones far above your level | CurseForge thread 8719289; #897, #1007 |
 
 ## Inspired by
 
