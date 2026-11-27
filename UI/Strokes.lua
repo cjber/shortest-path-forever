@@ -105,6 +105,8 @@ ns.Strokes = Strokes
 local out
 ---@type number, number, number, number, number, number, number
 local scale, width, height, dot, dotRim, spacing, walked
+-- Where along the walk the first dot sits.
+local phase = 0
 -- Whether a dotted segment of the current path lies in the view.
 local inView
 ---@type number, number, number?
@@ -259,30 +261,6 @@ local function Open(x1, y1, dx, dy, low, high, color, mark)
 	Open(x1, y1, dx, dy, math.max(low, (-b + root) / a), high, color, mark + 3)
 end
 
--- How deep the walk is at fraction t of the segment from a to b; cut is where a surface change is drawn.
-local function DepthAt(a, b, t)
-	local aDepth, bDepth = a and a.depth, b and b.depth
-	if aDepth and bDepth then
-		return aDepth + t * (bDepth - aDepth)
-	elseif t >= (a and a.depthCut or 0.5) then
-		return bDepth
-	end
-	return aDepth
-end
-
-local function Ink(color, depth)
-	if not depth then
-		return color
-	end
-	-- Quantize only the color. The surface data decides which dots are underground.
-	local shade = math.floor(depth / (depth + 20) * DEPTH_SHADES)
-	if not depthColors[shade] then
-		local strength = shade / DEPTH_SHADES
-		depthColors[shade] = CreateColor(0.62 - 0.38 * strength, 0.86 - 0.24 * strength, 1)
-	end
-	return depthColors[shade]
-end
-
 -- Clip before subdividing: even continent-sized walks need only the visible breadcrumbs. Dots sit at every SPACING
 -- along the whole walk, walked carrying the distance across segment joins so bends never bunch them.
 local function Segment(x1, y1, x2, y2, low, high, color, dashed, a, b, entranceLow, entranceHigh)
@@ -300,8 +278,9 @@ local function Segment(x1, y1, x2, y2, low, high, color, dashed, a, b, entranceL
 	end
 	local start = walked
 	walked = start + length
-	if not (a and a.depth) then
-		entranceDistance = b and b.depth and (start + length * (a and a.depthCut or 0.5)) or nil
+	local aDepth, bDepth, cut = a and a.depth, b and b.depth, a and a.depthCut or 0.5
+	if not aDepth then
+		entranceDistance = bDepth and (start + length * cut) or nil
 	end
 	if not low then
 		return
@@ -311,12 +290,27 @@ local function Segment(x1, y1, x2, y2, low, high, color, dashed, a, b, entranceL
 	-- would drop the dots at each bend. A dot on a joint belongs to the later segment: both ends share a tolerance,
 	-- so rounding in the running total cannot push it out of both.
 	local half = dot / 2 / length
-	local first = math.ceil((start + low * length - 0.001) / spacing) * spacing - start
+	local first = math.ceil((start + low * length - 0.001 - phase) / spacing) * spacing + phase - start
 	local count = Near(x1, y1, x2, y2)
 	for distance = first, high * length - 0.001, spacing do
 		local t = distance / length
 		if count == 0 or Clear(count, x1 + t * dx, y1 + t * dy) then
-			local depth = DepthAt(a, b, t)
+			local depth = aDepth
+			if aDepth and bDepth then
+				depth = aDepth + t * (bDepth - aDepth)
+			elseif t >= cut then
+				depth = bDepth
+			end
+			local ink = color
+			if depth then
+				-- Quantize only the color. The surface data decides which dots are underground.
+				local shade = math.floor(depth / (depth + 20) * DEPTH_SHADES)
+				if not depthColors[shade] then
+					local strength = shade / DEPTH_SHADES
+					depthColors[shade] = CreateColor(0.62 - 0.38 * strength, 0.86 - 0.24 * strength, 1)
+				end
+				ink = depthColors[shade]
+			end
 			local size, radius = dot, half
 			if depth and entranceDistance and start + distance >= entranceDistance then
 				local extra = dot * (ENTRANCE_SCALE - 1) / 2 / scale
@@ -336,7 +330,7 @@ local function Segment(x1, y1, x2, y2, low, high, color, dashed, a, b, entranceL
 				y1 + (t - radius) * dy,
 				x1 + (t + radius) * dx,
 				y1 + (t + radius) * dy,
-				Ink(color, depth),
+				ink,
 				true,
 				size
 			)
@@ -381,35 +375,21 @@ local function Line(x1, y1, x2, y2, color, dashed, a, b)
 end
 
 -- A short walk between stops can have every spaced breadcrumb fall inside the gaps at its ends although there is room
--- between them. It then gets one at its middle.
+-- between them. It is dotted again with the one dot at its middle.
 ---@param view SPFMapView
 local function MiddleDot(view, path, points, color)
-	local left, px, py = walked / 2, nil, nil
+	local usual = spacing
+	spacing, phase, walked, entranceDistance = walked, walked / 2, 0, nil
+	local previous, px, py
 	for index = 1, #points do
-		local x, y = view.position(points[index], view.mapID)
+		local point = points[index]
+		local x, y = view.position(point, view.mapID)
 		if px and x then
-			local dx, dy = (x - px) * width, (py - y) * height
-			local length = math.sqrt(dx * dx + dy * dy) * scale
-			if length > 0 and left <= length then
-				local t, reach = left / length, (dot / 2 + dotRim) / scale
-				local cx, cy = px * width + t * dx, -py * height + t * dy
-				if
-					cx >= minX * width + reach
-					and cx <= maxX * width - reach
-					and -cy >= minY * height + reach
-					and -cy <= maxY * height - reach
-					and Clear(Near(px * width, -py * height, x * width, -y * height), cx, cy)
-				then
-					local hx, hy = dx * dot / 2 / length, dy * dot / 2 / length
-					local depth = not path.preview and DepthAt(points[index - 1], points[index], t) or nil
-					Stroke(cx - hx, cy - hy, cx + hx, cy + hy, Ink(color, depth), true)
-				end
-				return
-			end
-			left = left - length
+			Line(px, py, x, y, color, true, not path.preview and previous or nil, not path.preview and point or nil)
 		end
-		px, py = x, y
+		previous, px, py = point, x, y
 	end
+	spacing, phase = usual, 0
 end
 
 -- The segment of a tour's walk still waiting to learn whether it ends in a bend: its ends, as map fractions, and its

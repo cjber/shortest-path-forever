@@ -313,6 +313,21 @@ do
 	end)
 	check(#drawn == 1 and close(drawn[1][1], (a.x + b.x) / 2 * CANVAS), "midway over several segments")
 	check(#between(28) == 0, "no room between the gaps")
+	-- A cave mouth between close stops is marked like any other, where the larger dot still clears them.
+	local function cave(west, east)
+		west.depthCut, east.depth = 0.49, 5
+		return { west, east }
+	end
+	local makeColor = _G.CreateColor
+	_G.CreateColor = function(r, g, blue)
+		return { r = r, g = g, b = blue }
+	end
+	between(32, cave)
+	check(strokes.n == 1 and close(strokes.width[1], DOT * 1.35), "the entrance dot is larger")
+	check(strokes.color[1] ~= colors.walk, "in the depth's colour")
+	between(31, cave)
+	check(strokes.n == 1 and close(strokes.width[1], DOT), "the usual dot where the larger would not clear")
+	_G.CreateColor = makeColor
 	local from, to = point(0.3, 0.5), point(0.332, 0.5)
 	local walk = { { mode = "walk", points = { from, to } } }
 	local marks = { { x = from.x, y = from.y, radius = radius }, { x = to.x, y = to.y, radius = radius } }
