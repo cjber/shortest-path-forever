@@ -10,6 +10,12 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.49.3] - 2026-11-27
+
+### Fixed
+
+- **Follow TomTom's arrow picks your waypoint back up.** Turning it on follows the arrow's waypoint when no other journey is under way, including a RestedXP step. A step that arrives in combat keeps its route, name and quests, and a destination you pick in combat is kept. Thanks to forleong for the report. (#1390)
+
 ## [1.49.2] - 2026-11-27
 
 ### Fixed
