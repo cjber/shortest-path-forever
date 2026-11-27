@@ -580,12 +580,11 @@ local function SyncArrow()
 		return
 	end
 	local hijacked = hooked.CrazyArrowIsHijacked and hooked:CrazyArrowIsHijacked()
-	-- Two states mute TomTom's arrow: our own arrow draws over the waypoint (guideArrow), or the player turned our
-	-- arrow off while this journey still owns the waypoint. Turning it off clears our guide points, not the journey.
-	-- When Shortest Path drives TomTom's own arrow (tomtomArrow on, arrow on), keep TomTom's arrow visible.
+	-- TomTom's arrow is muted only while our own arrow draws over its waypoint: with Show direction arrow off, it stays.
+	-- When Shortest Path drives TomTom's own arrow (Use TomTom's arrow), it stays too.
 	local driveTomTom = ns.TomTomArrowActive and ns.TomTomArrowActive()
 	-- With Use TomTom's arrow on, the bridge pointing TomTom's arrow is the arrow the player chose.
-	local bridged = ns.db.tomtomArrow and ns.db.arrow ~= false and ns.TomTomFollowsBridge()
+	local bridged = ns.db.tomtomArrow and ns.TomTomFollowsBridge()
 	if
 		not driveTomTom
 		and not bridged
@@ -593,7 +592,8 @@ local function SyncArrow()
 		and not hijacked
 		and following == arrowWaypoint
 		and API.CurrentStop(WaypointOwner(following))
-		and (guideArrow or ns.db.arrow == false)
+		and guideArrow
+		and ns.db.arrow ~= false
 		and not UnitIsDeadOrGhost("player")
 	then
 		muted = true

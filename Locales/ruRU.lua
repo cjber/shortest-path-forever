@@ -232,8 +232,8 @@ L["Show portals"] = "Показывать порталы"
 L["Show routes on the world map"] = "Показывать маршруты на карте мира"
 L["Show the compass"] = "Показывать компас"
 L["Show the flight to take"] = "Показывать нужный полет"
-L["Show the next direction and the game's navigation marker. When off, only the route on the map and minimap stays."] =
-	"Показывать следующее направление и навигационный маркер игры. Если выключено, остаётся только маршрут на карте и миникарте."
+L["Show Shortest Path's arrow and the game's navigation marker. TomTom's arrow has its own settings."] =
+	"Показывать стрелку Shortest Path и навигационный маркер игры. Стрелка TomTom настраивается отдельно." -- mt
 L["Show the time left under the compass"] = "Оставшееся время под компасом"
 L["Show the way to your corpse"] = "Показывать путь к телу"
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =

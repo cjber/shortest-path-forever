@@ -139,8 +139,8 @@ do
 	tomtom:ShowHideCrazyArrow()
 	equal(c.arrow.alpha, 0, "TomTom settings updates preserve suppression")
 	c.ns.db.arrow = false
-	c.ns.PointGuideArrow(nil)
-	equal(c.arrow.alpha, 0, "turning SPF's arrow off keeps TomTom's arrow muted while the journey guides")
+	c.ns.PointGuideArrow({ { map = 1, x = 1, y = 1 } })
+	equal(c.arrow.alpha, 0.4, "turning SPF's arrow off hands the screen back to TomTom's arrow")
 	equal(c.arrow.mouse, false, "TomTom's current input setting is retained")
 	c.ns.db.arrow = true
 	c.ns.PointGuideArrow({ { map = 1, x = 1, y = 1 } })
@@ -169,39 +169,28 @@ do
 	equal(c.arrow.alpha, 0.4, "turning follow off restores TomTom guidance")
 end
 
--- Turning our arrow off hides TomTom's Crazy Arrow too while a journey owns its waypoint: the route stays, and the
--- duplicate arrow is not shown again.
+-- Show direction arrow hides only Shortest Path's own arrow: TomTom's stays on the waypoint a journey follows (#1390).
 do
 	local c = Boot(true)
 	c.ns.db.arrow = false
 	local tomtom = c.login()
 	c.world()
 	c.frame()
-	local shows = 0
-	local showHide = tomtom.ShowHideCrazyArrow
-	function tomtom:ShowHideCrazyArrow(...)
-		shows = shows + 1
-		return showHide(self, ...)
-	end
-	tomtom:Way(1, 60, 52, "No arrow")
+	tomtom:Way(1, 60, 52, "TomTom only")
 	c.driver.path.settle()
 	equal(c.API.CurrentStop("TomTom"), 1, "the off arrow still follows the journey's waypoint")
-	equal(c.arrow.alpha, 0, "the off arrow keeps TomTom's Crazy Arrow muted")
-	equal(c.arrow.mouse, false, "the muted TomTom arrow cannot intercept clicks")
-	equal(shows, 0, "muting does not call ShowHideCrazyArrow to re-show TomTom's arrow")
+	equal(c.arrow.alpha, 0.7, "TomTom's arrow stays visible with our arrow off")
+	equal(c.arrow.mouse, true, "and takes the mouse as usual")
+	c.ns.PointGuideArrow({ { map = 1, x = 1, y = 1 } })
+	equal(c.arrow.alpha, 0.7, "new directions leave it visible")
 
-	-- The journey ending restores TomTom's arrow.
-	c.ns.ClearJourney()
-	equal(c.arrow.alpha, 0.7, "ending the journey with the arrow off restores TomTom's arrow")
-	equal(c.arrow.mouse, true, "restoring the arrow restores its input")
-
-	-- So does turning our arrow back on once it no longer guides.
-	tomtom:Way(1, 65, 52, "Back on")
-	c.driver.path.settle()
-	equal(c.arrow.alpha, 0, "a new journey mutes TomTom again with the arrow off")
 	c.ns.db.arrow = true
-	c.ns.PointGuideArrow(nil)
-	equal(c.arrow.alpha, 0.7, "turning the arrow back on restores TomTom when guidance is paused")
+	c.ns.PointGuideArrow({ { map = 1, x = 1, y = 1 } })
+	equal(c.arrow.alpha, 0, "turning our arrow on mutes TomTom's duplicate")
+	c.ns.db.arrow = false
+	c.ns.JourneyGuide.ArrowChanged()
+	c.ns.SyncTomTomArrow()
+	equal(c.arrow.alpha, 0.7, "turning it off again restores TomTom's arrow")
 	equal(c.arrow.mouse, true, "and its input")
 end
 

@@ -225,8 +225,8 @@ L["Show portals"] = "차원문 표시"
 L["Show routes on the world map"] = "세계 지도에 노선 표시"
 L["Show the compass"] = "나침반 표시"
 L["Show the flight to take"] = "탈 비행 경로 표시"
-L["Show the next direction and the game's navigation marker. When off, only the route on the map and minimap stays."] =
-	"다음 방향과 게임의 길 안내 표시를 보여줍니다. 끄면 지도와 미니맵의 경로만 남습니다."
+L["Show Shortest Path's arrow and the game's navigation marker. TomTom's arrow has its own settings."] =
+	"Shortest Path의 화살표와 게임의 길 안내 표시를 보여줍니다. TomTom 화살표는 자체 설정을 따릅니다." -- mt
 L["Show the time left under the compass"] = "나침반 아래에 남은 시간 표시"
 L["Show the way to your corpse"] = "시체까지 가는 길 표시"
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =
