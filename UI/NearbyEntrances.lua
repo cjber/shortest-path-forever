@@ -181,7 +181,7 @@ function Entrances.Navigate(place)
 	end
 	local started = ns.StartJourney(stop) == true
 	if started then
-		ns.NoticeQueuedDestination()
+		ns.PlayerPicked()
 	end
 	return started
 end

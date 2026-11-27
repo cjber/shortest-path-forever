@@ -76,7 +76,7 @@ ns.StartJourney = function(point)
 end
 
 local notices = 0
-ns.NoticeQueuedDestination = function()
+ns.PlayerPicked = function()
 	notices = notices + 1
 end
 

@@ -159,7 +159,7 @@ local function load()
 				stop = point,
 			}
 		end,
-		NoticeQueuedDestination = function()
+		PlayerPicked = function()
 			notices = notices + 1
 		end,
 		StartJourney = function(point)

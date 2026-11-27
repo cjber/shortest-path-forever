@@ -158,7 +158,6 @@ end
 ---@param point SPFPoint?
 ---@param reason? "arrived"|"cleared"|"skipped" -- why a nil point ended the journey
 function ns.JourneyChanged(point, reason)
-	ns.journeyArrived = reason == "arrived"
 	if ns.ProgressJourneyChanged then
 		ns.ProgressJourneyChanged(point, reason)
 	end
@@ -649,8 +648,6 @@ local function NavigateRoute(owner, stops, policy, markers, fade, tour)
 		and ns.HasJourney
 		and ns.HasJourney()
 		and not (ns.Corpse and ns.Corpse.Active())
-		-- A retarget keeps the old line until its search settles, which in combat is only after the fight.
-		and not InCombatLockdown()
 		and ns.ResubmitRoute
 		and ns.ResubmitRoute(route, points)
 	then
@@ -685,7 +682,7 @@ end
 function ns.PickInCombat(stop)
 	local accepted = NavigateRoute("Shortest Path Forever", { stop }, "normal", true, true)
 	if accepted then
-		ns.NoticeQueuedDestination()
+		ns.PlayerPicked()
 	end
 	return accepted
 end

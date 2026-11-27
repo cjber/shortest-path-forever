@@ -577,20 +577,16 @@ local function Travel(key, world, query, tier)
 	if #candidates < 2 or not (ns.EstimateIn and map and x and y) then
 		return Pick(key, candidates[1])
 	end
-	-- A destination chosen while the choice runs is the newer request: the choice then starts nothing. Arriving at the
-	-- old one is not a request.
-	local goal = ns.JourneyGoal()
-	if InCombatLockdown() then
-		-- The choice's searches wait for the fight to end.
-		ns.NoticeQueuedDestination()
-	end
+	-- The choice's searches wait for a fight to end. Whatever the player picks or clears meanwhile is the newer
+	-- request, and the choice then starts nothing.
+	ns.PlayerPicked()
+	local request = ns.PlayerRequests()
 	local stop
 	stop = Choose(candidates, map, x, y, function(place)
 		if stopTravel == stop then
 			stopTravel = nil
 		end
-		local current = ns.JourneyGoal()
-		if current == goal or ns.journeyArrived and not current then
+		if ns.PlayerRequests() == request then
 			Navigate(key, place)
 		end
 	end)

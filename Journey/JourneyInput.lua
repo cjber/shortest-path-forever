@@ -261,11 +261,32 @@ local function JourneysOff()
 	return true
 end
 
--- A destination picked mid-fight plots when the fight ends: say so, or the pick looks refused (#1413).
-function ns.NoticeQueuedDestination()
+-- The player's own picks, stops and clears, counted: a Nearby choice still running gives way to a later one. The
+-- addon's own changes of journey (an arrival, a quest handed in, a guide's next step) are not counted.
+local requests = 0
+
+---@return integer
+function ns.PlayerRequests()
+	return requests
+end
+
+function ns.PlayerRequest()
+	requests = requests + 1
+end
+
+-- A destination the player picked. One picked mid-fight plots when the fight ends: say so, or the pick looks refused
+-- (#1413).
+function ns.PlayerPicked()
+	ns.PlayerRequest()
 	if InCombatLockdown() and ns.db.journey then
 		ns.Notice(L["Destination queued until combat ends."])
 	end
+end
+
+-- The player's own clear. Menus and settings pass their own arguments to callbacks, so it takes none.
+function ns.PlayerClear()
+	ns.PlayerRequest()
+	ns.ClearJourney()
 end
 
 local function PlanQuest(questID, clickedMap, isWaypoint)
@@ -314,7 +335,7 @@ local function PlanQuest(questID, clickedMap, isWaypoint)
 	point.label, point.questID = location.label, questID
 	-- The goal's live objectives: the arrow and any pin read them from the client's quest log.
 	point.questIDs = { questID }
-	ns.NoticeQueuedDestination()
+	ns.PlayerPicked()
 	ns.StartJourney(point)
 	return true
 end
@@ -353,7 +374,7 @@ function ns.JourneyToMapPoint(uiMapID, x, y, label)
 		return false
 	end
 	point.label = label
-	ns.NoticeQueuedDestination()
+	ns.PlayerPicked()
 	ns.StartJourney(point)
 	return true
 end
@@ -610,7 +631,7 @@ local function OnMinimapClick(_, button)
 	end
 	local point = ns.MinimapPoint()
 	if point then
-		ns.NoticeQueuedDestination()
+		ns.PlayerPicked()
 		ns.StartJourney(point)
 	else
 		ns.Notice(L["no journey can be planned to that spot."])
@@ -637,7 +658,7 @@ function JourneyToPin(mapID, info, flight, x, y)
 		return false
 	end
 	point.label = info and info.name
-	ns.NoticeQueuedDestination()
+	ns.PlayerPicked()
 	ns.StartJourney(point)
 	return true
 end
@@ -837,7 +858,7 @@ ns.Init(function()
 	RememberFocused()
 	Binding("ShortestPathForeverTravelToPinButton", ns.JourneyToUserWaypoint)
 	Binding("ShortestPathForeverTravelToTrackedQuestButton", ns.JourneyToTrackedQuest)
-	Binding("ShortestPathForeverClearJourneyButton", ns.ClearJourney)
+	Binding("ShortestPathForeverClearJourneyButton", ns.PlayerClear)
 	-- Questie owns Shift-click on its icons. While Shift is the journey key, Alt-click over a Questie icon plans
 	-- there through our own event frame, and Alt-click anywhere else is left alone. When Alt is chosen, that one key
 	-- plans everywhere, Questie icons included, and Shift no longer plans a journey. TomTom's map overlay passes
@@ -871,7 +892,7 @@ ns.Init(function()
 			point.z = ns.SpawnHeight(point.map, point.x, point.y, QUESTIE_ICON_REACH)
 		end
 		if point and OnZone(ns.InstanceEntrance(point)) then
-			ns.NoticeQueuedDestination()
+			ns.PlayerPicked()
 			ns.StartJourney(point)
 		end
 	end)

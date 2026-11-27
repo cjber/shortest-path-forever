@@ -73,14 +73,20 @@ assert(latest.x > first.x and latest.y > first.y, "the latest click replaces the
 pump()
 assert(not ns.JourneyPlan() and actualPath.work.frames == 0, "the path pump sleeps during lockdown")
 assert(confirmations() == 2, "each pick mid-fight is confirmed on screen")
--- A guide moving its own objective is not a pick: it queues silently.
+-- A guide moving its own objective is not a pick: it queues silently, and leaves a Nearby choice still running.
+local requests = ns.PlayerRequests()
 ns.RetargetJourney({ map = latest.map, x = latest.x, y = latest.y, label = latest.label })
 assert(confirmations() == 2, "a retarget in combat says nothing")
+ns.ClearJourney()
+assert(ns.PlayerRequests() == requests, "the addon's own changes are not the player's requests")
+ns.PlayerClear()
+assert(ns.PlayerRequests() == requests + 1 and confirmations() == 2, "the player's clear counts, silently")
 -- A single Nearby place: the public calls refuse mid-fight, the player's pick is taken.
 local at = assert(ns.Locate(latest))
 local stop = { map = at.uiMap, x = at.x + 0.002, y = at.y, title = "Innkeeper", kind = "innkeeper" }
 assert(ShortestPathForever.API.Navigate("Some Guide", stop.map, stop.x, stop.y) == false, "refused to addons")
 assert(ns.PickInCombat(stop) == true, "the Nearby pick is accepted in combat")
+assert(ns.PlayerRequests() == requests + 2, "a pick counts")
 latest = assert(ns.JourneyGoal())
 assert(latest.label == "Innkeeper" and confirmations() == 3, "the Nearby pick is queued and confirmed")
 
@@ -109,6 +115,10 @@ pump()
 assert(ns.JourneyPlan(), "the pick is plotted before the fight")
 fireEvent("PLAYER_REGEN_DISABLED")
 combat = true
+local kept = ns.JourneyGoal()
+pick(0)
+mapTick()
+assert(ns.JourneyGoal() == kept and ns.JourneyPlan() and route.used > 0, "the same place picked again is left alone")
 pick(0.002)
 mapTick()
 assert(not ns.JourneyPlan(), "the replaced destination's plan is dropped")
@@ -116,6 +126,12 @@ assert(not (route:IsVisible() and route.used > 0), "and so is its line")
 combat = false
 fireEvent("PLAYER_REGEN_ENABLED")
 pump()
+local goal = ns.JourneyGoal()
+local replaced = assert(ns.JourneyPlan(), "the new destination is plotted after the fight")
+endpoint = replaced.legs[#replaced.legs].to
+mapTick()
+assert(endpoint.x == goal.x and endpoint.y == goal.y, "the new plan reaches the new destination")
+assert(route:IsVisible() and route.used > 0, "and its line is drawn")
 assert(#errors == 0, table.concat(errors, "\n"))
 print("combat_destination_spec: destination accepted, confirmed and plotted after combat")
 ]], "@combat_destination_spec"))()
