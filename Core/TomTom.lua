@@ -642,6 +642,11 @@ local function Follow(uid)
 	if ns.IsOwnTomTomWaypoint and ns.IsOwnTomTomWaypoint(uid) then
 		return
 	end
+	-- The bridge's waypoint is RestedXP's step, which Adventure Guide leads while it shows the guide itself.
+	if uid.source == "RXPGuides" and ns.RestedXPIntegrated and ns.RestedXPIntegrated() then
+		waiting = nil
+		return
+	end
 	if not live then
 		restored = uid
 		return

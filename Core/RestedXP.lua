@@ -115,6 +115,7 @@ local function Integrated()
 	local frontend = AdventureGuideForever and AdventureGuideForever.API
 	return frontend ~= nil and type(frontend.RestedXPIntegrated) == "function" and frontend.RestedXPIntegrated() == true
 end
+ns.RestedXPIntegrated = Integrated
 
 local function OwnsJourney()
 	return ns.JourneyOwner and ns.JourneyOwner() == OWNER

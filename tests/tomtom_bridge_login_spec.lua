@@ -422,6 +422,28 @@ for _, guideFirst in ipairs({ false, true }) do
 			assert(c.ns.JourneyGoal().hold == false, "there is no guide stop to keep")
 		end)
 	end
+
+	for _, path in ipairs({ "live", "after combat" }) do
+		check("a bridge step leaves Adventure Guide's journey alone " .. path .. order, function()
+			local c = guided(true)
+			c.env.AdventureGuideForever = {
+				API = {
+					RestedXPIntegrated = function()
+						return true
+					end,
+				},
+			}
+			assert(c.API.NavigateRoute("AdventureGuideForever", { { map = 1, x = 0.6, y = 0.4, title = "Guide" } }))
+			c.combat = path == "after combat"
+			publishStep(c)
+			settle(c)
+			if c.combat then
+				endCombat(c, guideFirst)
+			end
+			assert(c.ns.JourneyOwner() == "AdventureGuideForever", tostring(c.ns.JourneyOwner()))
+			assert(c.ns.JourneyGoal().label == "Guide", tostring(c.ns.JourneyGoal().label))
+		end)
+	end
 end
 
 assert(failures == 0, failures .. " TomTom bridge login scenarios failed")
