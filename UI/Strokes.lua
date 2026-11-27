@@ -222,8 +222,8 @@ local function Avoid(x, y, reach)
 	circleCount = circleCount + 3
 end
 
--- Whether a point is outside every mark's reach, widened by extra.
-local function ClearOfMarks(x, y, extra)
+-- A stop mark the dots leave a gap around: its radius plus what leaves STOP_GAP on screen past a dot's rim.
+local function EntranceClear(x, y, extra)
 	for i = 1, circleCount, 3 do
 		local dx, dy = x - circles[i], y - circles[i + 1]
 		if dx * dx + dy * dy < (circles[i + 2] + extra) ^ 2 then
@@ -233,7 +233,6 @@ local function ClearOfMarks(x, y, extra)
 	return true
 end
 
--- A stop mark the dots leave a gap around: its radius plus what leaves STOP_GAP on screen past a dot's rim.
 local function Circle(x, y, radius)
 	Avoid(x, y, radius + (STOP_GAP + dot / 2 + dotRim) / scale)
 end
@@ -323,7 +322,7 @@ local function Segment(x1, y1, x2, y2, low, high, color, dashed, a, b, entranceL
 					and entranceLow
 					and t >= entranceLow
 					and t <= entranceHigh
-					and ClearOfMarks(x1 + t * dx, y1 + t * dy, extra)
+					and EntranceClear(x1 + t * dx, y1 + t * dy, extra)
 				then
 					size, radius = dot * ENTRANCE_SCALE, half * ENTRANCE_SCALE
 				end
@@ -378,8 +377,8 @@ local function Line(x1, y1, x2, y2, color, dashed, a, b)
 	)
 end
 
--- Stops close together can leave a walk no breadcrumb outside the gaps at both ends. It then gets one at its middle,
--- which may give up STOP_GAP but never lies under a mark.
+-- A short walk between stops can have every spaced breadcrumb fall inside the gaps at its ends although there is room
+-- between them. It then gets one at its middle.
 ---@param view SPFMapView
 local function MiddleDot(view, path, points, color)
 	local left, px, py = walked / 2, nil, nil
@@ -400,7 +399,7 @@ local function MiddleDot(view, path, points, color)
 					and cx <= maxX * width - reach
 					and -cy >= minY * height + reach
 					and -cy <= maxY * height - reach
-					and ClearOfMarks(cx, cy, -STOP_GAP / scale)
+					and Clear(Near(px * width, -py * height, x * width, -y * height), cx, cy)
 				then
 					local hx, hy = dx * dot / 2 / length, dy * dot / 2 / length
 					local depth = not path.preview and DepthAt(previous, point, t) or nil

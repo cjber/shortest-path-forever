@@ -293,7 +293,7 @@ end
 Strokes.Map(strokes, { { mode = "walk", points = { point(0, 0.5), point(1, 0.5) } } }, mapView({ scale = 100 }))
 check(strokes.n == 4096, "bounded strokes: " .. strokes.n)
 
--- Stops too close for a breadcrumb outside both gaps still get one between them, clear of both marks (#1418).
+-- A walk whose spaced breadcrumbs all fall in the gaps at its ends gets one between them (#1418).
 do
 	local radius = 10
 	local function between(apart, points)
@@ -303,17 +303,17 @@ do
 		Strokes.Map(strokes, { { mode = "walk", points = walk } }, mapView({ marks = marks }))
 		return dots(strokes), a, b
 	end
-	local drawn, a, b = between(28)
+	local drawn, a, b = between(32)
 	check(#drawn == 1 and close(drawn[1][1], (a.x + b.x) / 2 * CANVAS), "one dot, midway")
 	check(close(drawn[1][2], -a.y * CANVAS), "on the walk")
-	check(drawn[1][1] - a.x * CANVAS >= radius + DOT / 2 + RIM, "clear of the first mark")
+	check(drawn[1][1] - a.x * CANVAS >= radius + 2 + DOT / 2 + RIM, "the usual gap")
 	-- Measured along the walk, whatever its segments.
-	drawn, a, b = between(28, function(from, to)
+	drawn, a, b = between(32, function(from, to)
 		return { from, point(from.x + 0.004, from.y), point(from.x + 0.02, from.y), to }
 	end)
 	check(#drawn == 1 and close(drawn[1][1], (a.x + b.x) / 2 * CANVAS), "midway over several segments")
-	check(#between(22) == 0, "no room without lying under a mark")
-	check(#between(60) > 1, "an open walk keeps its spacing")
+	check(#between(28) == 0, "no room between the gaps")
+	check(#between(80) > 1, "an open walk keeps its spacing")
 end
 
 -- The dots stop short of each stop's mark at any zoom (#51). Stop 3 goes back to stop 1's place: the route walks
