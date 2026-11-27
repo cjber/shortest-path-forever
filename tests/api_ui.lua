@@ -251,17 +251,36 @@ assert(plain.Icon.hidden and not plain.Texture.hidden and plain.Texture.texture 
 assert(plain.Button.hidden and plain.Disc.hidden and plain.Number.text == "")
 -- The stop is off the minimap here, so its mark waits on the rim as the goal pin: a ring would circle nothing.
 local miniRoute = ShortestPathForeverMinimapRoute
-assert(miniRoute.goalEdge and miniRoute.Goal.texture == ns.PIN_FILE and miniRoute.Goal.atlas == nil)
+assert(not miniRoute.goalRinged and miniRoute.Goal.texture == ns.PIN_FILE and miniRoute.Goal.atlas == nil)
 -- Standing beside it, the minimap rings the game's own icon there again.
 do
  local _, at = C_Map.GetWorldPosFromMapPos(1414, CreateVector2D(0.51, 0.5))
  posX, posY = at:GetXY()
  posX = posX - 20
  miniRoute.scripts.OnUpdate(miniRoute, 0.2)
- assert(not miniRoute.goalEdge and miniRoute.Goal.atlas == "adventureguide-ring")
+ assert(miniRoute.Goal.atlas == "adventureguide-ring")
  posX, posY = 0, 0
 end
 assert(api.Cancel("Test"))
+-- A tour of close stops rings each stop on the minimap, known mark or not, so what stands there shows.
+do
+ local _, at = C_Map.GetWorldPosFromMapPos(1414, CreateVector2D(0.51, 0.5))
+ posX, posY = at:GetXY()
+ posX = posX - 20
+ assert(api.NavigateRoute("Test", { stops[1], stops[2] }))
+ settle()
+ assert(miniRoute.Goal.texture == ns.PIN_FILE, "an ordinary stop wears our pin")
+ assert(api.NavigateRoute("Test", { stops[1], stops[2] }, { tourLine = true }))
+ settle()
+ assert(miniRoute.Goal.atlas == "adventureguide-ring", "the next tour stop is circled")
+ ns.RefreshJourneyPin()
+ assert(miniRoute.Goal.atlas == "adventureguide-ring", "and stays circled")
+ assert(api.NavigateRoute("Test", { stops[1], stops[2] }))
+ settle()
+ assert(miniRoute.Goal.texture == ns.PIN_FILE, "and wears the pin again without the option")
+ posX, posY = 0, 0
+ assert(api.Cancel("Test"))
+end
 assert(api.Navigate("Test", 1414, 0.51, 0.5, "Trainer", "trainer"))
 settle()
 -- The trainer's Class atlas fits the 22 by 22 look box at the stub atlas's 36 by 44 shape; a lone

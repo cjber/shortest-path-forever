@@ -167,6 +167,7 @@
 ---@field number? integer -- the stop's place in a multi-stop itinerary (API.lua)
 ---@field unmarked? boolean -- draws no stop pin on the world map: the route's stopMarkers option was false (API.lua)
 ---@field unfaded? boolean -- later legs draw at full strength: the route's fadeLaterLegs option was false (API.lua)
+---@field tourLine? boolean -- draws as a tour of many close stops: the route's tourLine option was true (API.lua)
 ---@field hold? boolean -- remain visible at the destination until the caller submits an updated route
 ---@field radius? number -- yards around a held stop where travel cues pause; finite and nonnegative
 ---@field shapes? SPFAreaShape[] -- objective areas the stop stands for, in world coordinates
