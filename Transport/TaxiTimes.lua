@@ -5,11 +5,11 @@ if ns.broken then
 	return
 end
 
--- What a flown taxi route really took, and how much of a flight leg is left. A ride is timed from the moment the
--- client takes control to the moment it gives control back, saved per directed flight path beside the other
--- observations, and preferred over the shipped estimate by the planner. In flight, the remaining time comes from
--- the player's progress along the drawn path, so it counts down on the path's own geometry rather than on the
--- estimate. Observation only: nothing here plans or draws.
+-- What a flown taxi route really took, and how much of a flight leg is left. A hop is timed only when it is flown
+-- from its first flight point, at take-off or on passing it, to its last: that time is saved per directed flight
+-- path beside the other observations and preferred over the shipped one by the planner. In flight, the remaining
+-- time comes from the player's progress along the drawn path, so it counts down on the path's own geometry rather
+-- than on the estimate. Observation only: nothing here plans or draws.
 
 ---@class SPFTaxiTimes
 local TaxiTimes = {}
@@ -41,12 +41,13 @@ end
 
 ---@class SPFTaxiFlight
 ---@field candidates SPFTaxiPath[]
----@field startedAt number seconds the ride began
----@field hopStart number seconds the hop being flown began
+---@field hopStart? number seconds the hop being flown left its flight point, nil when that was not seen
 ---@field path? SPFTaxiPath
 
 ---@type SPFTaxiFlight?
 local flight
+-- Whether the last sample was off a taxi, so the next ride's take-off is one seen.
+local grounded = false
 ---@type table<string, number>
 local snapshot = {}
 local version, snapshotVersion = 0, -1
@@ -93,13 +94,45 @@ local function Nearest(path, map, x, y)
 	return off
 end
 
--- The player stands this near the path's last point: the hop arrived at its flight point.
+-- Cumulative yards at each point of a hop's drawn path.
+local lengths = setmetatable({}, { __mode = "k" })
+---@param hop SPFTaxiPath
+---@return number[]
+local function Distances(hop)
+	local distances = lengths[hop]
+	if distances then
+		return distances
+	end
+	local points, length = hop.points, 0
+	distances = { 0 }
+	for point = 1, #points / 3 - 1 do
+		local dx = points[point * 3 + 2] - points[point * 3 - 1]
+		local dy = points[point * 3 + 3] - points[point * 3]
+		length = length + math.sqrt(dx * dx + dy * dy)
+		distances[point + 1] = length
+	end
+	lengths[hop] = distances
+	return distances
+end
+
+-- Yards travelled along one hop, from the nearest segment to the player.
+---@param hop SPFTaxiPath
+---@param map number
+---@param x number
+---@param y number
+---@return number? yards
+local function Along(hop, map, x, y)
+	local _, yards = Project(hop.points, map, x, y, Distances(hop))
+	return yards
+end
+
+-- The player stands this near the path's last point.
 ---@param path SPFTaxiPath
 ---@param map number
 ---@param x number
 ---@param y number
 ---@return boolean
-local function Arrived(path, map, x, y)
+local function AtEnd(path, map, x, y)
 	local points = path.points
 	local last = #points - 2
 	if points[last] ~= map then
@@ -107,6 +140,21 @@ local function Arrived(path, map, x, y)
 	end
 	local dx, dy = points[last + 1] - x, points[last + 2] - y
 	return dx * dx + dy * dy <= AT_NODE * AT_NODE
+end
+
+-- In the air, the hop is over at its end only with as little of the path left: some paths swing past their flight
+-- point well before they come down at it.
+---@param path SPFTaxiPath
+---@param map number
+---@param x number
+---@param y number
+---@return boolean
+local function Arrived(path, map, x, y)
+	if not AtEnd(path, map, x, y) then
+		return false
+	end
+	local distances, yards = Distances(path), Along(path, map, x, y)
+	return yards ~= nil and distances[#distances] - yards <= AT_NODE
 end
 
 ---@param map number
@@ -152,9 +200,9 @@ end
 ---@param map number
 ---@param x number
 ---@param y number
----@param now number
+---@param takeoff? number seconds the ride began, nil for one picked up in the air
 ---@return SPFTaxiFlight?
-local function Start(map, x, y, now)
+local function Start(map, x, y, takeoff)
 	local origin = NearestNode(map, x, y)
 	local candidates = origin and byFrom[origin] or nil
 	if not candidates or #candidates == 0 then
@@ -163,14 +211,14 @@ local function Start(map, x, y, now)
 	if #candidates == 0 then
 		return nil
 	end
-	return { candidates = candidates, startedAt = now, hopStart = now }
+	return { candidates = candidates, hopStart = takeoff }
 end
 
 local function Store()
-	local store = ns.db.taxiTimes
+	local store = ns.db.flownTimes
 	if not store then
 		store = {}
-		ns.db.taxiTimes = store
+		ns.db.flownTimes = store
 	end
 	return store
 end
@@ -188,39 +236,54 @@ local function Record(path, fromTime, toTime)
 	version = version + 1
 end
 
--- End the hop being flown at now, leaving the flight ready for whatever path follows.
+-- Leave the hop being flown, ready for whatever path follows it. Only a hop that arrived, with its start seen, is a
+-- reading: the seconds until a ride leaves the matched path, or comes down short of it, are far under the flight's.
 ---@param now number
-local function EndHop(now)
+---@param arrived boolean
+local function EndHop(now, arrived)
 	local current = flight
 	if not current or not current.path then
 		return
 	end
-	Record(current.path, current.hopStart, now)
-	current.path, current.hopStart, current.candidates = nil, now, nil
+	if arrived and current.hopStart then
+		Record(current.path, current.hopStart, now)
+	end
+	current.candidates = byFrom[current.path.to] or {}
+	current.path, current.hopStart = nil, arrived and now or nil
 end
 
----@param path SPFTaxiPath
+-- Time the hop that came down here. One that never parted from a longer path beside it is named by the landing.
 ---@param now number
-local function Commit(path, now)
+---@param map number
+---@param x number
+---@param y number
+local function Land(now, map, x, y)
 	local current = flight
 	if not current then
 		return
 	end
-	if current.path then
-		Record(current.path, current.hopStart, now)
+	local landed = {}
+	for _, path in ipairs(current.path and { current.path } or current.candidates or {}) do
+		if AtEnd(path, map, x, y) then
+			landed[#landed + 1] = path
+		end
 	end
-	current.path, current.candidates = path, nil
-	-- The first hop keeps the ride's start, so the shared opening is not lost to the delayed match.
-	current.hopStart = current.hopStart or now
+	if #landed == 1 then
+		current.path = landed[1]
+		EndHop(now, true)
+	end
 end
 
 local function TaxiSample()
 	local now = GetTime()
 	if not UnitOnTaxi("player") then
 		if flight then
-			EndHop(now)
-			flight = nil
+			local x, y, _, map = ns.JourneyPosition()
+			if x and y and map then
+				Land(now, map, x, y)
+			end
 		end
+		flight, grounded = nil, true
 		return
 	end
 	local x, y, _, map = ns.JourneyPosition()
@@ -228,7 +291,8 @@ local function TaxiSample()
 		return
 	end
 	if not flight then
-		flight = Start(map, x, y, now)
+		flight = Start(map, x, y, grounded and now or nil)
+		grounded = false
 		if not flight then
 			return
 		end
@@ -241,15 +305,13 @@ local function TaxiSample()
 	if path then
 		if Arrived(path, map, x, y) then
 			-- At a flight point: the hop is over, and whatever follows starts here.
-			EndHop(now)
-			current.candidates = byFrom[path.to] or {}
+			EndHop(now, true)
 			return
 		end
 		local distance = Nearest(path, map, x, y)
 		if not distance or distance > ON_PATH * ON_PATH then
-			-- Off the path: the map changed mid-crossing, or the reading drifted too far to attribute.
-			EndHop(now)
-			current.candidates = byFrom[path.to] or {}
+			-- Off the path: the map changed mid-crossing, or the ride is not the one matched.
+			EndHop(now, false)
 		end
 		return
 	end
@@ -265,8 +327,11 @@ local function TaxiSample()
 		end
 	end
 	current.candidates = keep
-	if #keep == 1 then
-		Commit(keep[1], now)
+	if #keep == 0 then
+		-- The ride is on none of them: whatever it matches next, it joined part of the way.
+		current.hopStart = nil
+	elseif #keep == 1 then
+		current.path, current.candidates = keep[1], nil
 	end
 end
 
@@ -275,7 +340,7 @@ end
 ---@param to number
 ---@return number?
 function TaxiTimes.Seconds(from, to)
-	local store = ns.db and ns.db.taxiTimes
+	local store = ns.db and ns.db.flownTimes
 	return store and store[Key(from, to)]
 end
 
@@ -322,7 +387,7 @@ end
 function TaxiTimes.Snapshot()
 	if snapshotVersion ~= version then
 		local copy = {}
-		for key, seconds in pairs(ns.db and ns.db.taxiTimes or {}) do
+		for key, seconds in pairs(ns.db and ns.db.flownTimes or {}) do
 			copy[key] = seconds
 		end
 		snapshot, snapshotVersion = copy, version
@@ -336,44 +401,25 @@ function TaxiTimes.CurrentPath()
 	return flight and flight.path or nil
 end
 
--- Cached per-hop geometry, keyed by the leg the planner returned.
+-- The yards before each hop of a leg and in all of it, keyed by the leg the planner returned.
 local geometry = setmetatable({}, { __mode = "k" })
 
 ---@param leg SPFLeg
----@return { before: number[], cumulative: number[][], total: number }
+---@return { before: number[], total: number }
 local function LegGeometry(leg)
 	local cached = geometry[leg]
 	if cached then
 		return cached
 	end
-	local before, cumulative, total = {}, {}, 0
+	local before, total = {}, 0
 	for index, hop in ipairs(leg.hops) do
 		before[index] = total
-		local points, distances, length = hop.points, { 0 }, 0
-		for point = 1, #points / 3 - 1 do
-			local dx = points[point * 3 + 2] - points[point * 3 - 1]
-			local dy = points[point * 3 + 3] - points[point * 3]
-			length = length + math.sqrt(dx * dx + dy * dy)
-			distances[point + 1] = length
-		end
-		cumulative[index] = distances
-		total = total + length
+		local distances = Distances(hop)
+		total = total + distances[#distances]
 	end
-	cached = { before = before, cumulative = cumulative, total = total }
+	cached = { before = before, total = total }
 	geometry[leg] = cached
 	return cached
-end
-
--- Yards travelled along one hop, from the nearest segment to the player.
----@param hop SPFTaxiPath
----@param distances number[]
----@param map number
----@param x number
----@param y number
----@return number? yards
-local function Along(hop, distances, map, x, y)
-	local _, yards = Project(hop.points, map, x, y, distances)
-	return yards
 end
 
 -- The milliseconds left of the flight leg being flown, read from where the player is on its drawn path, or nil
@@ -406,7 +452,7 @@ function TaxiTimes.Remaining(leg)
 	if span <= 0 or shape.total <= 0 then
 		return nil
 	end
-	local yards = Along(flight.path, shape.cumulative[index], map, x, y)
+	local yards = Along(flight.path, map, x, y)
 	if not yards then
 		return nil
 	end
@@ -415,7 +461,9 @@ function TaxiTimes.Remaining(leg)
 end
 
 ns.Init(function()
-	ns.db.taxiTimes = ns.db.taxiTimes or {}
+	-- The old key holds readings of unfinished hops, which cannot be told from whole ones.
+	ns.db.taxiTimes = nil
+	ns.db.flownTimes = ns.db.flownTimes or {}
 	if ns.TaxiPaths then
 		local valid = {}
 		for _, path in ipairs(ns.TaxiPaths) do
@@ -427,9 +475,9 @@ ns.Init(function()
 			end
 			list[#list + 1] = path
 		end
-		for key, seconds in pairs(ns.db.taxiTimes) do
+		for key, seconds in pairs(ns.db.flownTimes) do
 			if not valid[key] or type(seconds) ~= "number" or seconds < MIN_SECONDS or seconds > MAX_SECONDS then
-				ns.db.taxiTimes[key] = nil
+				ns.db.flownTimes[key] = nil
 			end
 		end
 	end
