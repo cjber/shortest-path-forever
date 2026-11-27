@@ -564,10 +564,11 @@ function ns.TomTomFollowsZygor(map, x, y)
 		and FromZygor(uid)
 end
 
--- Whether the followed waypoint is the RestedXP TomTom bridge's step. The bridge points TomTom's arrow at it, and our
+-- The followed waypoint, when it is the RestedXP TomTom bridge's step. The bridge points TomTom's arrow at it, and our
 -- own waypoint would replace it, which pauses the bridge.
-function ns.TomTomFollowsBridge()
-	return following ~= nil and following.source == "RXPGuides"
+---@return TomTomWaypoint?
+function ns.TomTomFollowedBridgeStep()
+	return following ~= nil and following.source == "RXPGuides" and following or nil
 end
 
 -- An empty arrow stays shown: TomTom's OnUpdate may still be advancing to the next waypoint, and hides it itself.
@@ -585,7 +586,7 @@ local function SyncArrow()
 	-- When Shortest Path drives TomTom's own arrow (tomtomArrow on, arrow on), keep TomTom's arrow visible.
 	local driveTomTom = ns.TomTomArrowActive and ns.TomTomArrowActive()
 	-- With Use TomTom's arrow on, the bridge pointing TomTom's arrow is the arrow the player chose.
-	local bridged = ns.db.tomtomArrow and ns.db.arrow ~= false and ns.TomTomFollowsBridge()
+	local bridged = ns.db.tomtomArrow and ns.db.arrow ~= false and ns.TomTomFollowedBridgeStep()
 	if
 		not driveTomTom
 		and not bridged
@@ -868,14 +869,10 @@ ns.Init(function()
 			HookQuestie()
 		elseif event == "PLAYER_REGEN_ENABLED" then
 			self:UnregisterEvent(event)
-			-- A frame later, after every guide has planned on this event, whatever order the client delivers it in:
-			-- the arrow's waypoint is followed after the guide's step, as it is outside combat.
-			C_Timer.After(0, function()
-				Follow(waiting)
-				if pickingUp then
-					PickUp()
-				end
-			end)
+			Follow(waiting)
+			if pickingUp then
+				PickUp()
+			end
 		elseif event == "PLAYER_ENTERING_WORLD" then
 			self:UnregisterEvent(event)
 			C_Timer.After(0, function()

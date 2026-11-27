@@ -314,7 +314,7 @@ do
 	equal(c.ns.HasJourney(), false, "nothing is planned in combat")
 	c.combat = false
 	c.watcher:OnEvent("PLAYER_REGEN_ENABLED")
-	c.frame()
+	c.driver.path.settle()
 	equal(c.title(), "Journey to After the fight", "the waiting waypoint is followed after combat")
 	c.ns.ClearJourney()
 	c.combat = true
@@ -322,7 +322,6 @@ do
 	tomtom:RemoveAll()
 	c.combat = false
 	c.watcher:OnEvent("PLAYER_REGEN_ENABLED")
-	c.frame()
 	equal(c.ns.HasJourney(), false, "a waypoint removed during combat is not followed after it")
 	equal(tomtom:IsValidWaypoint(gone), false, "and TomTom no longer has it")
 
@@ -495,7 +494,7 @@ do
 	equal(c.ns.HasJourney(), false, "nothing is planned in combat")
 	c.combat = false
 	c.watcher:OnEvent("PLAYER_REGEN_ENABLED")
-	c.frame()
+	c.driver.path.settle()
 	equal(c.title(), "Journey to In combat", "the selected waypoint is followed after combat")
 	turnOff()
 	c.combat = true
@@ -503,7 +502,7 @@ do
 	c.ns.PickInCombat({ map = 1, x = 0.6, y = 0.55, title = "Picked" })
 	c.combat = false
 	c.watcher:OnEvent("PLAYER_REGEN_ENABLED")
-	c.frame()
+	c.driver.path.settle()
 	equal(c.title(), "Journey to Picked", "a journey picked in combat is kept")
 end
 

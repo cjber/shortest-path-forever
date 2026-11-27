@@ -45,9 +45,9 @@ local function visible(c)
 	assert(owner == "RestedXP" or (owner == "TomTom" and c.ns.db.tomtomFollow), "the journey must be the guide's step")
 end
 
-local function publishStep(c)
+local function publishStep(c, x)
 	local rxp = c.env.RXP
-	local element = { zone = 1, x = 60, y = 50, title = "RXP Step 1", arrow = true, step = { active = true } }
+	local element = { zone = 1, x = x or 60, y = 50, title = "RXP Step 1", arrow = true, step = { active = true } }
 	rxp.arrowFrame.element, rxp.activeWaypoints = element, { element }
 	rxp.UpdateGotoSteps()
 	rxp.DrawArrow()
@@ -165,9 +165,14 @@ check("turning Follow TomTom's arrow off and on again follows the bridge's step 
 	visible(c)
 end)
 
-for _, follow in ipairs({ false, true }) do
-	local suffix = follow and " with tomtomFollow on" or " with tomtomFollow off"
-	check("a step that first arrives in combat shows its route after it" .. suffix, function()
+-- The client may deliver the end of combat to RestedXP's integration or to the TomTom follower first.
+for _, case in ipairs({
+	{ name = "with tomtomFollow off", follow = false },
+	{ name = "with tomtomFollow on", follow = true },
+	{ name = "with tomtomFollow on, the guide planning first", follow = true, guideFirst = true },
+}) do
+	local follow = case.follow
+	check("a step that first arrives in combat shows its route after it " .. case.name, function()
 		local c = Boot({ tomtomArrow = true, tomtomFollow = follow, restedXPBridge = true, deferLogin = true }, false)
 		c.ns.db.guideStops = true
 		bend(c)
@@ -178,14 +183,28 @@ for _, follow in ipairs({ false, true }) do
 		c.env.InCombatLockdown = function()
 			return combat
 		end
-		publishStep(c)
+		-- A position on a rounding edge: TomTom's 0-1 point read back as a percentage rounds the other way.
+		publishStep(c, 60.05)
 		settle(c)
 		assert(not c.ns.HasJourney(), "nothing is planned in combat")
 		combat = false
+		if case.guideFirst then
+			c.env.RXP.UpdateMap()
+		end
 		c.driver.fire("PLAYER_REGEN_ENABLED")
 		settle(c)
 		visible(c)
 		assert(c.API.CurrentStop(follow and "TomTom" or "RestedXP") == 1, "combat must not change who owns the step")
+		assert(c.ns.ResumeRestedXP() and c.API.CurrentStop("RestedXP") == 1, "Resume guide takes the step back")
+
+		-- A new step is the guide's to plan, before the bridge has moved TomTom's arrow to it.
+		if follow then
+			c.tomtom:SetCrazyArrow(c.bridge.Waypoint())
+			assert(c.API.CurrentStop("TomTom") == 1, "the arrow is followed to the step again")
+			c.env.RXP.arrowFrame.element.x = 80
+			c.env.RXP.UpdateMap()
+			assert(c.API.CurrentStop("RestedXP") == 1, "a step elsewhere is planned by the guide")
+		end
 	end)
 end
 
