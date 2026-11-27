@@ -1,11 +1,13 @@
 -- Run from the repository root: luajit tests/taxitimes_spec.lua
 -- The learned flight times through their own interface: the saved file pruned to the shipped paths and a sane
--- range, a shared opening matched to the path actually flown, each hop timed and saved, and the remaining time of
--- a leg read from where the player is on its drawn path.
+-- range, a shared opening matched to the path actually flown, each hop flown from end to end timed and saved, and
+-- the remaining time of a leg read from where the player is on its drawn path.
 local ns
 ns = {
 	db = {
-		taxiTimes = {
+		-- Readings saved before a hop had to be flown to its end: some are far under the flight's time.
+		taxiTimes = { ["1:3"] = 13 },
+		flownTimes = {
 			["1:2"] = 40,
 			["9:9"] = 12,
 			["1:3"] = 99999,
@@ -82,10 +84,11 @@ load("Journey/JourneySteps.lua")
 local TaxiTimes = ns.TaxiTimes
 
 -- The file at login: a reading for a path the data still has stays, everything else goes.
-equal(ns.db.taxiTimes["1:2"], 40, "a measured path in the shipped data stays")
-assert(ns.db.taxiTimes["9:9"] == nil, "a path the data no longer has is dropped")
-assert(ns.db.taxiTimes["1:3"] == nil, "an implausible reading is dropped")
-assert(ns.db.taxiTimes["2:1"] == nil, "a non-number is dropped")
+equal(ns.db.flownTimes["1:2"], 40, "a measured path in the shipped data stays")
+assert(ns.db.flownTimes["9:9"] == nil, "a path the data no longer has is dropped")
+assert(ns.db.flownTimes["1:3"] == nil, "an implausible reading is dropped")
+assert(ns.db.flownTimes["2:1"] == nil, "a non-number is dropped")
+assert(ns.db.taxiTimes == nil, "readings of unfinished hops are not carried over")
 
 local first = TaxiTimes.Snapshot()
 assert(TaxiTimes.Snapshot() == first, "the snapshot is reused until a ride adds one")
@@ -99,6 +102,7 @@ local function step(at, px, py)
 end
 
 -- A ride from A to B with a second path sharing the opening.
+step(-1, 0, 0)
 onTaxi = true
 step(0, 0, 0)
 assert(not TaxiTimes.CurrentPath(), "a shared opening does not commit a hop")
@@ -113,12 +117,12 @@ local other = { mode = "flight", hops = { ns.TaxiPaths[2] }, depart = 0, arrive 
 assert(TaxiTimes.Remaining(other) == nil, "another flight leg is not the one being flown")
 
 step(9, 1000, 0)
-equal(ns.db.taxiTimes["1:2"], 9, "the landed hop's own seconds are saved")
+equal(ns.db.flownTimes["1:2"], 9, "the landed hop's own seconds are saved")
 assert(TaxiTimes.CurrentPath() == nil, "the hop ended at its flight point")
 step(12, 1500, 0)
 assert(TaxiTimes.CurrentPath() == ns.TaxiPaths[3], "the connecting hop begins where the last one landed")
 step(15, 2000, 0)
-equal(ns.db.taxiTimes["2:3"], 6, "the connecting hop is timed too")
+equal(ns.db.flownTimes["2:3"], 6, "the connecting hop is timed too")
 onTaxi = false
 step(18, 2000, 0)
 assert(TaxiTimes.CurrentPath() == nil, "landing clears the ride")
@@ -135,6 +139,46 @@ step(23, 0, 4000)
 assert(TaxiTimes.CurrentPath() == ns.TaxiPaths[4], "the ride leaves from the master this character may use")
 onTaxi = false
 step(26, 0, 4000)
+assert(TaxiTimes.Seconds(4, 1) == nil, "a ride that comes down short of the end times nothing")
+
+-- A ride that leaves the path it matched, then lands at that path's end: neither that hop nor one picked up part of
+-- the way through has a seen start, so neither is a reading.
+ns.db.flownTimes = {}
+step(30, 0, 0)
+onTaxi = true
+step(31, 0, 0)
+step(33, 300, 0)
+assert(TaxiTimes.CurrentPath() == ns.TaxiPaths[1], "the ride matches the first path")
+step(37, 600, 900)
+assert(TaxiTimes.CurrentPath() == nil, "the ride left it")
+assert(next(ns.db.flownTimes) == nil, "the seconds flown before leaving a path are not its time")
+step(40, 1200, 0)
+assert(TaxiTimes.CurrentPath() == ns.TaxiPaths[3], "a later hop is matched")
+step(43, 2000, 0)
+assert(next(ns.db.flownTimes) == nil, "a hop joined part of the way is not timed")
+onTaxi = false
+step(46, 2000, 0)
+
+-- A reload in the air: the ride's take-off was not seen.
+setfenv(assert(loadfile("Transport/TaxiTimes.lua")), env)("ShortestPathForever", ns)
+TaxiTimes = ns.TaxiTimes
+ns.start()
+onTaxi = true
+step(50, 0, 0)
+step(53, 300, 0)
+step(59, 1000, 0)
+assert(next(ns.db.flownTimes) == nil, "a ride picked up after a reload is not timed from the reload")
+onTaxi = false
+step(62, 1000, 0)
+
+-- The last stretch is flown between two samples: the landing itself ends the hop.
+onTaxi = true
+step(70, 1000, 0)
+step(73, 1500, 0)
+onTaxi = false
+step(76, 2000, 0)
+equal(ns.db.flownTimes["2:3"], 6, "a landing at the end times the hop")
+ns.db.flownTimes = { ["1:2"] = 9 }
 
 -- A flight point's direct flights for its tooltip: your own timings first, then the shipped, quickest first, only
 -- to the points the caller allows.
@@ -170,7 +214,7 @@ assert(#flights == 1 and flights[1].to == 3, "only the points allowed")
 assert(#TaxiTimes.FlightsFrom(3, function()
 	return true
 end) == 0, "no flights from a dead end")
-ns.db.taxiTimes["1:3"] = 5
+ns.db.flownTimes["1:3"] = 5
 flights = TaxiTimes.FlightsFrom(1, function()
 	return true
 end)

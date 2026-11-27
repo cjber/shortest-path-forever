@@ -445,7 +445,8 @@
 ---@field debug? boolean
 ---@field anchors table<number, SPFAnchor> -- the newest sighting of each route, kept across sessions and characters
 ---@field nearbyRead? SPFNearbyQuestieRead the last QuestieDB read the Nearby list kept (UI/NearbyQuestie.lua)
----@field taxiTimes? table<string, number> -- measured seconds per directed flight path, "from:to"
+---@field flownTimes? table<string, number> -- measured seconds per directed flight path, "from:to"
+---@field taxiTimes? nil -- an older reading store, cleared at login
 ---@field trace? (number|string)[][]
 ---@field taxiLog? table<string, {seen: number, showsNodes: boolean, nodes: string[]}>
 ---@alias SPFMapReportKind "road"|"wall"

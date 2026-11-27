@@ -5,11 +5,11 @@ if ns.broken then
 	return
 end
 
--- What a flown taxi route really took, and how much of a flight leg is left. A ride is timed from the moment the
--- client takes control to the moment it gives control back, saved per directed flight path beside the other
--- observations, and preferred over the shipped estimate by the planner. In flight, the remaining time comes from
--- the player's progress along the drawn path, so it counts down on the path's own geometry rather than on the
--- estimate. Observation only: nothing here plans or draws.
+-- What a flown taxi route really took, and how much of a flight leg is left. A hop is timed only when it is flown
+-- from its first flight point, at take-off or on passing it, to its last: that time is saved per directed flight
+-- path beside the other observations and preferred over the shipped one by the planner. In flight, the remaining
+-- time comes from the player's progress along the drawn path, so it counts down on the path's own geometry rather
+-- than on the estimate. Observation only: nothing here plans or draws.
 
 ---@class SPFTaxiTimes
 local TaxiTimes = {}
@@ -41,12 +41,13 @@ end
 
 ---@class SPFTaxiFlight
 ---@field candidates SPFTaxiPath[]
----@field startedAt number seconds the ride began
----@field hopStart number seconds the hop being flown began
+---@field hopStart? number seconds the hop being flown left its flight point, nil when that was not seen
 ---@field path? SPFTaxiPath
 
 ---@type SPFTaxiFlight?
 local flight
+-- Whether the last sample was off a taxi, so the next ride's take-off is one seen.
+local grounded = false
 ---@type table<string, number>
 local snapshot = {}
 local version, snapshotVersion = 0, -1
@@ -152,9 +153,9 @@ end
 ---@param map number
 ---@param x number
 ---@param y number
----@param now number
+---@param takeoff? number seconds the ride began, nil for one picked up in the air
 ---@return SPFTaxiFlight?
-local function Start(map, x, y, now)
+local function Start(map, x, y, takeoff)
 	local origin = NearestNode(map, x, y)
 	local candidates = origin and byFrom[origin] or nil
 	if not candidates or #candidates == 0 then
@@ -163,14 +164,14 @@ local function Start(map, x, y, now)
 	if #candidates == 0 then
 		return nil
 	end
-	return { candidates = candidates, startedAt = now, hopStart = now }
+	return { candidates = candidates, hopStart = takeoff }
 end
 
 local function Store()
-	local store = ns.db.taxiTimes
+	local store = ns.db.flownTimes
 	if not store then
 		store = {}
-		ns.db.taxiTimes = store
+		ns.db.flownTimes = store
 	end
 	return store
 end
@@ -188,39 +189,31 @@ local function Record(path, fromTime, toTime)
 	version = version + 1
 end
 
--- End the hop being flown at now, leaving the flight ready for whatever path follows.
+-- Leave the hop being flown, ready for whatever path follows it. Only a hop that arrived, with its start seen, is a
+-- reading: the seconds until a ride leaves the matched path, or comes down short of it, are far under the flight's.
 ---@param now number
-local function EndHop(now)
+---@param arrived boolean
+local function EndHop(now, arrived)
 	local current = flight
 	if not current or not current.path then
 		return
 	end
-	Record(current.path, current.hopStart, now)
-	current.path, current.hopStart, current.candidates = nil, now, nil
-end
-
----@param path SPFTaxiPath
----@param now number
-local function Commit(path, now)
-	local current = flight
-	if not current then
-		return
-	end
-	if current.path then
+	if arrived and current.hopStart then
 		Record(current.path, current.hopStart, now)
 	end
-	current.path, current.candidates = path, nil
-	-- The first hop keeps the ride's start, so the shared opening is not lost to the delayed match.
-	current.hopStart = current.hopStart or now
+	current.candidates = byFrom[current.path.to] or {}
+	current.path, current.hopStart = nil, arrived and now or nil
 end
 
 local function TaxiSample()
 	local now = GetTime()
 	if not UnitOnTaxi("player") then
-		if flight then
-			EndHop(now)
-			flight = nil
+		local path = flight and flight.path
+		if path then
+			local x, y, _, map = ns.JourneyPosition()
+			EndHop(now, x ~= nil and y ~= nil and map ~= nil and Arrived(path, map, x, y))
 		end
+		flight, grounded = nil, true
 		return
 	end
 	local x, y, _, map = ns.JourneyPosition()
@@ -228,7 +221,8 @@ local function TaxiSample()
 		return
 	end
 	if not flight then
-		flight = Start(map, x, y, now)
+		flight = Start(map, x, y, grounded and now or nil)
+		grounded = false
 		if not flight then
 			return
 		end
@@ -241,15 +235,13 @@ local function TaxiSample()
 	if path then
 		if Arrived(path, map, x, y) then
 			-- At a flight point: the hop is over, and whatever follows starts here.
-			EndHop(now)
-			current.candidates = byFrom[path.to] or {}
+			EndHop(now, true)
 			return
 		end
 		local distance = Nearest(path, map, x, y)
 		if not distance or distance > ON_PATH * ON_PATH then
-			-- Off the path: the map changed mid-crossing, or the reading drifted too far to attribute.
-			EndHop(now)
-			current.candidates = byFrom[path.to] or {}
+			-- Off the path: the map changed mid-crossing, or the ride is not the one matched.
+			EndHop(now, false)
 		end
 		return
 	end
@@ -266,7 +258,7 @@ local function TaxiSample()
 	end
 	current.candidates = keep
 	if #keep == 1 then
-		Commit(keep[1], now)
+		current.path, current.candidates = keep[1], nil
 	end
 end
 
@@ -275,7 +267,7 @@ end
 ---@param to number
 ---@return number?
 function TaxiTimes.Seconds(from, to)
-	local store = ns.db and ns.db.taxiTimes
+	local store = ns.db and ns.db.flownTimes
 	return store and store[Key(from, to)]
 end
 
@@ -322,7 +314,7 @@ end
 function TaxiTimes.Snapshot()
 	if snapshotVersion ~= version then
 		local copy = {}
-		for key, seconds in pairs(ns.db and ns.db.taxiTimes or {}) do
+		for key, seconds in pairs(ns.db and ns.db.flownTimes or {}) do
 			copy[key] = seconds
 		end
 		snapshot, snapshotVersion = copy, version
@@ -415,7 +407,9 @@ function TaxiTimes.Remaining(leg)
 end
 
 ns.Init(function()
-	ns.db.taxiTimes = ns.db.taxiTimes or {}
+	-- The old key holds readings of unfinished hops, which cannot be told from whole ones.
+	ns.db.taxiTimes = nil
+	ns.db.flownTimes = ns.db.flownTimes or {}
 	if ns.TaxiPaths then
 		local valid = {}
 		for _, path in ipairs(ns.TaxiPaths) do
@@ -427,9 +421,9 @@ ns.Init(function()
 			end
 			list[#list + 1] = path
 		end
-		for key, seconds in pairs(ns.db.taxiTimes) do
+		for key, seconds in pairs(ns.db.flownTimes) do
 			if not valid[key] or type(seconds) ~= "number" or seconds < MIN_SECONDS or seconds > MAX_SECONDS then
-				ns.db.taxiTimes[key] = nil
+				ns.db.flownTimes[key] = nil
 			end
 		end
 	end
