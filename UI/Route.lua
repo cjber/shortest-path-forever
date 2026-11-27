@@ -103,7 +103,7 @@ local NO_PATHS = {}
 ---@field Goal Texture
 ---@field strokeLayer SPFStrokeLayer
 ---@field elapsed number
----@field goalEdge? boolean the goal's mark waits on the rim, off the minimap
+---@field goalRinged? boolean the goal's mark is drawn as a ring; nil until it is drawn
 ---@field idle number seconds the minimap has drawn nothing new
 ---@field ticker? FunctionContainer the slow poll while the every-frame update rests
 ---@field lastX? number
@@ -721,9 +721,9 @@ local function DrawMinimap(self)
 		-- Off the minimap it only shows the way, a little faded, as the game's own tracked pin is at the minimap's
 		-- edge, and always as the goal pin: a ring would circle nothing there.
 		self.Goal:SetAlpha(edge and EDGE_ALPHA or 1)
-		if (edge or false) ~= (self.goalEdge or false) then
-			self.goalEdge = edge
-			local ringed = not edge and Ringed()
+		local ringed = not edge and Ringed()
+		if ringed ~= self.goalRinged then
+			self.goalRinged = ringed
 			local size = ringed and MINIMAP_RING or MINIMAP_GOAL
 			SetGoalArt(self.Goal, ringed, size, ns.GoalPinActive())
 		end
@@ -902,10 +902,7 @@ function ns.SetJourneyRoute(destination, route)
 		provider:RefreshAllData()
 	end
 	if minimap then
-		local ringed = Ringed()
-		local size = ringed and MINIMAP_RING or MINIMAP_GOAL
-		SetGoalArt(minimap.Goal, ringed, size, ns.GoalPinActive())
-		minimap.goalEdge = nil
+		minimap.goalRinged = nil
 		if destination then
 			minimap:Show()
 			DrawMinimap(minimap)
@@ -931,7 +928,7 @@ function ns.RefreshJourneyPin()
 	end
 	journeyPinActive = active
 	if minimap then
-		local ringed = not minimap.goalEdge and Ringed()
+		local ringed = minimap.goalRinged == true
 		local size = ringed and MINIMAP_RING or MINIMAP_GOAL
 		SetGoalArt(minimap.Goal, ringed, size, active)
 	end

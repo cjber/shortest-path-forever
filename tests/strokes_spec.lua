@@ -200,8 +200,36 @@ do
 	apart[2].jump = true
 	Strokes.Map(strokes, { { mode = "walk", points = apart } }, mapView({ tour = true }))
 	check(strokes.n == 6, "a break in the walk is not rounded across: " .. strokes.n)
-	Strokes.Minimap(strokes, { bend }, minimapView(point(0.2, 0.5), { tour = true }))
+	-- A fall straight down lands on the map point it left from.
+	local fall = { point(0.1, 0.5), point(0.2, 0.5), point(0.2, 0.5), point(0.2, 0.6) }
+	fall[2].jump = true
+	Strokes.Map(strokes, { { mode = "walk", points = fall } }, mapView({ tour = true }))
+	check(strokes.n == 6, "nor across a fall in place: " .. strokes.n)
+	Strokes.Minimap(strokes, { bend }, minimapView(point(0.2, 0.7), { tour = true }))
 	check(strokes.n == 2 and not strokes.dot[1], "a tour's minimap walk is solid")
+	-- It stops short of the player's arrow and of the next stop's ring, so both show.
+	local player = point(0.1, 0.5)
+	local goal = point(0.1 + 0.25, 0.5)
+	local past = { mode = "walk", points = { player, point(0.1 + 0.4, 0.5) } }
+	local view = minimapView(player, { tour = true, goal = goal })
+	local gx, gy = Strokes.Minimap(strokes, { past }, view)
+	local cx, cy = (gx + 1) * MINIMAP / 2, (gy - 1) * MINIMAP / 2
+	check(strokes.n == 2, "the line breaks round the ring: " .. strokes.n)
+	-- The line runs straight up from the player, so each end's distance to a mark on it is enough.
+	for i = 1, strokes.n do
+		for _, y in ipairs({ strokes.y1[i], strokes.y2[i] }) do
+			check(math.abs(y + MINIMAP / 2) >= ARROW - 1e-9, "the tour line under the arrow")
+			check(math.abs(y - cy) >= view.goalRadius, "the tour line under the ring")
+		end
+		check((strokes.y1[i] - cy) * (strokes.y2[i] - cy) > 0, "the tour line across the ring")
+		check(close(strokes.x1[i], cx), "straight up")
+	end
+	-- Beside a held stop, a tour's ring is the mark: no line is drawn back through it.
+	local beside = point(0.1 + 0.05, 0.5)
+	beside.hold = true
+	local approach = { mode = "walk", points = { player, beside } }
+	Strokes.Minimap(strokes, { approach }, minimapView(player, { tour = true, goal = beside }))
+	check(strokes.n == 0, "nothing runs through a held stop's ring: " .. strokes.n)
 end
 
 -- Every other mode is a solid line in its colour, inside a darker outline two pixels wider.

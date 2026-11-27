@@ -108,6 +108,8 @@ local entranceDistance
 -- Stop marks as x, y and reach, flat; near holds those the segment in hand passes.
 ---@type number[], number, number[]
 local circles, circleCount, near = {}, 0, {}
+-- Whether solid lines stop short of the marks too, as a tour's do on the minimap.
+local gapped = false
 
 -- Walking geometry defaults to breadcrumbs. Solid mode, the player's choice or a tour's, keeps the same route, but
 -- emits continuous segments for both the world map and the minimap.
@@ -146,7 +148,7 @@ local function Begin(buffer, viewScale, small, stitched)
 	minX, maxX = wide and -math.huge or 0, wide and math.huge or 1
 	minY, maxY = minX, maxX
 	dot, dotRim, spacing = small and SMALL_DOT or DOT, RIM, small and SMALL_SPACING or SPACING
-	walked, fade, later, route, circleCount = 0, 1, 1, nil, 0
+	walked, fade, later, route, circleCount, gapped = 0, 1, 1, nil, 0, false
 end
 
 local function Stroke(x1, y1, x2, y2, color, isDot, dotSize)
@@ -231,6 +233,26 @@ local function Circle(x, y, radius)
 	Avoid(x, y, radius + (STOP_GAP + dot / 2 + dotRim) / scale)
 end
 
+-- A solid stretch, from low to high of a segment, left open inside the avoided marks from the one at `mark` on.
+local function Open(x1, y1, dx, dy, low, high, color, mark)
+	if low >= high then
+		return
+	end
+	if mark > circleCount then
+		Stroke(x1 + low * dx, y1 + low * dy, x1 + high * dx, y1 + high * dy, color)
+		return
+	end
+	local fx, fy, reach = x1 - circles[mark], y1 - circles[mark + 1], circles[mark + 2]
+	local a, b = dx * dx + dy * dy, fx * dx + fy * dy
+	local discriminant = b * b - a * (fx * fx + fy * fy - reach * reach)
+	if discriminant <= 0 then
+		return Open(x1, y1, dx, dy, low, high, color, mark + 3)
+	end
+	local root = math.sqrt(discriminant)
+	Open(x1, y1, dx, dy, low, math.min(high, (-b - root) / a), color, mark + 3)
+	Open(x1, y1, dx, dy, math.max(low, (-b + root) / a), high, color, mark + 3)
+end
+
 -- Clip before subdividing: even continent-sized walks need only the visible breadcrumbs. Dots sit at every SPACING
 -- along the whole walk, walked carrying the distance across segment joins so bends never bunch them.
 local function Segment(x1, y1, x2, y2, low, high, color, dashed, a, b, entranceLow, entranceHigh)
@@ -242,7 +264,7 @@ local function Segment(x1, y1, x2, y2, low, high, color, dashed, a, b, entranceL
 	if not dashed then
 		walked, entranceDistance = 0, nil
 		if low then
-			Stroke(x1 + low * dx, y1 + low * dy, x1 + high * dx, y1 + high * dy, color)
+			Open(x1, y1, dx, dy, low, high, color, gapped and 1 or circleCount + 1)
 		end
 		return
 	end
@@ -551,6 +573,7 @@ function Strokes.Map(buffer, paths, view)
 					if path.preview then
 						-- A hop still planning has no geometry to draw; a straight line would cross the sea.
 						if previous.map ~= point.map then
+							Flush(color)
 							Mark(px, py, color)
 							Mark(x, y, color)
 						elseif px and x then
@@ -561,6 +584,7 @@ function Strokes.Map(buffer, paths, view)
 							end
 						end
 					elseif previous.jump or previous.map ~= point.map then
+						Flush(color)
 						entranceDistance = nil
 						if path.mode == "boat" or path.mode == "zeppelin" then
 							Bridge(view, path.points, index, px, py, x, y, color)
@@ -637,6 +661,7 @@ function Strokes.Minimap(buffer, paths, view)
 		return nil
 	end
 	local cosine, sine = math.cos(facing), math.sin(facing)
+	gapped = view.tour == true
 	-- The player's arrow sits at the centre of the minimap: no breadcrumb is centred under it, so the route never
 	-- hides which way the player faces. Only the arrow's own radius, not a stop's full gap, so a ten-yard approach
 	-- still has room for dots (#74).
@@ -699,7 +724,7 @@ function Strokes.Minimap(buffer, paths, view)
 		end
 	end
 	-- Keep the final few yards visible when the goal ring covers every breadcrumb.
-	if goal and goal.hold and goal.map == map and out.n == 0 then
+	if goal and goal.hold and not gapped and goal.map == map and out.n == 0 then
 		local gx, gy = Project(goal, x, y, radius, cosine, sine)
 		local distance = gx * gx + gy * gy
 		if distance > 0 and distance < 0.25 then

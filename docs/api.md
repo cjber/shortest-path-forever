@@ -88,7 +88,8 @@ the addon can use it once it shows the requested map.
   `{ tourLine = true }` draws a tour of many close stops so the way ahead stays readable: walks are solid lines,
   whatever the player's line style, in their route colour, with slightly rounded corners on the world map, which
   shows the leg under way and the next four, the later ones faded less than usual (`fadeLaterLegs = false` still draws
-  them at full strength). The minimap circles the next stop instead of covering it, so what stands there shows. The
+  them at full strength). The minimap circles the next stop instead of covering it, and its line stops short of that
+  circle and of your arrow, so what stands there shows. The
   default is `false`, and it too belongs to that journey.
   Any other options table, key, policy or non-boolean switch answers
   `nil, "invalid"` and changes nothing. A route keeps its policy until the
