@@ -255,7 +255,8 @@ local ns = {
 	RefreshTomTom = function()
 		tomtomRefreshed = tomtomRefreshed + 1
 	end,
-	RefreshTomTomFollow = function()
+	RefreshTomTomFollow = function(toggled)
+		assert(toggled == true, "the checkbox says the player changed the setting")
 		tomtomFollowRefreshed = tomtomFollowRefreshed + 1
 	end,
 	Way = function(message)

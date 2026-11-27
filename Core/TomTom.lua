@@ -668,6 +668,30 @@ local function Unfollow(uid)
 	end
 end
 
+-- Follows a waypoint set earlier. A journey already planned (a guide's, or the player's own) is not replaced by it.
+---@param uid TomTomWaypoint?
+local function FollowEarlier(uid)
+	local tomtom = hooked
+	if uid and tomtom and not ns.HasJourney() then
+		local valid = tomtom.IsValidWaypoint
+		if type(valid) ~= "function" or valid(tomtom, uid) then
+			Follow(uid)
+		end
+	end
+end
+
+-- The setting was turned on in combat, so the arrow's waypoint is picked up when combat ends.
+local pickingUp = false
+
+local function PickUp()
+	pickingUp = InCombatLockdown()
+	if pickingUp then
+		watcher:RegisterEvent("PLAYER_REGEN_ENABLED")
+	else
+		FollowEarlier(ns.TomTomArrowWaypoint())
+	end
+end
+
 -- The waypoint a TomTom table holds at a map and point, after AddWaypoint has stored it. Real TomTom's GetKeyArgs
 -- gives the key; a stand-in without it is matched on the same map, point and title it stores.
 ---@param tomtom table
@@ -702,8 +726,9 @@ local function ArrowSelectionChanged()
 	SyncArrow()
 end
 
--- The settings checkbox, TomTom loading and the addon's own load all call this.
-function ns.RefreshTomTomFollow()
+-- The settings checkboxes, TomTom loading and the addon's own load all call this.
+---@param toggled? boolean the player just changed "Follow TomTom's arrow"
+function ns.RefreshTomTomFollow(toggled)
 	local tomtom = TomTom
 	if
 		not hooked
@@ -776,6 +801,8 @@ function ns.RefreshTomTomFollow()
 	if not (ns.db and ns.db.tomtomFollow) then
 		Unfollow(following)
 		waiting = nil
+	elseif toggled then
+		PickUp()
 	end
 	SyncArrow()
 end
@@ -841,21 +868,21 @@ ns.Init(function()
 			HookQuestie()
 		elseif event == "PLAYER_REGEN_ENABLED" then
 			self:UnregisterEvent(event)
-			Follow(waiting)
+			-- A frame later, after every guide has planned on this event, whatever order the client delivers it in:
+			-- the arrow's waypoint is followed after the guide's step, as it is outside combat.
+			C_Timer.After(0, function()
+				Follow(waiting)
+				if pickingUp then
+					PickUp()
+				end
+			end)
 		elseif event == "PLAYER_ENTERING_WORLD" then
 			self:UnregisterEvent(event)
 			C_Timer.After(0, function()
 				live = true
 				local uid = restored
 				restored = nil
-				-- A journey already planned (a guide's, or the player's own) is not replaced by an old waypoint.
-				local tomtom = hooked
-				if uid and tomtom and not ns.HasJourney() then
-					local valid = tomtom.IsValidWaypoint
-					if type(valid) ~= "function" or valid(tomtom, uid) then
-						Follow(uid)
-					end
-				end
+				FollowEarlier(uid)
 			end)
 		elseif name == "Questie" then
 			HookQuestie()

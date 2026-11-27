@@ -145,5 +145,49 @@ check("Follow TomTom's arrow still points TomTom's arrow along the route to a ma
 	visible(c)
 end)
 
+check("turning Follow TomTom's arrow off and on again follows the bridge's step again", function()
+	local c = Boot({ tomtomArrow = true, tomtomFollow = true, restedXPBridge = true, deferLogin = true }, false)
+	bend(c)
+	c.login()
+	c.world()
+	c.runTimers()
+	publishStep(c)
+	settle(c)
+	visible(c)
+
+	c.ns.db.tomtomFollow = false
+	c.ns.RefreshTomTomFollow(true)
+	assert(not c.ns.HasJourney(), "turning the setting off ends the followed journey")
+	c.ns.db.tomtomFollow = true
+	c.ns.RefreshTomTomFollow(true)
+	settle(c)
+	assert(c.API.CurrentStop("TomTom") == 1, "the journey must follow the selected waypoint again")
+	visible(c)
+end)
+
+for _, follow in ipairs({ false, true }) do
+	local suffix = follow and " with tomtomFollow on" or " with tomtomFollow off"
+	check("a step that first arrives in combat shows its route after it" .. suffix, function()
+		local c = Boot({ tomtomArrow = true, tomtomFollow = follow, restedXPBridge = true, deferLogin = true }, false)
+		c.ns.db.guideStops = true
+		bend(c)
+		c.login()
+		c.world()
+		c.runTimers()
+		local combat = true
+		c.env.InCombatLockdown = function()
+			return combat
+		end
+		publishStep(c)
+		settle(c)
+		assert(not c.ns.HasJourney(), "nothing is planned in combat")
+		combat = false
+		c.driver.fire("PLAYER_REGEN_ENABLED")
+		settle(c)
+		visible(c)
+		assert(c.API.CurrentStop(follow and "TomTom" or "RestedXP") == 1, "combat must not change who owns the step")
+	end)
+end
+
 assert(failures == 0, failures .. " TomTom bridge login scenarios failed")
 print("tomtom RestedXP bridge login: ok")

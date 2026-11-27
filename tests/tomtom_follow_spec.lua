@@ -314,7 +314,7 @@ do
 	equal(c.ns.HasJourney(), false, "nothing is planned in combat")
 	c.combat = false
 	c.watcher:OnEvent("PLAYER_REGEN_ENABLED")
-	c.driver.path.settle()
+	c.frame()
 	equal(c.title(), "Journey to After the fight", "the waiting waypoint is followed after combat")
 	c.ns.ClearJourney()
 	c.combat = true
@@ -322,6 +322,7 @@ do
 	tomtom:RemoveAll()
 	c.combat = false
 	c.watcher:OnEvent("PLAYER_REGEN_ENABLED")
+	c.frame()
 	equal(c.ns.HasJourney(), false, "a waypoint removed during combat is not followed after it")
 	equal(tomtom:IsValidWaypoint(gone), false, "and TomTom no longer has it")
 
@@ -437,6 +438,73 @@ do
 	c.world()
 	c.frame()
 	equal(c.ns.HasJourney(), false, "a waypoint removed during login plans nothing")
+end
+
+-- Turning the setting on follows the waypoint the arrow already points to, never over a journey under way.
+do
+	local c = Boot(false)
+	local tomtom = c.login()
+	c.world()
+	c.frame()
+	local function turnOn()
+		c.ns.db.tomtomFollow = true
+		c.ns.RefreshTomTomFollow(true)
+		c.driver.path.settle()
+	end
+	local function turnOff()
+		c.ns.db.tomtomFollow = false
+		c.ns.RefreshTomTomFollow(true)
+	end
+	tomtom:Way(1, 60, 50, "Standing")
+	turnOn()
+	equal(c.title(), "Journey to Standing", "the selected waypoint is followed")
+	turnOff()
+	turnOn()
+	equal(c.title(), "Journey to Standing", "and followed again after off and on")
+
+	-- Other callers (TomTom loading, "Use TomTom's arrow") restart no journey the player ended.
+	c.ns.ClearJourney()
+	c.ns.RefreshTomTomFollow()
+	equal(c.ns.HasJourney(), false, "only turning the setting on picks the arrow's waypoint up")
+
+	turnOff()
+	c.API.Navigate("Guide", 1, 0.6, 0.55, "Guide stop")
+	turnOn()
+	equal(c.title(), "Journey to Guide stop", "a journey under way is kept")
+	c.ns.ClearJourney()
+
+	for _, mark in ipairs({ { corpse = true }, { from = "Polestar" } }) do
+		turnOff()
+		mark.title = "Not ours to follow"
+		tomtom:AddWaypoint(1, 0.3, mark.corpse and 0.3 or 0.31, mark)
+		turnOn()
+		equal(c.ns.HasJourney(), false, "corpse and Polestar waypoints are never picked up")
+	end
+
+	turnOff()
+	local gone = tomtom:Way(1, 61, 50, "Gone")
+	tomtom:RemoveWaypoint(gone)
+	turnOn()
+	equal(c.ns.HasJourney(), false, "a removed waypoint still on the arrow is not picked up")
+
+	-- In combat the pick-up waits, and a journey planned meanwhile is kept.
+	turnOff()
+	tomtom:Way(1, 62, 50, "In combat")
+	c.combat = true
+	turnOn()
+	equal(c.ns.HasJourney(), false, "nothing is planned in combat")
+	c.combat = false
+	c.watcher:OnEvent("PLAYER_REGEN_ENABLED")
+	c.frame()
+	equal(c.title(), "Journey to In combat", "the selected waypoint is followed after combat")
+	turnOff()
+	c.combat = true
+	turnOn()
+	c.ns.PickInCombat({ map = 1, x = 0.6, y = 0.55, title = "Picked" })
+	c.combat = false
+	c.watcher:OnEvent("PLAYER_REGEN_ENABLED")
+	c.frame()
+	equal(c.title(), "Journey to Picked", "a journey picked in combat is kept")
 end
 
 -- With the setting off, TomTom's own waypoints plan nothing, at login or after it.
