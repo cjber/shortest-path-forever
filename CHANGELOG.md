@@ -10,6 +10,12 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.49.4] - 2026-11-27
+
+### Fixed
+
+- **Turning off Show direction arrow leaves TomTom's arrow alone.** It hides Shortest Path's arrow and the game's marker only. *Follow TomTom's arrow* keeps TomTom's arrow on screen, and *Use TomTom's arrow* keeps pointing it at each step. Thanks to forleong for the report. (#1390)
+
 ## [1.49.3] - 2026-11-27
 
 ### Fixed
