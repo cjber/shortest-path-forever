@@ -65,6 +65,8 @@ Credit for the reports and requests behind the addon.
 
 | Who | What | Notes |
 |---|---|---|
+| GamingExports | Destinations picked in combat are queued and their line shows | CurseForge comment 100017277, #1413 |
+| fredranger | Flight times only count flights flown from end to end | Discord, #1421 |
 | static2290 | Start Journey stops while following a map pin | Discord, #1410 |
 | static2290 | Add Journey stops directly from the map | Discord, #1411 |
 | static2290 | Remember Journey stops and resume the remaining route | Discord, #1412 |

@@ -643,7 +643,7 @@ L["Right-click to choose map services."] = "右键点击选择地图服务。" -
 L["Use TomTom's arrow"] = "使用 TomTom 的箭头" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"安装 TomTom 时，用 TomTom 的箭头指向每一步，替代本插件箭头和游戏标记。" -- mt
-L["Journey stops remembers your list."] = "旅程停靠点现在会记住你的列表。" -- mt
+L["Flight times no longer shrink after some rides."] = "部分飞行后，飞行时间不再变短。" -- mt
 L["Mailbox"] = "邮箱" -- mt
 L["Skip this stop"] = "跳过此采集点" -- mt
 L["Destination queued until combat ends."] = "目的地已排队，战斗结束后规划。" -- mt
