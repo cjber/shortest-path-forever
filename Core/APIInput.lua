@@ -178,6 +178,29 @@ function Input.PlayerStart(heightOnly)
 	return nil, "unavailable"
 end
 
+-- Where an estimate starts, and its part of the cache key. "player", with no fractions, is the live origin, which may
+-- be temporarily unavailable; a fixed origin only needs to project to a world point.
+---@param map any
+---@param x any
+---@param y any
+---@return SPFPoint? from, string? key, ("loading"|"combat"|"unavailable")? refusal
+function Input.Origin(map, x, y)
+	if not (canaccessvalue(map) and map == "player") then
+		local from = Input.Point(map, x, y)
+		return from, from and string.format("%d:%.4f:%.4f", map, x, y)
+	end
+	if not (canaccessvalue(x) and canaccessvalue(y)) or x ~= nil or y ~= nil then
+		return nil
+	end
+	local from, refusal = Input.PlayerStart(true)
+	if not from then
+		return nil, nil, refusal
+	end
+	-- Player floors can change without a change in XY. The fixed-point cache still rounds its map fractions.
+	local z = from.z and string.format("%.17g", from.z) or ""
+	return from, string.format("player:%d:%.17g:%.17g:%s", from.map, from.x, from.y, z)
+end
+
 ---@return nil, "loading"
 function Input.Loading()
 	local _, answer = APIKit.NotReady("loading")

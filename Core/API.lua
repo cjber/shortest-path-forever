@@ -390,7 +390,6 @@ local function Answer(from, to, key, job, walk, bound, place, ceiling)
 	return nil, "unreachable"
 end
 
--- A live origin may be temporarily unavailable. A fixed origin only needs to project to a world point.
 ---@return { at: number, seconds: number|false, legs?: SPFLeg[] }?, SPFAPINoRoute?
 local function Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound, place, ceiling)
 	if not Ready() then
@@ -403,32 +402,13 @@ local function Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound, 
 	if not to then
 		return APIKit.Invalid()
 	end
-	local player = canaccessvalue(fromMap) and fromMap == "player"
-	local from, refusal
-	if player then
-		if not (canaccessvalue(fromX) and canaccessvalue(fromY)) or fromX ~= nil or fromY ~= nil then
-			return APIKit.Invalid()
-		end
-		from, refusal = Input.PlayerStart(true)
-	else
-		from = Point(fromMap, fromX, fromY)
-	end
+	local from, origin, refusal = Input.Origin(fromMap, fromX, fromY)
 	if refusal then
 		return nil, refusal
 	end
 	if not from then
 		return APIKit.Invalid()
 	end
-	-- Player floors can change without a change in XY. The fixed-point cache still rounds its map fractions.
-	local origin = player
-			and string.format(
-				"player:%d:%.17g:%.17g:%s",
-				from.map,
-				from.x,
-				from.y,
-				from.z and string.format("%.17g", from.z) or ""
-			)
-		or string.format("%d:%.4f:%.4f", fromMap, fromX, fromY)
 	local key = string.format(
 		"%s:%d:%.17g:%.17g:%s:%s:%s",
 		origin,
