@@ -614,6 +614,18 @@ function ns.TomTomArrowWaypoint()
 	return arrowWaypoint
 end
 
+-- The place of the guide's own stop, when the guide holds the journey and the waypoint is its bridge's: the waypoint
+-- stands for that stop, wherever the bridge last left it.
+---@param uid TomTomWaypoint
+---@return {map: number, x: number, y: number}?
+local function GuideStop(uid)
+	if uid.source ~= "RXPGuides" or ns.JourneyOwner() ~= "RestedXP" then
+		return nil
+	end
+	local goal = ns.JourneyGoal()
+	return goal and (goal.stop or goal).submitted
+end
+
 ---@param uid any
 local function Follow(uid)
 	-- TomTom's corpse arrow is left to the corpse run (Journey/Corpse.lua), which keeps the journey you were on.
@@ -652,15 +664,20 @@ local function Follow(uid)
 	end
 	waiting = nil
 	-- A guide plans its step first, with its quests and held until the guide moves on; following the bridge's waypoint
-	-- then takes that stop over, as the same place. The end of combat reaches the guide and us in either order. With no
-	-- journey to disturb, the guide plans its step even if it planned it before.
+	-- then takes that stop over, by asking for its place. The end of combat reaches the guide and us in either order.
+	-- With no journey to disturb, the guide plans its step even if it planned it before.
 	if uid.source == "RXPGuides" and ns.RefreshRestedXP then
 		local plan = ns.HasJourney() and ns.RefreshRestedXP or ns.ReplanRestedXP
 		plan()
 	end
+	local map, x, y = uid[1], uid[2], uid[3]
+	local guide = GuideStop(uid)
+	if guide then
+		map, x, y = guide.map, guide.x, guide.y
+	end
 	-- API.NavigateRoute checks the map and point; TomTom's waypoint is a uiMapID and a 0-1 point, as the shim's is.
 	-- Questie's and Zygor's quests, recorded when the waypoint was set, go with it.
-	if RouteToWaypoint(uid, uid[1], uid[2], uid[3], Text(uid.title) and uid.title or nil) then
+	if RouteToWaypoint(uid, map, x, y, Text(uid.title) and uid.title or nil) then
 		following = uid
 	end
 	SyncArrow()
@@ -683,24 +700,13 @@ local function Unfollow(uid)
 	end
 end
 
--- Whether the journey is the RestedXP guide's stop at the very place of its bridge's waypoint, so that following the
--- waypoint hands that stop over rather than replacing it.
----@param uid TomTomWaypoint
----@return boolean
-local function GuideStopAt(uid)
-	if uid.source ~= "RXPGuides" or ns.JourneyOwner() ~= "RestedXP" or (ns.Corpse and ns.Corpse.Active()) then
-		return false
-	end
-	local goal = ns.JourneyGoal()
-	local at = goal and (goal.stop or goal).submitted
-	return at ~= nil and at.map == uid[1] and at.x == uid[2] and at.y == uid[3]
-end
-
--- Follows a waypoint set earlier. A journey already planned (a guide's, or the player's own) is not replaced by it.
+-- Follows a waypoint set earlier. A journey already planned (a guide's, or the player's own) is not replaced by it;
+-- a guide's bridge waypoint takes the guide's stop over, except while a corpse run has it waiting.
 ---@param uid TomTomWaypoint?
 local function FollowEarlier(uid)
 	local tomtom = hooked
-	if uid and tomtom and (not ns.HasJourney() or GuideStopAt(uid)) then
+	local handover = uid and GuideStop(uid) and not (ns.Corpse and ns.Corpse.Active())
+	if uid and tomtom and (not ns.HasJourney() or handover) then
 		local valid = tomtom.IsValidWaypoint
 		if type(valid) ~= "function" or valid(tomtom, uid) then
 			Follow(uid)

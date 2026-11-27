@@ -69,6 +69,12 @@ local function setFollow(c, on)
 	settle(c)
 end
 
+-- The journey goes to the place the guide's element names now, wherever the bridge's waypoint was left.
+local function atElement(c, when)
+	local at, element = c.ns.JourneyGoal().submitted, c.env.RXP.arrowFrame.element
+	assert(at.x == element.x / 100 and at.y == element.y / 100, when .. ": the stop must be the guide's own")
+end
+
 local function arrive(c)
 	local goal = c.ns.JourneyGoal()
 	c.driver.move({ map = goal.map, x = goal.x, y = goal.y })
@@ -225,14 +231,62 @@ check("a step the bridge sets before the world is up keeps the guide's stop", fu
 	held(c, "TomTom", "login")
 end)
 
-check("turning Follow on leaves a guide that has moved past TomTom's waypoint", function()
+check("turning Follow on takes the guide's stop where TomTom's waypoint lags behind", function()
 	local c = guided(false)
 	publishStep(c)
 	settle(c)
 	c.env.RXP.arrowFrame.element.x = 80
 	c.env.RXP.UpdateMap()
 	setFollow(c, true)
-	held(c, "RestedXP", "moved on")
+	held(c, "TomTom", "moved on")
+	atElement(c, "moved on")
+end)
+
+check("a stale bridge waypoint selected again follows the guide's stop, as does its replacement", function()
+	local c = guided(true)
+	publishStep(c)
+	settle(c)
+	local stale = c.bridge.Waypoint()
+	c.env.RXP.arrowFrame.element.x = 80
+	c.env.RXP.UpdateMap()
+	c.env.RXPTOMTOM_SetCurrentWaypoint()
+	settle(c)
+	assert(c.bridge.Waypoint() == stale, "the bridge still holds its old waypoint")
+	held(c, "TomTom", "stale")
+	atElement(c, "stale")
+	publishStep(c, 70)
+	settle(c)
+	assert(c.bridge.Waypoint() ~= stale, "the bridge replaced its waypoint")
+	held(c, "TomTom", "next tick")
+	atElement(c, "next tick")
+	visible(c)
+	arrive(c)
+end)
+
+check("a step renamed while TomTom holds it takes the new name and quest in place", function()
+	local c = guided(true)
+	publishStep(c)
+	settle(c)
+	held(c, "TomTom", "followed")
+	local goal, element = c.ns.JourneyGoal(), c.env.RXP.arrowFrame.element
+	element.title, element.questId, element.tag = "Turn it in", 33, "turnin"
+	c.env.RXP.UpdateMap()
+	settle(c)
+	assert(c.ns.JourneyOwner() == "TomTom" and c.ns.JourneyGoal() == goal, "the stop must not be planned again")
+	assert(goal.label == "Turn it in", "the stop must take the new name, not " .. tostring(goal.label))
+	assert(goal.questIDs[1] == 33 and #goal.questIDs == 1, "the stop must take the new quest")
+	assert(goal.hold == true, "the stop stays the guide's")
+end)
+
+check("a guide step's new name leaves the player's own journey alone", function()
+	local c = guided(true)
+	publishStep(c)
+	settle(c)
+	assert(c.ns.JourneyToMapPoint(1, 0.1, 0.2, "Mine"))
+	c.env.RXP.arrowFrame.element.title = "Renamed"
+	c.env.RXP.UpdateMap()
+	settle(c)
+	assert(c.ns.JourneyOwner() == nil and c.ns.JourneyGoal().label == "Mine", "the player's journey is kept")
 end)
 
 check("turning Follow on leaves the player's own journey to the step's place", function()
@@ -300,6 +354,20 @@ for _, guideFirst in ipairs({ false, true }) do
 			arrive(c)
 		end)
 	end
+
+	check("a step that moves a little during combat is the guide's stop after it" .. order, function()
+		local c = guided(true)
+		c.combat = true
+		publishStep(c)
+		settle(c)
+		-- Too small a move for the guide to name a new target, and the bridge keeps the waypoint it set.
+		c.env.RXP.arrowFrame.element.x = 60.02
+		endCombat(c, guideFirst)
+		held(c, "TomTom", "after combat")
+		atElement(c, "after combat")
+		visible(c)
+		arrive(c)
+	end)
 
 	check("a step that arrives in combat with Follow off is the guide's" .. order, function()
 		local c = guided(false)

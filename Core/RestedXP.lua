@@ -86,13 +86,13 @@ end
 
 -- The current stop's label, renamed without replanning: a guide relabels its step as quests complete at one spot.
 -- RestedXP splits a step into several stops at one place; they share the step's name.
-local function Rename(title, map, x, y)
-	local stop = API.CurrentStop(OWNER)
+local function Rename(owner, title, map, x, y)
+	local stop = API.CurrentStop(owner)
 	if not stop or title == targetTitle or not API.RenameStop then
 		return
 	end
 	targetTitle = title
-	API.RenameStop(OWNER, stop, title, function(point)
+	API.RenameStop(owner, stop, title, function(point)
 		return point.map == map and point.x == x and point.y == y
 	end)
 end
@@ -260,13 +260,15 @@ local function Sync()
 		end
 		target, targetTitle, targetQuests = key, title, questKey
 	end
-	if API.CurrentStop(OWNER) then
-		Rename(title, map, x / 100, y / 100)
+	-- The step's stop is ours, or TomTom's once its follower has taken the bridge's step over.
+	local holder = API.CurrentStop(OWNER) and OWNER or ns.TomTomFollowsBridge and ns.TomTomFollowsBridge() and "TomTom"
+	if holder then
+		Rename(holder, title, map, x / 100, y / 100)
 		if questKey ~= targetQuests then
 			targetQuests = questKey
-			local index = API.CurrentStop(OWNER)
+			local index = API.CurrentStop(holder)
 			if index then
-				ns.SetStopQuests(OWNER, index, quests, actions)
+				ns.SetStopQuests(holder, index, quests, actions)
 			end
 		end
 	end
