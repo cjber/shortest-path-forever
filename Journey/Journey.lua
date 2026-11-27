@@ -308,7 +308,7 @@ local function UpdateProgress()
 		return
 	end
 	if inside then
-		Guide.Pause()
+		Guide.Pause(goal)
 		return
 	end
 	-- A dungeon's door is reached by going in (EnteredInstance), never by standing beside it: the stop it stands for
@@ -667,7 +667,7 @@ local function Update(self, elapsed)
 				ns.AdvanceGuide()
 			end
 			if goal and not replacingGoal and ns.StopInside(goal) then
-				Guide.Pause()
+				Guide.Pause(goal)
 			end
 		end
 		return

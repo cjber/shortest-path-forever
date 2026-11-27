@@ -212,6 +212,7 @@ Credit for the reports and requests behind the addon.
 | nimri82 | The public guidance point for RestedXP-Navigator | CurseForge; #777 |
 | [cmartin303](https://github.com/cmartin303) | Short walks through Ironforge keep nearby doorways | GitHub; #910 |
 | [lukehmu](https://github.com/lukehmu) | Journey clicks in the corners of a square minimap | GitHub; #1152 |
+| [bhuddleston42](https://github.com/bhuddleston42) | Held guide stops keep their arrival pin when starting inside the area | GitHub pull request |
 
 ## Inspired by
 

@@ -743,22 +743,25 @@ end
 
 -- Keep the owner's stop while it waits for quest progress, without directions to a place already reached. The arrow
 -- becomes the arrival pin over the stop's own area (#627), and leaves it to the guide when the stop changes.
-function Guide.Pause()
+---@param goal SPFPoint?
+function Guide.Pause(goal)
 	if not guide then
 		return
 	end
+	-- The route can pause before To() has populated the display target.
+	goal = goal or guide.goal or guide.pausedGoal
 	if guide.paused then
+		guide.pausedGoal = goal
 		-- The driver asks every tick while the player stands in the area: only the arrival pin may need putting back,
 		-- for a setting turned on again, and a waypoint combat kept until it ended still has to go.
 		if not InCombatLockdown() and guide.waypoint and OwnsWaypoint() then
 			ClearGuideWaypoint()
 		end
 		if ns.PointArrivalPin then
-			ns.PointArrivalPin(guide.pausedGoal)
+			ns.PointArrivalPin(goal)
 		end
 		return
 	end
-	local goal = guide.goal
 	local changed = true
 	guide.paused = true
 	guide.pausedGoal = goal
