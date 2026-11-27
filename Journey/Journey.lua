@@ -928,7 +928,7 @@ local function TrackingChanged(event)
 	-- Capture our own write while Guide's synchronous guards are live. RestedXP records its pin after the event.
 	local owned = Guide.OwnsReported(event)
 	local changed = ns.FocusedWaypointChanged and ns.FocusedWaypointChanged()
-	local captureStop = changed and ns.JourneyStopsEditor and ns.JourneyStopsEditor.WaypointReceiver(owned)
+	local captureStop = changed and ns.JourneyStopsEditor and ns.JourneyStopsEditor.WaypointReceiver(owned) or nil
 	if not owned and C_Map.HasUserWaypoint() and ns.RestedXPHasActiveSteps and ns.RestedXPHasActiveSteps() then
 		if not pendingTracking then
 			local pending = {}
