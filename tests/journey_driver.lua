@@ -30,6 +30,9 @@ local function frame()
 	function f:Hide()
 		self.hidden = true
 	end
+	function f:IsShown()
+		return not self.hidden
+	end
 	function f:SetAlpha(value)
 		self.alpha = value
 	end
@@ -55,7 +58,8 @@ local function frame()
 end
 local function fire(event, ...)
 	for _, f in ipairs(frames) do
-		if rawget(f, "OnEvent") then
+		-- A frame that registers its events in OnShow has none while it has never been shown, or once hidden.
+		if rawget(f, "OnEvent") and not (rawget(f, "OnShow") and f.hidden) then
 			f:OnEvent(event, ...)
 		end
 	end

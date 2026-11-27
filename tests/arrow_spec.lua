@@ -551,6 +551,8 @@ assert(#markerPlaces >= 1, "the first update places the native marker")
 local markerTicker = assert(tickers[#tickers], "a marker-only ticker runs while our frame is hidden")
 assert(not markerTicker.cancelled, "and is still running")
 local placedOnce = #markerPlaces
+-- A guide that restates its step's quests reads the lines again; the hidden frame has no update loop of its own.
+ns.RefreshArrowLines()
 driver.move({ map = 1, x = 80, y = 0, z = 0 })
 markerTicker.callback()
 assert(#markerPlaces > placedOnce, "a later poll tick places the marker again as the walk reaches the next bend")

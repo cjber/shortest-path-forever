@@ -11,11 +11,35 @@ local function check(name, run)
 	end
 end
 
+-- Every route bends, so Shortest Path always has a bearing an arrow could draw.
+local function bend(c)
+	c.driver.path.draw = function(from, to)
+		return { from, { map = from.map, x = 800, y = -900 }, to }
+	end
+end
+
+-- The harness records a frame's Show and Hide in its hidden field.
+local function ourArrowShown(c)
+	local frame = c.arrowFrame()
+	return frame ~= nil and frame.hidden == false
+end
+
+local function settle(c)
+	c.driver.update(0)
+	c.runTimers()
+	c.driver.path.settle()
+	c.driver.update(1)
+	c.runTimers()
+end
+
 local function visible(c)
 	assert(c.tomtom.Arrow() and c.tomtom.Arrow() == c.bridge.Waypoint(), "TomTom must select the bridge's waypoint")
 	assert(not c.crazy.hidden and c.crazy.alpha > 0, "TomTom's arrow must be visible")
 	assert(not c.bridge.paused, "the bridge must stay unpaused")
 	assert(c.env.RXPG_ARROW.alpha == 0 and not c.env.RXPG_ARROW.hidden, "the bridge owns RestedXP's native arrow")
+	-- RestedXP's journey keeps our arrow down by default; one that follows TomTom's arrow shows the route beside it.
+	assert(ourArrowShown(c) == c.ns.db.tomtomFollow, "our arrow must show the route only while following TomTom's")
+	assert(c.env.C_Map.GetUserWaypoint() ~= nil, "the game's marker must show the route")
 	-- With Follow TomTom's arrow on, the journey may follow the bridge's waypoint instead of the guide's own element.
 	local owner = c.ns.JourneyOwner()
 	assert(owner == "RestedXP" or (owner == "TomTom" and c.ns.db.tomtomFollow), "the journey must be the guide's step")
@@ -36,20 +60,17 @@ for _, follow in ipairs({ false, true }) do
 		opts.tomtomArrow, opts.tomtomFollow, opts.restedXPBridge, opts.deferLogin = true, follow, true, true
 		local c = Boot(opts, restored)
 		c.ns.db.guideStops = true
+		bend(c)
 		return c
 	end
 
 	check("bridge selects after Shortest Path's login callbacks" .. suffix, function()
 		local c = boot(false)
-		c.driver.path.draw = function(from, to)
-			return { from, { map = from.map, x = 800, y = -900 }, to }
-		end
 		c.login()
 		c.world()
 		c.runTimers()
 		publishStep(c)
-		c.driver.update(0)
-		c.runTimers()
+		settle(c)
 		visible(c)
 	end)
 
@@ -68,7 +89,7 @@ for _, follow in ipairs({ false, true }) do
 			"the bridge deliberately yields to the saved foreign point"
 		)
 		c.env.RXPTOMTOM_SetCurrentWaypoint()
-		c.driver.update(0)
+		settle(c)
 		visible(c)
 	end)
 end
@@ -103,6 +124,7 @@ end)
 check("Follow TomTom's arrow still points TomTom's arrow along the route to a manual waypoint", function()
 	local c = Boot({ tomtomArrow = true, tomtomFollow = true, restedXPBridge = true, deferLogin = true }, false)
 	c.ns.db.restedxp = false
+	bend(c)
 	c.login()
 	c.world()
 	c.runTimers()
@@ -111,7 +133,7 @@ check("Follow TomTom's arrow still points TomTom's arrow along the route to a ma
 	c.driver.update(0)
 	c.runTimers()
 	assert(c.API.CurrentStop("TomTom") == 1, "the journey must follow the manual waypoint")
-	assert(c.ns.TomTomArrowActive() and c.tomtom.Arrow() == manual, "Shortest Path drives TomTom's arrow")
+	assert(c.ns.TomTomArrowActive() and c.tomtom.Arrow() ~= manual, "Shortest Path points TomTom's arrow at the bend")
 
 	c.tomtom:RemoveWaypoint(manual)
 	publishStep(c)

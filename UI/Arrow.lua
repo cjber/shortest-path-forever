@@ -761,7 +761,10 @@ function ns.RefreshArrowLines()
 		ShowArrival(arrival)
 	else
 		RefreshTravelLines(destination)
-		Wake()
+		-- A hidden frame runs no update loop, and the marker poll skips its turn while one is marked as running.
+		if frame:IsShown() then
+			Wake()
+		end
 	end
 end
 
