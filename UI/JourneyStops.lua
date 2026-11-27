@@ -45,6 +45,34 @@ local function Copy(point)
 	end
 	return { map = map, x = x, y = y, z = z, title = title or ns.JourneyTitle(world) }
 end
+
+---@param points any
+---@param allowEmpty? boolean
+---@return SPFAPIStop[]?
+local function CopyStops(points, allowEmpty)
+	if not (canaccessvalue(points) and type(points) == "table" and getmetatable(points) == nil) then
+		return nil
+	end
+	local count = #points
+	if (count == 0 and not allowEmpty) or count > 64 then
+		return nil
+	end
+	for key in pairs(points) do
+		if not Number(key) or key % 1 ~= 0 or key < 1 or key > count then
+			return nil
+		end
+	end
+	local snapshot = {}
+	for i = 1, count do
+		local copy = Copy(points[i])
+		if not copy then
+			return nil
+		end
+		snapshot[i] = copy
+	end
+	return snapshot
+end
+
 ---@return SPFAPIPlace?
 local function Origin()
 	local x, y, _, map = ns.PlayerPosition()
@@ -70,16 +98,55 @@ local function Blocked()
 		return "corpse"
 	end
 end
+local function StartBlocked()
+	return Blocked() or (not ns.IsPlayerJourney(ns.JourneyOwner()) and "occupied" or nil)
+end
 ---@return SPFPublicAPI
 local api = function()
 	return ShortestPathForever.API
 end
+
+---@param controller SPFJourneyStopsController
+local function SaveDraft(controller)
+	if ns.charDB then
+		ns.charDB.journeyStops = (#controller.stops > 0 or controller.manual)
+				and { stops = controller.stops, manual = controller.manual }
+			or nil
+	end
+end
+
+---@param controller SPFJourneyStopsController
+---@param snapshot SPFAPIStop[]
+---@return boolean
+local function Navigate(controller, snapshot)
+	controller.generation = controller.generation + 1
+	local owner = ns.STOPS_OWNER .. controller.session .. ":" .. controller.generation
+	if not api().NavigateRoute(owner, snapshot) then
+		controller.state = "failed"
+		return false
+	end
+	controller.owner, controller.activeStops = owner, snapshot
+	controller:Observe()
+	ns.KeepJourneyStops(owner, snapshot)
+	return true
+end
+
 local Editor = {}
 ---@return SPFJourneyStopsController
 function Editor.new()
 	serial = serial + 1
 	local controller = { stops = {}, selected = 0, manual = false, generation = 0, session = serial, state = "idle" }
 	---@cast controller SPFJourneyStopsController
+	local saved = ns.charDB and ns.charDB.journeyStops
+	if saved ~= nil then
+		local stops = type(saved) == "table" and type(saved.manual) == "boolean" and CopyStops(saved.stops, true)
+		if stops then
+			controller.stops, controller.manual = stops, saved.manual
+			controller.selected = #stops > 0 and 1 or 0
+		else
+			ns.charDB.journeyStops = nil
+		end
+	end
 	function controller:CancelOrder()
 		self.generation = self.generation + 1
 		if self.job then
@@ -132,6 +199,7 @@ function Editor.new()
 		self:CancelOrder()
 		self.stops[#self.stops + 1] = copy
 		self.selected, self.state = #self.stops, "idle"
+		SaveDraft(self)
 		return true
 	end
 	function controller:AddWaypoint()
@@ -158,6 +226,7 @@ function Editor.new()
 		self:CancelOrder()
 		self.stops[at], self.stops[to] = self.stops[to], self.stops[at]
 		self.selected, self.manual, self.state = to, true, "idle"
+		SaveDraft(self)
 		return true
 	end
 	function controller:Remove()
@@ -167,6 +236,7 @@ function Editor.new()
 		self:CancelOrder()
 		table.remove(self.stops, self.selected)
 		self.selected, self.state = math.min(self.selected, #self.stops), "idle"
+		SaveDraft(self)
 		return true
 	end
 	function controller:Clear()
@@ -175,52 +245,26 @@ function Editor.new()
 		end
 		self:CancelOrder()
 		self.stops, self.selected, self.manual, self.state = {}, 0, false, "idle"
+		SaveDraft(self)
 		return true
 	end
 	function controller:Submit(points)
-		local reason = Blocked()
-		if reason or ns.HasJourney() then
-			self.state = reason or "occupied"
+		local reason = StartBlocked()
+		if reason then
+			self.state = reason
 			return false
 		end
-		if not (canaccessvalue(points) and type(points) == "table" and getmetatable(points) == nil) then
+		local snapshot = CopyStops(points)
+		if not snapshot then
 			self.state = "invalid"
 			return false
 		end
-		local count = #points
-		if count < 1 or count > 64 then
-			self.state = "invalid"
+		if not Navigate(self, snapshot) then
 			return false
 		end
-		for key in pairs(points) do
-			if not Number(key) or key % 1 ~= 0 or key < 1 or key > count then
-				self.state = "invalid"
-				return false
-			end
-		end
-		local snapshot = {}
-		for i = 1, count do
-			local point = points[i]
-			local copy = Copy(point)
-			if not copy then
-				self.state = "invalid"
-				return false
-			end
-			snapshot[i] = copy
-		end
-		if #snapshot < 1 or #snapshot > 64 then
-			self.state = "invalid"
-			return false
-		end
-		self.generation = self.generation + 1
-		local owner = "SPF:Stops:" .. self.session .. ":" .. self.generation
-		-- No yield between the final ownership check and submission.
-		if Blocked() or ns.HasJourney() or not api().NavigateRoute(owner, snapshot) then
-			self.state = "failed"
-			return false
-		end
-		self.owner, self.index, self.state = owner, 1, "running"
-		self.activeStops = snapshot
+		-- A route to the place a paused journey already leads to takes it over, pause and all.
+		api().Resume(self.owner)
+		self:Observe()
 		return true
 	end
 	function controller:Start()
@@ -228,9 +272,9 @@ function Editor.new()
 			return false
 		end
 		self:CancelOrder()
-		local reason = Blocked()
-		if reason or ns.HasJourney() or #self.stops == 0 then
-			self.state = reason or (ns.HasJourney() and "occupied" or "empty")
+		local reason = StartBlocked()
+		if reason or #self.stops == 0 then
+			self.state = reason or "empty"
 			return false
 		end
 		if self.manual then
@@ -241,8 +285,9 @@ function Editor.new()
 			self.state = "loading"
 			return false
 		end
+		ns.ForgetKeptJourney()
 		self.job = ns.StopOrder.Begin(self.stops, from)
-		self.from, self.state = from, "ordering"
+		self.from, self.goal, self.state = from, ns.JourneyGoal(), "ordering"
 		return true
 	end
 	---@param pathJob? SPFPathJob the path job stepping (ns.Path.Run), so an uncached estimate pauses at the frame budget
@@ -251,8 +296,8 @@ function Editor.new()
 		if not job then
 			return
 		end
-		local reason = Blocked()
-		if reason or ns.HasJourney() then
+		local reason = StartBlocked()
+		if reason then
 			self:CancelOrder()
 			self.state = reason == "combat" and "order-combat" or reason == "corpse" and "order-corpse" or "occupied"
 			return
@@ -260,6 +305,13 @@ function Editor.new()
 		local state, points = job:Step(pathJob)
 		-- Cleared or restarted while its estimate paused: that order no longer owns the editor.
 		if self.job ~= job then
+			return
+		end
+		-- A journey started since Start is newer than this order.
+		local goal = ns.JourneyGoal()
+		if goal and goal ~= self.goal then
+			self:CancelOrder()
+			self.state = "changed"
 			return
 		end
 		if state == "working" or state == "loading" then
@@ -331,6 +383,21 @@ function Editor.new()
 	return controller
 end
 
+---@type SPFJourneyStopsController?
+local editor
+function Editor.Current()
+	editor = editor or Editor.new()
+	return editor
+end
+
+-- Starts a kept route again: false when the API refuses it, nil when the kept value is damaged.
+function Editor.Restore(points)
+	local snapshot = CopyStops(points)
+	if snapshot then
+		return Navigate(Editor.Current(), snapshot)
+	end
+end
+
 ns.JourneyStopsEditor = Editor
 
 local messages = {
@@ -357,8 +424,6 @@ local messages = {
 }
 ---@type SPFJourneyStopsWindow
 local window
----@type SPFJourneyStopsController
-local controller
 ---@type FontString
 local status
 ---@type Frame
@@ -399,7 +464,7 @@ local function Button(text, x, y, callback, width)
 	return button
 end
 local function Build()
-	controller = ns.JourneyStopsEditor.new()
+	local controller = Editor.Current()
 	local host = CreateFrame("Frame", "ShortestPathForeverJourneyStops", UIParent, "PortraitFrameTemplate")
 	window = host --[[@as SPFJourneyStopsWindow]]
 	window:SetSize(560, 560)
@@ -480,7 +545,6 @@ local function Build()
 		window:Hide()
 	end, 96)
 	refresh = function()
-		controller:Observe()
 		local editable = controller:Editable()
 		for _, button in ipairs(editButtons) do
 			button:SetEnabled(editable)
@@ -489,22 +553,20 @@ local function Build()
 		editButtons[3]:SetEnabled(editable and controller.selected > 0 and controller.selected < #controller.stops)
 		editButtons[4]:SetEnabled(editable and controller.selected > 0)
 		editButtons[5]:SetEnabled(editable and #controller.stops > 0)
-		startButton:SetEnabled(
-			editable and not controller.job and #controller.stops > 0 and not ns.HasJourney() and not Blocked()
-		)
+		startButton:SetEnabled(editable and not controller.job and #controller.stops > 0 and not StartBlocked())
 		pauseButton:SetEnabled(controller.owner ~= nil and controller.state == "running" and not Blocked())
 		resumeButton:SetEnabled(controller.owner ~= nil and controller.state == "paused" and not Blocked())
 		stopButton:SetEnabled(controller.owner ~= nil or controller.job ~= nil)
+		local displayed = controller.activeStops or controller.stops
 		local text = messages[controller.state] or L["The journey could not start."]
 		if controller.owner then
-			text = L["Stop %d of %d."]:format(controller.index or 1, #controller.stops)
+			text = L["Stop %d of %d."]:format(controller.index or 1, #displayed)
 			if controller.state == "paused" then
 				text = text .. " " .. L["Journey paused."]
 			end
 		end
 		status:SetText(text .. "\n" .. (controller.manual and L["Your order"] or L["Estimated travel-time order"]))
-		local displayed = controller.owner and controller.activeStops or controller.stops
-		for i, stop in ipairs(displayed or controller.stops) do
+		for i, stop in ipairs(displayed) do
 			local row = rows[i]
 			if not row then
 				row = CreateFrame("Button", nil, content, "SharedButtonSmallTemplate") --[[@as Button]]
@@ -537,10 +599,10 @@ local function Build()
 			end)
 			row:Show()
 		end
-		for i = #controller.stops + 1, #rows do
+		for i = #displayed + 1, #rows do
 			rows[i]:Hide()
 		end
-		content:SetHeight(math.max(288, #controller.stops * 28))
+		content:SetHeight(math.max(288, #displayed * 28))
 	end
 	window:SetScript("OnHide", function()
 		window:UnregisterAllEvents()

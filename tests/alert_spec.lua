@@ -79,6 +79,11 @@ driver.begin({ map = 1, x = 0, y = -400 }, { map = 1, x = 0, y = -460 })
 driver.move({ map = 1, x = 0, y = -460 })
 driver.update(0.1)
 assert(not ns.HasJourney() and #played == 3, "every arrival of your own pings")
+assert(API.NavigateRoute("SPF:Stops:1:1", { { map = 1, x = 0.512, y = 0.5 } }))
+driver.update(0.1)
+driver.move({ map = 1, x = 0, y = -600 })
+driver.update(0.1)
+assert(not ns.HasJourney() and #played == 4, "a Journey stops route pings at its end")
 
 -- An unknown flight master gets one plan warning, then one more on approach, through the same raid-warning banner
 -- and taskbar flash as the timed transport alerts. No sound is guessed for a flight master.
@@ -109,7 +114,7 @@ for _, tick in ipairs(ticks) do
 	tick()
 end
 assert(#warnings == 2 and warnings[2]:find("near", 1, true), "unknown current master warns on approach")
-assert(flashes == 2 and #played == 3, "both warnings flash, with no invented flight-master sound")
+assert(flashes == 2 and #played == 4, "both warnings flash, with no invented flight-master sound")
 
 -- A known master stays quiet; an unknown master in a later step gets a plan warning but no approach warning.
 warnings = {}

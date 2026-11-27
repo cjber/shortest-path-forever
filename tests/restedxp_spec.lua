@@ -182,6 +182,11 @@ local nearby = ns.JourneyGoal()
 frame.element.x = 81
 rxp.UpdateGotoSteps()
 assert(ns.JourneyGoal() == nearby, "Nearby manual destinations keep the same priority")
+assert(API.NavigateRoute("SPF:Stops:1:1", { { map = 1, x = 0.3, y = 0.25 } }))
+local stops = ns.JourneyGoal()
+frame.element.x = 82
+rxp.UpdateGotoSteps()
+assert(ns.JourneyGoal() == stops, "a Journey stops route keeps the same priority")
 assert(ns.ResumeRestedXP(), "explicit resume returns control to the guide")
 driver.path.settle()
 assert(API.CurrentStop("RestedXP") == 1, "resumed guide owns the journey")

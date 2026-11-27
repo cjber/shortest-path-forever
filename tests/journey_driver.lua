@@ -242,6 +242,13 @@ local env = setmetatable({
 		end,
 	},
 	Menu = { ModifyMenu = noop },
+	hooksecurefunc = function(owner, key, hook)
+		local original = owner[key]
+		owner[key] = function(...)
+			original(...)
+			hook(...)
+		end
+	end,
 	-- The client's own event queue, which runs a callback once its events have fired; here they already have.
 	EventUtil = {
 		ContinueAfterAllEvents = function(fn)

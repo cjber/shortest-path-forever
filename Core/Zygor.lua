@@ -154,7 +154,7 @@ local function Sync()
 		return
 	end
 	local owner = ns.JourneyOwner()
-	if ns.HasJourney() and (owner == nil or owner == "Shortest Path Forever") then
+	if ns.HasJourney() and ns.IsOwnJourney(owner) then
 		return
 	end
 	local moved = map ~= targetMap or x ~= targetX or y ~= targetY

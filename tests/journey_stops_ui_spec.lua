@@ -143,6 +143,7 @@ driver.load("Core/APIInput.lua")
 driver.load("Core/APIStops.lua")
 driver.load("Core/API.lua")
 driver.load("Journey/Itinerary.lua")
+driver.load("Journey/Resume.lua")
 driver.load("Journey/StopOrder.lua")
 driver.load("UI/JourneyStops.lua")
 local checks = 0
@@ -213,6 +214,13 @@ eq(find("Start").enabled, false, "death event disables start")
 dead = false
 window.scripts.OnEvent(window, "PLAYER_UNGHOST")
 eq(find("Start").enabled, true, "alive event restores start without polling")
+ns.db.mapPinRoutes = true
+waypoint(0.504)
+flush()
+local pinGoal = ns.JourneyGoal()
+eq(pinGoal ~= nil, true, "the map pin starts a player journey")
+eq(find("Start").enabled, true, "a player journey leaves Start enabled")
+ns.db.mapPinRoutes = false
 local api, estimates = env.ShortestPathForever.API, 0
 debug.sethook(function(event)
 	local func = debug.getinfo(2, "f").func
@@ -222,7 +230,7 @@ debug.sethook(function(event)
 end, "c")
 find("Start"):Click()
 eq(estimates, 0, "start never bursts estimates")
-eq(ns.HasJourney(), false, "order first")
+eq(ns.JourneyGoal(), pinGoal, "the pin journey continues while stops are ordered")
 for _ = 1, 3 do
 	local before = estimates
 	flush()
@@ -230,6 +238,7 @@ for _ = 1, 3 do
 end
 debug.sethook()
 eq(ns.HasJourney(), true, "finite ordinary journey submitted")
+eq(ns.JourneyGoal() == pinGoal, false, "the ordered journey replaces the pin journey")
 eq(find("Add map waypoint").enabled, false, "own route locks editing")
 find("Pause"):Click()
 eq(find("Resume").enabled, true, "paused controls")
@@ -301,4 +310,27 @@ eq(api.Navigate("Hidden external", 1, 0.52, 0.5), true, "journey changes while e
 eq(#timers, 0, "hidden editor has unsubscribed from API changes")
 api.Cancel("Hidden external")
 eq(#timers, 0, "hidden cancellation schedules no UI refresh")
+ns.JourneyStopsEditor.Restore({ { map = 1, x = 0.504, y = 0.5, title = "Remaining" } })
+ns.ShowJourneyStops()
+eq(window.children[2].text:find("Stop 1 of 1.", 1, true), 1, "progress counts the remaining route")
+eq(find("1. Remaining (50.4, 50.0)"):IsShown(), true, "the remaining route is visible")
+eq(find("Pause").enabled, true, "resumed route can be paused")
+find("Pause"):Click()
+eq(find("Resume").enabled, true, "resumed route can be resumed from pause")
+find("Stop"):Click()
+eq(ns.HasJourney(), false, "resumed route can be stopped")
+driver.move({ map = 1, x = 0, y = 0, z = 0 })
+ns.JourneyStopsEditor.Restore({
+	{ map = 1, x = 0.502, y = 0.5, title = "Near" },
+	{ map = 1, x = 0.504, y = 0.5, title = "Far" },
+})
+driver.path.settle()
+driver.move({ map = 1, x = 0, y = -100, z = 0 })
+for _ = 1, 4 do
+	driver.update(0.1)
+end
+find("Close"):Click()
+ns.ShowJourneyStops()
+eq(window.children[2].text:find("Stop 2 of 2.", 1, true), 1, "progress follows the next stop")
+find("Stop"):Click()
 print("journey_stops_ui_spec: " .. checks .. " checks passed")

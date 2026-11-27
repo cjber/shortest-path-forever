@@ -4,6 +4,8 @@ local _, ns = ...
 
 ns.Credits = {
 	players = {
+		{ name = "static2290", what = "Start Journey stops while following a map pin" },
+		{ name = "static2290", what = "Remember Journey stops and resume the remaining route" },
 		{ name = "hailtohell", what = "Other addons can draw walks from your floor" },
 		{ name = "forleong", what = "TomTom arrow handoff with the RestedXP bridge" },
 		{ name = "xh43k", what = "A switch for routing to the map pin" },
