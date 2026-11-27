@@ -667,7 +667,6 @@ L["Right-click to choose map services."] = "우클릭으로 지도 편의시설�
 L["Use TomTom's arrow"] = "TomTom 화살표 사용" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"TomTom이 설치되어 있으면 자체 화살표와 게임 표시 대신 TomTom 화살표로 각 단계를 가리킵니다." -- mt
-L["Walking routes can now be dotted or solid."] =
-	"이제 도보 경로를 점선이나 실선으로 표시할 수 있습니다." -- mt
+L["Journey stops remembers your list."] = "여정 경유지가 목록을 기억합니다." -- mt
 L["Mailbox"] = "우체통" -- mt
 L["Skip this stop"] = "이 채집 지점 건너뛰기" -- mt
