@@ -10,6 +10,30 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.49.0] - 2026-11-27
+
+<!-- discord-image: docs/screenshots/stops.png -->
+
+### Added
+
+- **Journey stops remembers your list.** Your list and chosen order survive a reload or relog, and a journey in progress picks up at the first unfinished stop. Thanks to static2290 for the idea. (#1412)
+- **A calmer route for tours of many close stops.** Addons that tour dozens of places can ask for a solid line with
+  softly rounded corners that shows the leg you are on and the next four.
+- **Add stops directly from the map.** Place pins while editing your Journey stops list to add them. Thanks to static2290 for the idea. (#1411)
+- **Move the Journey stops window.** Drag it off the part of the map you want to pin. (#1411)
+
+### Fixed
+
+- **The minimap no longer covers the next stop of a tour.** On a tour of many close stops the next one is circled, so the
+  herb, vein or other icon there shows through.
+- Other addons can draw walks from your current floor. In places like Ironforge, their paths can now lead you out through the gates. Thanks to hailtohell for the report. (#1409)
+- **Start Journey stops while following a map pin.** Pressing Start replaces the journey to your pin. Thanks to static2290 for the report. (#1410)
+- **The arrival sound follows a journey that changes hands.** When another addon takes over a journey at the same destination its arrival is quiet, and one you take over plays your sound.
+
+### For addon authors
+
+- API minor 13 accepts `"player"` as the origin for `WalkPath`, `EstimateWalks`, `Estimate` and `EstimateDetail`.
+
 ## [1.48.2] - 2026-11-27
 
 ### Fixed
