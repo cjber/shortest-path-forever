@@ -10,6 +10,14 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.48.2] - 2026-11-27
+
+### Fixed
+
+- The RestedXP arrow stays in TomTom while following it. With the RestedXP TomTom bridge, Use TomTom's arrow and Follow TomTom's arrow all on, TomTom's arrow keeps pointing at the RestedXP step after you log in and after a waypoint you set in TomTom. Thanks to forleong for the report. (#1390)
+- RestedXP's step pins keep your guidance running. A map pin that a RestedXP step places or clears leaves your current journey alone. Map pins you place still take over as usual. (#1402)
+- The game's marker keeps up with bends when another arrow leads. With Shortest Path's own arrow hidden, a guide addon restating the quests of its current step no longer stops the marker moving on to the next bend of the route. (#1404)
+
 ## [1.48.1] - 2026-11-27
 
 <!-- forever-core-sync -->
