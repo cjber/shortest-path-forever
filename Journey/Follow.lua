@@ -154,6 +154,7 @@ function ns.StartFollowing(unit, throttle)
 	Driver()
 	local label = Name()
 	point.label, point.routeTitle = label, label
+	ns.PlayerPicked()
 	ns.StartJourney(point)
 	Driver()
 	return true

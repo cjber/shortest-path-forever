@@ -293,7 +293,6 @@ local function EndJourney(reason)
 	RefreshTracker()
 end
 
--- Menus and settings pass their own arguments to callbacks, so the player's clear takes none.
 function ns.ClearJourney()
 	EndJourney("cleared")
 end

@@ -383,6 +383,11 @@ function ns.ResubmitRoute(route, points)
 	if not old or (moved ~= route.index and old.map ~= points[moved].map) then
 		return nil
 	end
+	-- A retarget keeps the old line until its search settles, which in combat is only after the fight: moving the
+	-- current stop then starts the journey afresh.
+	if moved == route.index and InCombatLockdown() then
+		return nil
+	end
 	-- The pins' and the lines' switches belong to the whole submission, whichever stop moved.
 	for index, point in ipairs(points) do
 		local kept = previous[index]

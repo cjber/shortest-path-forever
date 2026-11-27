@@ -337,7 +337,7 @@ end
 
 function GoalPin.OnMouseClickAction(_, button)
 	if button == "RightButton" then
-		ns.ClearJourney()
+		ns.PlayerClear()
 	end
 end
 

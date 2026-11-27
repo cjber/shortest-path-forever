@@ -978,6 +978,7 @@ do
 end
 return {
 	env = env,
+	ns = ns,
 	getMapOpens = function()
 		return mapOpens
 	end,

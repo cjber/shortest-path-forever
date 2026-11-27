@@ -54,6 +54,9 @@ local env = setmetatable({
 	IsShiftKeyDown = function()
 		return false
 	end,
+	InCombatLockdown = function()
+		return false
+	end,
 	IsAltKeyDown = function()
 		return false
 	end,

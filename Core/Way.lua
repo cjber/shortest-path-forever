@@ -217,11 +217,11 @@ local function ResetWay(text)
 	action = action:lower()
 	if action == "all" then
 		if ns.JourneyGoal() then
-			ns.ClearJourney()
+			ns.PlayerClear()
 		end
 	elseif action == "away" then
 		if WayJourney() and wayMap ~= C_Map.GetBestMapForUnit("player") then
-			ns.ClearJourney()
+			ns.PlayerClear()
 		end
 	elseif action ~= "" then
 		local notThis = action == "not"
@@ -231,7 +231,7 @@ local function ResetWay(text)
 			return
 		end
 		if WayJourney() and (wayMap == zone) ~= notThis then
-			ns.ClearJourney()
+			ns.PlayerClear()
 		end
 	else
 		ns.Print(L["/way reset all, away, <zone> or not <zone>"])

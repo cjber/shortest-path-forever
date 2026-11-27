@@ -646,3 +646,4 @@ L["With TomTom installed, point TomTom's arrow at each step instead of our arrow
 L["Journey stops remembers your list."] = "旅程停靠点现在会记住你的列表。" -- mt
 L["Mailbox"] = "邮箱" -- mt
 L["Skip this stop"] = "跳过此采集点" -- mt
+L["Destination queued until combat ends."] = "目的地已排队，战斗结束后规划。" -- mt
