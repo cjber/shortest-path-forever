@@ -134,16 +134,23 @@ local function HoldArrow()
 	end
 end
 
--- Whether the player's user waypoint is the pin RestedXP's own waypoint element set for a step under way. RestedXP
+local function ActiveSteps()
+	local rxp = RXP
+	return rxp and rxp.RXPFrame and rxp.RXPFrame.activeSteps
+end
+
+---@return boolean
+function ns.RestedXPHasActiveSteps()
+	local steps = ActiveSteps()
+	return steps ~= nil and #steps > 0
+end
+
+-- Whether the current user waypoint is the pin RestedXP's own waypoint element set for a step under way. RestedXP
 -- records what it wrote (waypointSet, and the position read back from the client) and clears the pin only on that
 -- same match, so this is RestedXP's own record of ownership.
 ---@return boolean
-function ns.OwnerWroteWaypoint()
-	local steps = hooked and OwnsJourney() and hooked.RXPFrame and hooked.RXPFrame.activeSteps
-	if not steps then
-		return false
-	end
-	for _, step in ipairs(steps) do
+function ns.RestedXPOwnsWaypoint()
+	for _, step in ipairs(ActiveSteps() or {}) do
 		for _, element in ipairs(step.elements or {}) do
 			if element.waypointSet == true and element.zone then
 				local position = C_Map.GetUserWaypointPositionForMap(element.zone)

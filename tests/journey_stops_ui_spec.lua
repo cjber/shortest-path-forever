@@ -118,6 +118,7 @@ local function frame(kind, name, parent, template)
 end
 local driver = assert(loadfile("tests/journey_driver.lua"))()
 local ns, env = driver.ns, driver.env
+ns.db.mapPinRoutes = false
 local dead, combat = false, false
 env.CreateFrame, env.UISpecialFrames, env.UIParent = frame, {}, {}
 env.InCombatLockdown = function()

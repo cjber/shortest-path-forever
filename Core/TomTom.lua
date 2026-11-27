@@ -564,6 +564,12 @@ function ns.TomTomFollowsZygor(map, x, y)
 		and FromZygor(uid)
 end
 
+-- Whether the followed waypoint is the RestedXP TomTom bridge's step. The bridge points TomTom's arrow at it, and our
+-- own waypoint would replace it, which pauses the bridge.
+function ns.TomTomFollowsBridge()
+	return following ~= nil and following.source == "RXPGuides"
+end
+
 -- An empty arrow stays shown: TomTom's OnUpdate may still be advancing to the next waypoint, and hides it itself.
 local function SyncArrow()
 	if hooked and hooked.IsCrazyArrowEmpty and hooked:IsCrazyArrowEmpty() then
@@ -578,8 +584,11 @@ local function SyncArrow()
 	-- arrow off while this journey still owns the waypoint. Turning it off clears our guide points, not the journey.
 	-- When Shortest Path drives TomTom's own arrow (tomtomArrow on, arrow on), keep TomTom's arrow visible.
 	local driveTomTom = ns.TomTomArrowActive and ns.TomTomArrowActive()
+	-- With Use TomTom's arrow on, the bridge pointing TomTom's arrow is the arrow the player chose.
+	local bridged = ns.db.tomtomArrow and ns.db.arrow ~= false and ns.TomTomFollowsBridge()
 	if
 		not driveTomTom
+		and not bridged
 		and following
 		and not hijacked
 		and following == arrowWaypoint

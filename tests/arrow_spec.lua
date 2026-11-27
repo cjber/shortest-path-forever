@@ -117,6 +117,19 @@ ns.PointGuideArrow(nil)
 queued(frame, 0.1)
 assert(frame.hidden and placed == 1 and ns.GuideTargets() == nil, "a queued tick cannot revive cleared guidance")
 
+ns.PointGuideArrow(points, place)
+queued(frame, 10)
+queued(frame, 10)
+local quiet = placed
+queued(frame, 0.1)
+assert(placed == quiet, "a settled arrow places nothing while you stand still")
+ns.RedrawGuideMarker()
+assert(placed == quiet, "asking for the marker writes nothing inside the caller")
+queued(frame, 0.1)
+assert(placed == quiet + 1, "the next tick places the marker again")
+ns.PointGuideArrow(nil)
+placed = 1
+
 ns.RefreshCompass = function()
 	ns.RefreshCompass = nil
 	ns.PointGuideArrow(nil)
@@ -551,6 +564,8 @@ assert(#markerPlaces >= 1, "the first update places the native marker")
 local markerTicker = assert(tickers[#tickers], "a marker-only ticker runs while our frame is hidden")
 assert(not markerTicker.cancelled, "and is still running")
 local placedOnce = #markerPlaces
+-- A guide that restates its step's quests reads the lines again; the hidden frame has no update loop of its own.
+ns.RefreshArrowLines()
 driver.move({ map = 1, x = 80, y = 0, z = 0 })
 markerTicker.callback()
 assert(#markerPlaces > placedOnce, "a later poll tick places the marker again as the walk reaches the next bend")

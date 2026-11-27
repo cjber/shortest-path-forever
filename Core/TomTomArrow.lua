@@ -68,7 +68,11 @@ local function TomTomArrowEnabled()
 		return false
 	end
 	-- The bridge pauses when TomTom selects an unowned waypoint and waits for all foreign waypoints to go away.
-	-- Let it point TomTom during RestedXP journeys, including when the player sets a manual TomTom waypoint.
+	-- Let it point TomTom during RestedXP journeys, including when the player sets a manual TomTom waypoint, and while
+	-- Follow TomTom's arrow is routing to the bridge's step.
+	if ns.TomTomFollowsBridge and ns.TomTomFollowsBridge() then
+		return false
+	end
 	if ns.JourneyOwner and ns.JourneyOwner() == "RestedXP" and C_AddOns.IsAddOnLoaded("RestedXP-TomTom") then
 		return false
 	end

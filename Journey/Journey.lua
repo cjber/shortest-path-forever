@@ -37,6 +37,15 @@ local driver
 local ARRIVAL = 15
 local Search, Guide = ns.JourneySearch, ns.JourneyGuide
 local RefreshTracker, StopGuide = Guide.RefreshTracker, Guide.Stop
+---@class SPFTrackingReport
+---@field waypoint? boolean
+---@field waypointChanged? boolean
+---@field superTracking? boolean
+---@type SPFTrackingReport?
+local pendingTracking
+-- Whether the waypoint slot holds another addon's pin, or one whose ownership is still being resolved. That pin
+-- going is not the player's doing.
+local foreignPin = false
 -- A walk whose drawn line runs this many yards above or below the floor you are on (Floor.lua) is not the one you are
 -- on: it is on another floor of the same spot. The walking search's own height tolerance.
 local OTHER_FLOOR = 10
@@ -250,8 +259,20 @@ end
 ---@type SPFRoutePolicy
 local journeyPolicy = "normal"
 
+-- A report held back belongs to the journey it arrived in. Once another starts or it ends, only the guide still
+-- answers the waypoint, and the focus it named starts nothing.
+local function ForgetPendingFocus()
+	if pendingTracking then
+		pendingTracking.waypointChanged = nil
+		if ns.FocusedTrackingReset then
+			ns.FocusedTrackingReset()
+		end
+	end
+end
+
 ---@param reason "arrived"|"cleared"|"skipped"
 local function EndJourney(reason)
+	ForgetPendingFocus()
 	Search.Reset()
 	goal, result, nextPoint = nil, nil, nil
 	replacingGoal = false
@@ -813,6 +834,7 @@ end
 ---@param policy? SPFRoutePolicy
 ---@return boolean
 function ns.StartJourney(point, policy)
+	ForgetPendingFocus()
 	policy = policy or "normal"
 	point = ns.InstanceEntrance(point)
 	if CorpseRun() then
@@ -867,6 +889,67 @@ function ns.StartJourney(point, policy)
 	return true
 end
 
+---@param event string
+---@param waypointChanged? boolean
+---@param waypointOwner? "guide"|"RestedXP"
+local function ReportTracking(event, waypointChanged, waypointOwner)
+	Guide.TrackingChanged(event, waypointOwner == "RestedXP")
+	if ns.FocusedTrackingChanged then
+		ns.FocusedTrackingChanged(event, waypointOwner ~= nil, waypointChanged)
+	end
+end
+
+---@param pending SPFTrackingReport
+local function ResolveWaypoint(pending)
+	pendingTracking = nil
+	if pending.waypoint then
+		local owner = ns.RestedXPOwnsWaypoint() and "RestedXP" or nil
+		foreignPin = owner ~= nil
+		ReportTracking("USER_WAYPOINT_UPDATED", pending.waypointChanged, owner)
+	end
+	if pending.superTracking then
+		ReportTracking("SUPER_TRACKING_CHANGED")
+	end
+end
+
+---@param event string
+local function TrackingChanged(event)
+	if event == "SUPER_TRACKING_CHANGED" then
+		if pendingTracking and pendingTracking.waypoint then
+			pendingTracking.superTracking = true
+		else
+			ReportTracking(event)
+		end
+		return
+	end
+	-- Capture our own write while Guide's synchronous guards are live. RestedXP records its pin after the event.
+	local owned = Guide.OwnsReported(event)
+	local changed = ns.FocusedWaypointChanged and ns.FocusedWaypointChanged()
+	if not owned and C_Map.HasUserWaypoint() and ns.RestedXPHasActiveSteps and ns.RestedXPHasActiveSteps() then
+		if not pendingTracking then
+			local pending = {}
+			pendingTracking = pending
+			C_Timer.After(0, function()
+				ResolveWaypoint(pending)
+			end)
+		end
+		-- The client has one waypoint slot, so only the latest write can still be acted on.
+		foreignPin = true
+		pendingTracking.waypoint = true
+		pendingTracking.waypointChanged = pendingTracking.waypointChanged or changed
+	else
+		if pendingTracking then
+			pendingTracking.waypoint, pendingTracking.waypointChanged = nil, nil
+		end
+		local owner = owned and "guide" or nil
+		if not owner and foreignPin and not C_Map.HasUserWaypoint() then
+			owner = "RestedXP"
+		end
+		foreignPin = false
+		ReportTracking(event, changed, owner)
+	end
+end
+
 ns.Init(function()
 	local journeyDriver = CreateFrame("Frame", "ShortestPathForeverJourneyDriver", UIParent)
 	---@cast journeyDriver SPFJourneyDriver
@@ -883,6 +966,7 @@ ns.Init(function()
 	driver:RegisterEvent("PLAYER_ENTERING_WORLD")
 	driver:SetScript("OnEvent", function(self, event, questID)
 		if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
+			ForgetPendingFocus()
 			Guide.ClearOrphan()
 			EnteredInstance()
 			if ns.FocusedTrackingReset then
@@ -903,10 +987,7 @@ ns.Init(function()
 		if questGone and goal and goal.questID == questID then
 			ns.ClearJourney()
 		elseif event == "SUPER_TRACKING_CHANGED" or event == "USER_WAYPOINT_UPDATED" then
-			Guide.TrackingChanged(event)
-			if ns.FocusedTrackingChanged then
-				ns.FocusedTrackingChanged(event)
-			end
+			TrackingChanged(event)
 		end
 	end)
 	driver:Hide()
