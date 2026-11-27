@@ -1,6 +1,6 @@
 # Addon API
 
-Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 11`) with uiMapIDs and normalized 0-1 coordinates.
+Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 12`) with uiMapIDs and normalized 0-1 coordinates.
 Version 2 removes peer sharing and `Leaderboard`; callers must accept versions 1 and 2 and reject future versions. Check that a function exists before calling it, because an older
 addon may not have it yet. The full types are in [`types/API.lua`](../types/API.lua). On ForeverCore 1.3.2 or
 later, the API is also listed by `ForeverCore.APIKit.Addons()`.
@@ -18,6 +18,7 @@ the addon can use it once it shows the requested map.
 
 ## Minor history
 
+- Version 2, `minor = 12` adds `NavigateRoute`'s `tourLine` option.
 - Version 2, `minor = 11` adds the `"skipped"` result of `Ended`.
 - Version 2, `minor = 10` adds `SetArrowShown` and `NavigateRoute`'s `fadeLaterLegs` option.
 - Version 2, `minor = 9` adds `SuspendMapPins` and `ResumeMapPins`.
@@ -84,6 +85,10 @@ the addon can use it once it shows the requested map.
   journey and ends with it.
   `{ fadeLaterLegs = false }` draws the world map's legs past the current stop at full strength, for a loop whose
   whole shape matters; the default is `true`. Stop pins keep their own look, and it too belongs to that journey.
+  `{ tourLine = true }` draws a tour of many close stops so the way ahead stays readable: walks are solid lines,
+  whatever the player's line style, in their route colour, with slightly rounded corners on the world map, which
+  shows the leg under way and the next four, the later ones faded less than usual (`fadeLaterLegs = false` still draws
+  them at full strength). The default is `false`, and it too belongs to that journey.
   Any other options table, key, policy or non-boolean switch answers
   `nil, "invalid"` and changes nothing. A route keeps its policy until the
   same owner or another one submits again.

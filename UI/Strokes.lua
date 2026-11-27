@@ -19,6 +19,10 @@ local UNDER_THICKNESS = THICKNESS + 2
 -- but drop well back against parchment; StopPin.lua fades its later stops by this same amount.
 local LATER_ALPHA = 0.4
 ns.LaterAlpha = LATER_ALPHA
+-- A tour's later legs are solid and only a few, so they stay readable while receding less. Its bends are cut back this
+-- many screen pixels, never past this share of either side, and bridged by this many segments: enough to soften a
+-- corner without moving the line off the walk.
+local TOUR_LATER_ALPHA, TOUR_CUT, TOUR_CUT_SHARE, TOUR_STEPS = 0.6, 3.5, 0.4, 4
 -- Breadcrumbs stop short of each stop's mark, so the way runs up to a stop rather than under it: a dot is left out when
 -- its rim would come within STOP_GAP of the mark, on screen, at either end of a leg.
 local STOP_GAP = 2
@@ -67,6 +71,7 @@ local minX, maxX, minY, maxY = 0, 1, 0, 1
 ---@field clipBottom? number
 ---@field marks? {x: number, y: number, radius: number}[] -- stop marks the dots leave a gap around
 ---@field current number -- paths after this many belong to later hops
+---@field tour? boolean -- a tour of many close stops: solid walks with soft corners, later legs receding less
 ---@field highlight? table<number, boolean> -- stops whose leg is shown at full strength while the pointer is on them
 ---@field colors table<SPFMode, colorRGBA>
 
@@ -84,6 +89,7 @@ local minX, maxX, minY, maxY = 0, 1, 0, 1
 ---@field walkSize number? breadcrumb size as a percent
 ---@field goal SPFPoint?
 ---@field goalRadius number -- the goal mark's radius on the minimap
+---@field tour? boolean -- a tour of many close stops: its walks are solid
 ---@field colors table<SPFMode, colorRGBA>
 
 ---@class SPFStrokeGeometry
@@ -103,10 +109,11 @@ local entranceDistance
 ---@type number[], number, number[]
 local circles, circleCount, near = {}, 0, {}
 
--- Walking geometry defaults to breadcrumbs. Solid mode keeps the same route and stop gaps, but emits continuous
--- segments for both the world map and the minimap.
-local function WalkingRouteDotted()
-	return not (ns.db and ns.db.routeStyle == "solid")
+-- Walking geometry defaults to breadcrumbs. Solid mode, the player's choice or a tour's, keeps the same route, but
+-- emits continuous segments for both the world map and the minimap.
+---@param tour boolean?
+local function WalkingRouteDotted(tour)
+	return not (tour or ns.db and ns.db.routeStyle == "solid")
 end
 
 ---@return SPFStrokes
@@ -336,6 +343,48 @@ local function Line(x1, y1, x2, y2, color, dashed, a, b)
 	)
 end
 
+-- The segment of a tour's walk still waiting to learn whether it ends in a bend: its ends, as map fractions, and its
+-- length before any cut, in the view's units.
+local held, hx1, hy1, hx2, hy2, hlength = false, 0, 0, 0, 0, 0
+
+local function Flush(color)
+	if held then
+		held = false
+		Line(hx1, hy1, hx2, hy2, color)
+	end
+end
+
+-- A tour's walk, one segment at a time: where the next one carries on from the held one, both are cut back from the
+-- bend and joined by a curve around it. Ends and breaks in the walk stay exact.
+local function Soft(x1, y1, x2, y2, color)
+	local length = math.sqrt(((x2 - x1) * width) ^ 2 + ((y2 - y1) * height) ^ 2)
+	if length == 0 then
+		return
+	end
+	local startX, startY = x1, y1
+	if held and hx2 == x1 and hy2 == y1 then
+		-- A straight run needs no curve, and no extra strokes.
+		local cross = (x1 - hx1) * (y2 - y1) - (y1 - hy1) * (x2 - x1)
+		if math.abs(cross) * width * height > 0.01 * hlength * length then
+			local cut = math.min(TOUR_CUT / scale, TOUR_CUT_SHARE * hlength, TOUR_CUT_SHARE * length)
+			local ax, ay = x1 + (hx1 - x1) * cut / hlength, y1 + (hy1 - y1) * cut / hlength
+			startX, startY = x1 + (x2 - x1) * cut / length, y1 + (y2 - y1) * cut / length
+			held = false
+			Line(hx1, hy1, ax, ay, color)
+			local px, py = ax, ay
+			for step = 1, TOUR_STEPS do
+				local t = step / TOUR_STEPS
+				local x = (1 - t) ^ 2 * ax + 2 * (1 - t) * t * x1 + t ^ 2 * startX
+				local y = (1 - t) ^ 2 * ay + 2 * (1 - t) * t * y1 + t ^ 2 * startY
+				Line(px, py, x, y, color)
+				px, py = x, y
+			end
+		end
+	end
+	Flush(color)
+	held, hx1, hy1, hx2, hy2, hlength = true, startX, startY, x2, y2, length
+end
+
 -- A small cross where a hop with no line of its own (a portal, a preview across the sea) leaves or lands.
 local function Mark(x, y, color)
 	if x and (wide or (x >= 0 and x <= 1 and y >= 0 and y <= 1)) then
@@ -467,7 +516,7 @@ function Strokes.Map(buffer, paths, view)
 		local color = path.color or view.colors[path.mode]
 		route = path.route
 		fade = path.placeholder and 0.45 or 1
-		later = pathIndex > view.current and LATER_ALPHA or 1
+		later = pathIndex > view.current and (view.tour and TOUR_LATER_ALPHA or LATER_ALPHA) or 1
 		-- A stop under the pointer shows its own leg at full strength, so the faded way ahead answers the cursor.
 		if view.highlight and path.stop and view.highlight[path.stop] then
 			later = 1
@@ -516,7 +565,11 @@ function Strokes.Map(buffer, paths, view)
 							Mark(x, y, color)
 						end
 					elseif px and x then
-						Line(px, py, x, y, color, path.mode == "walk" and WalkingRouteDotted(), previous, point)
+						if view.tour and path.mode == "walk" then
+							Soft(px, py, x, y, color)
+						else
+							Line(px, py, x, y, color, path.mode == "walk" and WalkingRouteDotted(), previous, point)
+						end
 					else
 						entranceDistance = nil
 					end
@@ -524,6 +577,7 @@ function Strokes.Map(buffer, paths, view)
 				previous, px, py = point, x, y
 			end
 		end
+		Flush(color)
 	end
 end
 
@@ -599,7 +653,7 @@ function Strokes.Minimap(buffer, paths, view)
 	end
 	local shortestSide = math.min(width, height)
 	local inset = 1 - border / shortestSide
-	local dotted = WalkingRouteDotted()
+	local dotted = WalkingRouteDotted(view.tour)
 	local walkInset = dotted and inset - (dot + dotRim * 2) / scale / shortestSide or inset
 	for _, path in ipairs(paths) do
 		walked, entranceDistance = 0, nil

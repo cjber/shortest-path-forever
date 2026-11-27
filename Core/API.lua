@@ -235,7 +235,7 @@ function ns.JourneyStops()
 end
 
 ---@class SPFPublicAPI
-local API = { version = 2, minor = 11 }
+local API = { version = 2, minor = 12 }
 
 local function Differs(a, b)
 	for key, value in pairs(a) do
@@ -502,7 +502,7 @@ function ns.OnSpawnFloor(point)
 	return point
 end
 
-local function NavigateRoute(owner, stops, policy, markers, fade)
+local function NavigateRoute(owner, stops, policy, markers, fade, tour)
 	if not Owner(owner) or not Ready() or not ns.db.journey or type(stops) ~= "table" then
 		return false
 	end
@@ -589,6 +589,7 @@ local function NavigateRoute(owner, stops, policy, markers, fade)
 		-- A caller drawing its own places asks for the line alone: no stop pin on the world map (UI/Route.lua).
 		point.unmarked = not markers or nil
 		point.unfaded = not fade or nil
+		point.tourLine = tour or nil
 		if count > 1 then
 			local location = not point.label and ns.Locate(point)
 			-- What to do there, apart from the count the tooltip gives its own line (UI/StopPin.lua).
@@ -618,8 +619,8 @@ local function NavigateRoute(owner, stops, policy, markers, fade)
 		goal = goal and (goal.stop or goal)
 		local stop = points[1]
 		if goal and goal.map == stop.map and goal.x == stop.x and goal.y == stop.y then
-			local redraw = goal.unmarked ~= stop.unmarked
-			goal.unmarked = stop.unmarked
+			local redraw = goal.unmarked ~= stop.unmarked or goal.tourLine ~= stop.tourLine
+			goal.unmarked, goal.tourLine = stop.unmarked, stop.tourLine
 			if route then
 				ended[route.owner] = { reason = "replaced", at = GetTime() }
 			end
@@ -660,15 +661,22 @@ end
 ---@param options? SPFAPIRouteOptions
 ---@return boolean|nil, ForeverCoreAPIInvalid?
 function API.NavigateRoute(owner, stops, options)
-	local policy, markers, fade = Input.RouteOptions(options)
+	local policy, markers, fade, tour = Input.RouteOptions(options)
 	if not policy then
 		return APIKit.Invalid()
 	end
-	return NavigateRoute(owner, stops, policy, markers, fade)
+	return NavigateRoute(owner, stops, policy, markers, fade, tour)
 end
 
 function API.Navigate(owner, map, x, y, title, kind)
-	return NavigateRoute(owner, { { map = map, x = x, y = y, title = title, kind = kind } }, "normal", true, true)
+	return NavigateRoute(
+		owner,
+		{ { map = map, x = x, y = y, title = title, kind = kind } },
+		"normal",
+		true,
+		true,
+		false
+	)
 end
 
 function API.CurrentStop(owner)

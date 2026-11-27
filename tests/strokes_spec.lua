@@ -165,6 +165,45 @@ Strokes.Minimap(strokes, { bend }, minimapView(point(0.2, 0.5)))
 check(strokes.n == 2 and not strokes.dot[1] and not strokes.dot[2], "solid minimap walking lines are continuous")
 ns.db = nil
 
+-- A tour's walk is solid whatever the player's style, its bends cut back a few screen pixels and bridged by a curve;
+-- the ends stay exact and later legs recede less.
+do
+	local ends = bend.points
+	Strokes.Map(
+		strokes,
+		{ { mode = "walk", points = ends }, { mode = "walk", points = ends } },
+		mapView({ tour = true, current = 1 })
+	)
+	local each = strokes.n / 2
+	check(each == 6, "two sides and four steps round the bend: " .. each)
+	for i = 1, each do
+		check(not strokes.dot[i] and strokes.alpha[i] == 1 and strokes.alpha[i + each] == 0.6)
+		check(
+			i == 1 or close(strokes.x1[i], strokes.x2[i - 1]) and close(strokes.y1[i], strokes.y2[i - 1]),
+			"connected"
+		)
+	end
+	check(close(strokes.x1[1], 100) and close(strokes.y1[1], -500), "the start stays exact")
+	check(close(strokes.x2[each], 300) and close(strokes.y2[each], -800), "the end stays exact")
+	check(close(strokes.x2[1], 300 - 3.5) and close(strokes.y2[1], -500), "the bend is cut back")
+	check(close(strokes.x1[each], 300) and close(strokes.y1[each], -503.5))
+	Strokes.Map(strokes, { { mode = "walk", points = ends } }, mapView({ tour = true, scale = 2 }))
+	check(close(strokes.x2[1], 300 - 1.75), "the cut is screen pixels")
+	local short = { point(0.1, 0.5), point(0.105, 0.5), point(0.105, 0.7) }
+	Strokes.Map(strokes, { { mode = "walk", points = short } }, mapView({ tour = true }))
+	check(close(strokes.x2[1], 103), "never more than two fifths of a side")
+	local straight = { point(0.1, 0.5), point(0.2, 0.5), point(0.3, 0.5) }
+	Strokes.Map(strokes, { { mode = "walk", points = straight } }, mapView({ tour = true }))
+	check(strokes.n == 2, "a straight run gains no strokes")
+	-- Two walked segments either side of a jump: no curve joins them, and the jump keeps its two end marks.
+	local apart = { point(0.1, 0.5), point(0.2, 0.5), point(0.2, 0.6), point(0.3, 0.6) }
+	apart[2].jump = true
+	Strokes.Map(strokes, { { mode = "walk", points = apart } }, mapView({ tour = true }))
+	check(strokes.n == 6, "a break in the walk is not rounded across: " .. strokes.n)
+	Strokes.Minimap(strokes, { bend }, minimapView(point(0.2, 0.5), { tour = true }))
+	check(strokes.n == 2 and not strokes.dot[1], "a tour's minimap walk is solid")
+end
+
 -- Every other mode is a solid line in its colour, inside a darker outline two pixels wider.
 Strokes.Map(strokes, { { mode = "lift", points = bend.points, route = 7 } }, mapView())
 check(strokes.n == 2 and not strokes.dot[1] and strokes.color[1] == "lift", "one line per segment")

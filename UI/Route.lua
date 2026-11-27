@@ -78,6 +78,11 @@ for _, choice in ipairs(ROUTE_COLORS) do
 	routeColorByKey[choice.key] = choice.color
 end
 local provider, goal, paths, worldPaths, stops, stopIndex
+-- Whether the journey is a tour of many close stops (NavigateRoute's tourLine).
+local function Tour()
+	local stop = goal and (goal.stop or goal)
+	return stop ~= nil and stop.tourLine == true
+end
 -- The route's pools on the world map (UI/Canvas.lua), made at load.
 ---@type SPFCanvasPool, SPFCanvasPool
 local linePins, goalPins
@@ -169,6 +174,8 @@ ns.JourneyMapPosition = MapPosition
 local REDRAW_EVERY = 0.1
 -- How far past the view the journey is drawn, in views, so a drag stays drawn until it has gone that far.
 local VIEW_MARGIN = 0.5
+-- How many legs past the current one the world map draws on a tour (NavigateRoute's tourLine).
+local TOUR_LATER_LEGS = 4
 
 -- What Strokes.lua draws through, refilled for each drawing rather than rebuilt.
 ---@type SPFMapView
@@ -347,6 +354,7 @@ function RoutePin:Draw()
 	mapView.marks = journey and provider and provider.stopMarks or nil
 	-- The journey's own paths come first; Itinerary.lua's later hops recede, unless NavigateRoute asked for full strength.
 	mapView.current = journey and not (goal and (goal.stop or goal).unfaded) and #paths or math.huge
+	mapView.tour = journey and Tour()
 	mapView.highlight = journey and hoveredStops or nil
 	-- A journey's dots run every few pixels whatever the zoom: only those near the view are drawn. Lines of other
 	-- pins (RouteTransports.lua) are short and do not follow the view.
@@ -698,6 +706,7 @@ local function DrawMinimap(self)
 	view.walkSize = ns.db.minimapRouteScale
 	-- A goal with a known mark wears the wider ring (ns.SetJourneyRoute).
 	view.goal, view.goalRadius = goal, (goal and goal.look and MINIMAP_RING or MINIMAP_GOAL) / 2
+	view.tour = Tour()
 	local linePaths = paths
 	if ns.db.minimapLine == false then
 		linePaths = NO_PATHS
@@ -782,7 +791,7 @@ local function WorldPaths()
 			path.stop = stopIndex
 			worldPaths[#worldPaths + 1] = path
 		end
-		for _, path in ipairs(ns.db.laterLegs ~= false and ns.JourneyPreview() or {}) do
+		for _, path in ipairs(ns.db.laterLegs ~= false and ns.JourneyPreview(Tour() and TOUR_LATER_LEGS or nil) or {}) do
 			worldPaths[#worldPaths + 1] = path
 		end
 	end
@@ -842,6 +851,10 @@ end
 -- line pins back or lets them go, and the minimap redraws with the new choice.
 function ns.RefreshRouteLines()
 	geometryRevision = geometryRevision + 1
+	-- A resubmit may change how many later legs the map draws.
+	if goal then
+		WorldPaths()
+	end
 	if linePins and WorldMapFrame:IsShown() then
 		provider:RefreshAllData()
 	end
