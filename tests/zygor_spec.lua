@@ -196,4 +196,13 @@ for _, installed in ipairs({ false, true }) do
 	assert(c.API.CurrentStop("Zygor") == 1, "removing the mirror leaves the pointer's route alone")
 end
 
+-- A Journey stops route is the player's own: the guide's pointer does not replace it.
+do
+	local c = Boot()
+	assert(c.API.NavigateRoute("SPF:Stops:1:1", { { map = 1, x = 0.55, y = 0.5 } }))
+	c.pointer:ShowArrow({ m = 1, x = 0.65, y = 0.5, title = "Guide point" })
+	c.enable()
+	assert(c.API.CurrentStop("SPF:Stops:1:1") == 1 and not c.API.CurrentStop("Zygor"), "the stops route stays")
+end
+
 print("zygor: ok")

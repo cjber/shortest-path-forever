@@ -597,7 +597,7 @@ end
 -- Subscribe: one call per burst of guidance changes, on the next frame, each subscriber isolated from the others.
 do
 	equal(API.version, 2, "version 2 removes peer and leaderboard APIs")
-	equal(API.minor, 11, "minor 11 adds the skipped result of Ended")
+	equal(API.minor, 13, "minor 13 adds the player origin")
 	equal(pcall(API.Subscribe, "callback"), false, "a callback must be a function")
 	local timers, route =
 		{}, {

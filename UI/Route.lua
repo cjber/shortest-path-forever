@@ -31,8 +31,8 @@ function ns.DestinationPinScale()
 	return math.max(50, math.min(100, value)) / 100
 end
 
--- A stop with a known mark is only ringed, so the game's icon shows through; every other goal wears our own pin,
--- gold while Guide tracks it and bronze while the route is only planned.
+-- A stop that is ringed (Ringed, on the minimap) shows what stands there through the ring; every other goal wears our
+-- own pin, gold while Guide tracks it and bronze while the route is only planned.
 ---@param texture Texture
 ---@param ringed boolean
 ---@param size number
@@ -78,6 +78,16 @@ for _, choice in ipairs(ROUTE_COLORS) do
 	routeColorByKey[choice.key] = choice.color
 end
 local provider, goal, paths, worldPaths, stops, stopIndex
+-- Whether the journey is a tour of many close stops (NavigateRoute's tourLine).
+local function Tour()
+	local stop = goal and (goal.stop or goal)
+	return stop ~= nil and stop.tourLine == true
+end
+-- Addon textures draw over the minimap's own icons, so a stop with a known mark (a "?", a flight master) and every
+-- stop of a tour of close stops (often a herb or vein to be seen) is only circled there.
+local function Ringed()
+	return goal ~= nil and (goal.look ~= nil or Tour())
+end
 -- The route's pools on the world map (UI/Canvas.lua), made at load.
 ---@type SPFCanvasPool, SPFCanvasPool
 local linePins, goalPins
@@ -93,7 +103,7 @@ local NO_PATHS = {}
 ---@field Goal Texture
 ---@field strokeLayer SPFStrokeLayer
 ---@field elapsed number
----@field goalEdge? boolean the goal's mark waits on the rim, off the minimap
+---@field goalRinged? boolean the goal's mark is drawn as a ring; nil until it is drawn
 ---@field idle number seconds the minimap has drawn nothing new
 ---@field ticker? FunctionContainer the slow poll while the every-frame update rests
 ---@field lastX? number
@@ -169,6 +179,8 @@ ns.JourneyMapPosition = MapPosition
 local REDRAW_EVERY = 0.1
 -- How far past the view the journey is drawn, in views, so a drag stays drawn until it has gone that far.
 local VIEW_MARGIN = 0.5
+-- How many legs past the current one the world map draws on a tour (NavigateRoute's tourLine).
+local TOUR_LATER_LEGS = 4
 
 -- What Strokes.lua draws through, refilled for each drawing rather than rebuilt.
 ---@type SPFMapView
@@ -347,6 +359,7 @@ function RoutePin:Draw()
 	mapView.marks = journey and provider and provider.stopMarks or nil
 	-- The journey's own paths come first; Itinerary.lua's later hops recede, unless NavigateRoute asked for full strength.
 	mapView.current = journey and not (goal and (goal.stop or goal).unfaded) and #paths or math.huge
+	mapView.tour = journey and Tour()
 	mapView.highlight = journey and hoveredStops or nil
 	-- A journey's dots run every few pixels whatever the zoom: only those near the view are drawn. Lines of other
 	-- pins (RouteTransports.lua) are short and do not follow the view.
@@ -488,18 +501,6 @@ function Layer:RefreshAllData()
 	end
 end
 
--- The objective quests a stop marks, as UI/QuestPins.lua reads them (#472, #859). Its hand-ins come after them, so a
--- stop that only hands a quest in still has one to show.
----@param point SPFPoint
----@return integer[]
-local function StopQuests(point)
-	local quests = { point.questID }
-	for _, questID in ipairs(point.questIDs or {}) do
-		quests[#quests + 1] = questID
-	end
-	return quests
-end
-
 -- Stops whose buttons would overlap at this zoom share one, as the map's docks do: at their middle, faded, or at the
 -- stop being guided to and at full strength when it is among them. The buttons are rebuilt only when that grouping
 -- changes, and the line redrawn around them.
@@ -530,7 +531,7 @@ function Layer:RefreshStops()
 				details = point.details,
 				look = point.look,
 				ground = ns.PathGrid.ground(point.map, point.x, point.y, point.z),
-				quests = StopQuests(point),
+				quests = ns.StopQuests(point),
 				handins = point.handins,
 			}
 		end
@@ -696,8 +697,8 @@ local function DrawMinimap(self)
 	view.x, view.y, view.map, view.radius, view.facing = x, y, map, radius, facing
 	view.width, view.height, view.scale, view.square = width, height, scale, square
 	view.walkSize = ns.db.minimapRouteScale
-	-- A goal with a known mark wears the wider ring (ns.SetJourneyRoute).
-	view.goal, view.goalRadius = goal, (goal and goal.look and MINIMAP_RING or MINIMAP_GOAL) / 2
+	view.goal, view.goalRadius = goal, (Ringed() and MINIMAP_RING or MINIMAP_GOAL) / 2
+	view.tour = Tour()
 	local linePaths = paths
 	if ns.db.minimapLine == false then
 		linePaths = NO_PATHS
@@ -706,11 +707,11 @@ local function DrawMinimap(self)
 	if gx then
 		self.Goal:SetPoint("CENTER", self, "CENTER", gx * width / 2, gy * height / 2)
 		-- Off the minimap it only shows the way, a little faded, as the game's own tracked pin is at the minimap's
-		-- edge, and always as the goal pin: a ring for a known mark would circle nothing there.
+		-- edge, and always as the goal pin: a ring would circle nothing there.
 		self.Goal:SetAlpha(edge and EDGE_ALPHA or 1)
-		if (edge or false) ~= (self.goalEdge or false) then
-			self.goalEdge = edge
-			local ringed = not edge and goal and goal.look ~= nil
+		local ringed = not edge and Ringed()
+		if ringed ~= self.goalRinged then
+			self.goalRinged = ringed
 			local size = ringed and MINIMAP_RING or MINIMAP_GOAL
 			SetGoalArt(self.Goal, ringed, size, ns.GoalPinActive())
 		end
@@ -782,7 +783,7 @@ local function WorldPaths()
 			path.stop = stopIndex
 			worldPaths[#worldPaths + 1] = path
 		end
-		for _, path in ipairs(ns.db.laterLegs ~= false and ns.JourneyPreview() or {}) do
+		for _, path in ipairs(ns.db.laterLegs ~= false and ns.JourneyPreview(Tour() and TOUR_LATER_LEGS or nil) or {}) do
 			worldPaths[#worldPaths + 1] = path
 		end
 	end
@@ -842,6 +843,10 @@ end
 -- line pins back or lets them go, and the minimap redraws with the new choice.
 function ns.RefreshRouteLines()
 	geometryRevision = geometryRevision + 1
+	-- A resubmit may change how many later legs the map draws.
+	if goal then
+		WorldPaths()
+	end
 	if linePins and WorldMapFrame:IsShown() then
 		provider:RefreshAllData()
 	end
@@ -885,12 +890,7 @@ function ns.SetJourneyRoute(destination, route)
 		provider:RefreshAllData()
 	end
 	if minimap then
-		-- Addon textures draw over the minimap's own icons, so a stop with a known mark (a "?", a flight master) is only
-		-- circled there: the game's icon shows through the ring.
-		local ringed = destination ~= nil and destination.look ~= nil
-		local size = ringed and MINIMAP_RING or MINIMAP_GOAL
-		SetGoalArt(minimap.Goal, ringed, size, ns.GoalPinActive())
-		minimap.goalEdge = nil
+		minimap.goalRinged = nil
 		if destination then
 			minimap:Show()
 			DrawMinimap(minimap)
@@ -916,7 +916,7 @@ function ns.RefreshJourneyPin()
 	end
 	journeyPinActive = active
 	if minimap then
-		local ringed = not minimap.goalEdge and goal.look ~= nil
+		local ringed = minimap.goalRinged == true
 		local size = ringed and MINIMAP_RING or MINIMAP_GOAL
 		SetGoalArt(minimap.Goal, ringed, size, active)
 	end

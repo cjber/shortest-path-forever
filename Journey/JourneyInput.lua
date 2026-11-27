@@ -397,11 +397,9 @@ function ns.JourneyToTrackedQuest()
 end
 
 -- Route to the focused quest: an opt-in journey (db.focusedQuest) from the quest or flight point the client is
--- super-tracking, so a controller needs no map click. The map pin the player placed always plans one: Ctrl-click,
--- the map's pin button, /mappin and a chat link all end in the client's user waypoint, the one thing every way of
--- placing it shares (#1336). Removing that pin ends the journey it planned (#1348). A guide's own journey is left
--- alone: its focus changes are its steps, not the player's choice. Journey.lua calls these after Guide.TrackingChanged,
--- so a guide the player took over has already yielded.
+-- super-tracking, so a controller needs no map click. Ctrl-click, the map's pin button, /mappin and a chat link
+-- all report the same user waypoint (#1336). A player's new pin adds a stop to an open draft or can start a
+-- journey. Removing a pin ends the journey it planned (#1348). Guide-owned reports are handled separately.
 ---@type number?
 local focusedQuest
 ---@type SPFPoint?
@@ -450,12 +448,10 @@ function ns.FocusedTrackingReset()
 	RememberFocused()
 end
 
--- Whether another addon leads the journey. The player's own journeys start without an API owner, or under this
--- addon's name through Nearby services.
+-- Whether the route under way is held against a change of focus: another addon's, or a Journey stops list.
 ---@return boolean
-local function GuideLeads()
-	local owner = ns.JourneyOwner and ns.JourneyOwner()
-	return owner ~= nil and owner ~= "Shortest Path Forever"
+local function RouteHeld()
+	return not ns.IsPlayerJourney(ns.JourneyOwner and ns.JourneyOwner())
 end
 
 ---@param questID number
@@ -515,7 +511,8 @@ end
 ---@param event string
 ---@param ownedWaypoint? boolean
 ---@param waypointChanged? boolean
-function ns.FocusedTrackingChanged(event, ownedWaypoint, waypointChanged)
+---@param capturedStop? boolean
+function ns.FocusedTrackingChanged(event, ownedWaypoint, waypointChanged, capturedStop)
 	if event == "SUPER_TRACKING_CHANGED" then
 		local guide = ns.JourneyGuide
 		local owned = guide and guide.OwnsReported and guide.OwnsReported(event) or false
@@ -526,7 +523,7 @@ function ns.FocusedTrackingChanged(event, ownedWaypoint, waypointChanged)
 		if changed then
 			focusedQuestGoal = nil
 		end
-		if owned or not (ns.db and ns.db.focusedQuest and ns.db.journey) or GuideLeads() then
+		if owned or not (ns.db and ns.db.focusedQuest and ns.db.journey) or RouteHeld() then
 			return
 		end
 		if nodeChanged and node and not GoalIsNode(node) then
@@ -548,12 +545,12 @@ function ns.FocusedTrackingChanged(event, ownedWaypoint, waypointChanged)
 	if ownedWaypoint or not waypointChanged then
 		return
 	end
-	local waypoint = UserWaypoint()
 	local previousGoal = focusedWaypointGoal
 	focusedWaypointGoal = nil
-	if not (ns.db and ns.db.journey) then
+	if capturedStop or not (ns.db and ns.db.journey) then
 		return
 	end
+	local waypoint = UserWaypoint()
 	if waypoint then
 		if GoalIsWaypoint(waypoint) then
 			if previousGoal and ns.JourneyGoal() == previousGoal then
@@ -562,7 +559,7 @@ function ns.FocusedTrackingChanged(event, ownedWaypoint, waypointChanged)
 		elseif ns.db.mapPinRoutes and ns.JourneyToUserWaypoint() then
 			focusedWaypointGoal = ns.JourneyGoal()
 		end
-	elseif previousGoal and not GuideLeads() and ns.JourneyGoal() == previousGoal then
+	elseif previousGoal and not RouteHeld() and ns.JourneyGoal() == previousGoal then
 		ns.ClearJourney()
 	end
 end

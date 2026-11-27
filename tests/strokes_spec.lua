@@ -165,6 +165,104 @@ Strokes.Minimap(strokes, { bend }, minimapView(point(0.2, 0.5)))
 check(strokes.n == 2 and not strokes.dot[1] and not strokes.dot[2], "solid minimap walking lines are continuous")
 ns.db = nil
 
+-- A tour's walk is solid whatever the player's style, its bends cut back a few screen pixels and bridged by a curve;
+-- the ends stay exact and later legs recede less.
+do
+	local ends = bend.points
+	Strokes.Map(
+		strokes,
+		{ { mode = "walk", points = ends }, { mode = "walk", points = ends } },
+		mapView({ tour = true, current = 1 })
+	)
+	local each = strokes.n / 2
+	check(each == 6, "two sides and four steps round the bend: " .. each)
+	for i = 1, each do
+		check(not strokes.dot[i] and strokes.alpha[i] == 1 and strokes.alpha[i + each] == 0.6)
+		check(
+			i == 1 or close(strokes.x1[i], strokes.x2[i - 1]) and close(strokes.y1[i], strokes.y2[i - 1]),
+			"connected"
+		)
+	end
+	check(close(strokes.x1[1], 100) and close(strokes.y1[1], -500), "the start stays exact")
+	check(close(strokes.x2[each], 300) and close(strokes.y2[each], -800), "the end stays exact")
+	check(close(strokes.x2[1], 300 - 3.5) and close(strokes.y2[1], -500), "the bend is cut back")
+	check(close(strokes.x1[each], 300) and close(strokes.y1[each], -503.5))
+	Strokes.Map(strokes, { { mode = "walk", points = ends } }, mapView({ tour = true, scale = 2 }))
+	check(close(strokes.x2[1], 300 - 1.75), "the cut is screen pixels")
+	local short = { point(0.1, 0.5), point(0.106, 0.5), point(0.106, 0.7) }
+	Strokes.Map(strokes, { { mode = "walk", points = short } }, mapView({ tour = true }))
+	check(close(strokes.x2[1], 103.6), "never more than two fifths of a side")
+	local straight = { point(0.1, 0.5), point(0.2, 0.5), point(0.3, 0.5) }
+	Strokes.Map(strokes, { { mode = "walk", points = straight } }, mapView({ tour = true }))
+	check(strokes.n == 2, "a straight run gains no strokes")
+	-- Two walked segments either side of a jump: no curve joins them, and the jump keeps its two end marks.
+	local apart = { point(0.1, 0.5), point(0.2, 0.5), point(0.2, 0.6), point(0.3, 0.6) }
+	apart[2].jump = true
+	Strokes.Map(strokes, { { mode = "walk", points = apart } }, mapView({ tour = true }))
+	check(strokes.n == 6, "a break in the walk is not rounded across: " .. strokes.n)
+	-- A fall straight down lands on the map point it left from.
+	local fall = { point(0.1, 0.5), point(0.2, 0.5), point(0.2, 0.5), point(0.2, 0.6) }
+	fall[2].jump = true
+	Strokes.Map(strokes, { { mode = "walk", points = fall } }, mapView({ tour = true }))
+	check(strokes.n == 6, "nor across a fall in place: " .. strokes.n)
+	Strokes.Minimap(strokes, { bend }, minimapView(point(0.2, 0.7), { tour = true }))
+	check(strokes.n == 2 and not strokes.dot[1], "a tour's minimap walk is solid")
+	-- It stops short of the player's arrow and of the next stop's ring, so both show.
+	local player = point(0.1, 0.5)
+	local goal = point(0.1 + 0.25, 0.5)
+	local past = { mode = "walk", points = { player, point(0.1 + 0.4, 0.5) } }
+	local view = minimapView(player, { tour = true, goal = goal })
+	local gx, gy = Strokes.Minimap(strokes, { past }, view)
+	local cx, cy = (gx + 1) * MINIMAP / 2, (gy - 1) * MINIMAP / 2
+	check(strokes.n == 2, "the line breaks round the ring: " .. strokes.n)
+	-- The line runs straight up from the player, so each end's distance to a mark on it is enough.
+	for i = 1, strokes.n do
+		for _, y in ipairs({ strokes.y1[i], strokes.y2[i] }) do
+			check(math.abs(y + MINIMAP / 2) >= ARROW - 1e-9, "the tour line under the arrow")
+			check(math.abs(y - cy) >= view.goalRadius, "the tour line under the ring")
+		end
+		check((strokes.y1[i] - cy) * (strokes.y2[i] - cy) > 0, "the tour line across the ring")
+		check(close(strokes.x1[i], cx), "straight up")
+	end
+	-- Beside a held stop, a tour's ring is the mark: no line is drawn back through it.
+	local beside = point(0.1 + 0.05, 0.5)
+	beside.hold = true
+	local approach = { mode = "walk", points = { player, beside } }
+	Strokes.Minimap(strokes, { approach }, minimapView(player, { tour = true, goal = beside }))
+	check(strokes.n == 0, "nothing runs through a held stop's ring: " .. strokes.n)
+end
+
+-- Terrain walks step about a pixel at a time on a zone map, and the client draws nothing for a sliver of one: a
+-- solid walk, a tour's or the player's own style, is one unbroken line with no stroke under a pixel short of its end.
+do
+	local stairs = { point(0.1, 0.5) }
+	for i = 1, 120 do
+		local last, along, aside = stairs[i], 0.0011, i % 6 == 0 and 0.0011 or 0
+		-- A shallow run, then a steep one that turns at every step.
+		if i > 60 then
+			along, aside = i % 2 == 0 and 0.0011 or 0, i % 2 == 1 and 0.0011 or 0
+		end
+		stairs[i + 1] = point(last.x + along, last.y + aside)
+	end
+	local finish = stairs[#stairs]
+	for _, tour in ipairs({ true, false }) do
+		ns.db = { routeStyle = "solid" }
+		Strokes.Map(strokes, { { mode = "walk", points = stairs } }, mapView({ tour = tour }))
+		ns.db = nil
+		for i = 1, strokes.n do
+			local left = math.sqrt((strokes.x2[i] - finish.x * CANVAS) ^ 2 + (strokes.y2[i] + finish.y * CANVAS) ^ 2)
+			check(left < 8 or length(strokes, i) >= 1, "a sliver the client drops: " .. i .. " " .. length(strokes, i))
+			check(
+				i == 1 or close(strokes.x1[i], strokes.x2[i - 1]) and close(strokes.y1[i], strokes.y2[i - 1]),
+				"unbroken"
+			)
+		end
+		check(close(strokes.x1[1], 100) and close(strokes.y1[1], -500), "from the first point")
+		check(close(strokes.x2[strokes.n], finish.x * CANVAS), "to the last")
+		check(close(strokes.y2[strokes.n], -finish.y * CANVAS), "to the last, down")
+	end
+end
+
 -- Every other mode is a solid line in its colour, inside a darker outline two pixels wider.
 Strokes.Map(strokes, { { mode = "lift", points = bend.points, route = 7 } }, mapView())
 check(strokes.n == 2 and not strokes.dot[1] and strokes.color[1] == "lift", "one line per segment")
@@ -250,6 +348,9 @@ for i = 1, strokes.n do
 	dashed, solid = dashed + (strokes.dot[i] and 1 or 0), solid + (strokes.dot[i] and 0 or 1)
 end
 check(dashed == 23 and solid == 2, "dots to the last place on this map, then a cross: " .. dashed .. ", " .. solid)
+-- A tour draws the same hop as a solid line.
+Strokes.Map(strokes, { hop }, mapView({ tour = true }))
+check(strokes.n == 3 and #dots(strokes) == 0, "a tour's hop still planning is solid: " .. strokes.n)
 
 -- Flights are drawn through FlightLines.lua's rounded corners, ends exact (#67).
 local corner = { mode = "flight", points = { point(0.2, 0.2), point(0.6, 0.2), point(0.6, 0.6) } }

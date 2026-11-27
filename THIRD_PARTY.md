@@ -65,6 +65,10 @@ Credit for the reports and requests behind the addon.
 
 | Who | What | Notes |
 |---|---|---|
+| static2290 | Start Journey stops while following a map pin | Discord, #1410 |
+| static2290 | Add Journey stops directly from the map | Discord, #1411 |
+| static2290 | Remember Journey stops and resume the remaining route | Discord, #1412 |
+| [hailtohell](https://github.com/hailtohell) | Other addons can draw walks from your floor | GitHub, #1409 |
 | forleong | TomTom arrow handoff with the RestedXP bridge | CurseForge thread 100011835, #1390 |
 | xh43k | A switch for routing to the map pin | Discord, #1391 |
 | Nedula | Minimap walking route size | CurseForge thread 8778371; #1281 |

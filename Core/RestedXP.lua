@@ -191,7 +191,7 @@ local function Sync()
 	-- Manual destinations have no API owner; Nearby uses this addon's owner. Native guide updates must
 	-- not replace either while it is active. Resume guide is the explicit hand-back action.
 	local owner = ns.JourneyOwner()
-	if not resuming and ns.HasJourney() and (owner == nil or owner == "Shortest Path Forever") then
+	if not resuming and ns.HasJourney() and ns.IsOwnJourney(owner) then
 		Restore()
 		return
 	end

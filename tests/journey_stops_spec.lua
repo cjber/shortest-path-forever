@@ -6,6 +6,7 @@ driver.load("Core/APIInput.lua")
 driver.load("Core/APIStops.lua")
 driver.load("Core/API.lua")
 driver.load("Journey/Itinerary.lua")
+driver.load("Journey/Resume.lua")
 local timers = {}
 env.C_Timer = {
 	After = function(_, fn)
@@ -230,6 +231,7 @@ c:Clear()
 c:Add(stop(0.502))
 c:Add(stop(0.503))
 eq(c:Move(-1), true, "manual farther stop first")
+eq(api.Navigate("Shortest Path Forever", 1, 0.52, 0.5), true, "Nearby starts a player journey")
 eq(c:Start(), true, "manual multi-stop start")
 eq(c.job, nil, "manual order does not estimate")
 eq(c.activeStops[1].x, 0.503, "active list follows explicit order")
@@ -253,4 +255,24 @@ for _, bad in ipairs({
 	eq(c:Submit(bad), false, "whole snapshot rejected")
 	eq(ns.HasJourney(), false, "no prefix submitted")
 end
+-- A journey the player starts while the stops are ordering is newer than the order.
+c:Clear()
+c:Add(stop(0.502))
+c:Add(stop(0.503))
+eq(c:Start(), true, "order before a newer journey")
+eq(api.Navigate("Shortest Path Forever", 1, 0.52, 0.5), true, "Nearby starts during ordering")
+local newer = ns.JourneyGoal()
+for _ = 1, 3 do
+	c:Step()
+end
+eq(c.job, nil, "the order is dropped")
+eq(c.state, "changed", "the newer journey is reported")
+eq(ns.JourneyGoal(), newer, "the newer journey continues")
+-- Start on the place a paused journey leads to takes it over running.
+eq(api.Pause("Shortest Path Forever"), true, "pause the player journey")
+c:Clear()
+eq(c:Submit({ { map = 1, x = 0.52, y = 0.5 } }), true, "same place handover")
+eq(c.state, "running", "the handover is unpaused")
+eq(ns.IsJourneyGuided(), true, "guidance is on")
+c:Stop()
 print("journey_stops_spec: " .. checks .. " checks passed")

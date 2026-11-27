@@ -82,11 +82,11 @@ end
 ---@param from any
 ---@param callback any
 ---@param opts any
----@return SPFPoint?
+---@return SPFPoint?, SPFAPIWalkRefusal?
 local function StartPoint(owner, from, callback, opts)
 	if
 		not Input.Owner(owner)
-		or type(from) ~= "table"
+		or not canaccessvalue(from)
 		or type(callback) ~= "function"
 		or (opts ~= nil and type(opts) ~= "table")
 	then
@@ -96,7 +96,12 @@ local function StartPoint(owner, from, callback, opts)
 	if water ~= nil and type(water) ~= "boolean" then
 		return nil
 	end
-	return Input.Point(from.map, from.x, from.y)
+	if from == "player" then
+		return Input.PlayerStart()
+	end
+	if type(from) == "table" then
+		return Input.Point(from.map, from.x, from.y)
+	end
 end
 
 ---@param target any
@@ -134,14 +139,14 @@ end
 -- One walking search from `from` to every target on its map, all in uiMapIDs and 0-1 fractions. Returns a function
 -- that cancels it, safe to call twice and never calling back once called, or nil and why it did not start.
 ---@param owner string
----@param from SPFAPIPlace
+---@param from SPFAPIPlace|"player"
 ---@param targets SPFAPIPlace[]
 ---@param callback fun(costs: (number|false)[], reason: SPFAPIWalkReason?)
 ---@param opts? SPFAPIWalkOptions
 ---@return fun()? cancel, SPFAPIWalkRefusal? reason
 function ns.EstimateWalks(owner, from, targets, callback, opts)
-	local start = StartPoint(owner, from, callback, opts)
-	if not start or type(targets) ~= "table" then
+	-- Bad targets answer "invalid" even while a live origin is unavailable: asking again later cannot help.
+	if type(targets) ~= "table" then
 		return nil, "invalid"
 	end
 	local count = #targets
@@ -152,6 +157,10 @@ function ns.EstimateWalks(owner, from, targets, callback, opts)
 		if not Input.Number(key) or key % 1 ~= 0 or key < 1 or key > count then
 			return nil, "invalid"
 		end
+	end
+	local start, refusal = StartPoint(owner, from, callback, opts)
+	if not start then
+		return nil, refusal or "invalid"
 	end
 	local places = {}
 	for index = 1, count do
@@ -169,16 +178,19 @@ function ns.EstimateWalks(owner, from, targets, callback, opts)
 end
 
 ---@param owner string
----@param from SPFAPIPlace
+---@param from SPFAPIPlace|"player"
 ---@param to SPFAPIPlace
 ---@param callback fun(path: SPFAPIWalkPath?, reason: SPFAPIWalkReason?)
 ---@param opts? SPFAPIWalkOptions
 ---@return fun()? cancel, SPFAPIWalkRefusal? reason
 function ns.WalkPath(owner, from, to, callback, opts)
-	local start = StartPoint(owner, from, callback, opts)
+	if type(to) ~= "table" then
+		return nil, "invalid"
+	end
+	local start, refusal = StartPoint(owner, from, callback, opts)
 	local goal = start and TargetPoint(to, start.map)
 	if not start or not goal then
-		return nil, "invalid"
+		return nil, refusal or "invalid"
 	end
 	local water, reason = ReadyWater(start.map, opts)
 	if water == nil then
