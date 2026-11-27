@@ -262,6 +262,19 @@ do
  posX, posY = 0, 0
 end
 assert(api.Cancel("Test"))
+-- A tour of close stops rings each stop on the minimap, known mark or not, so what stands there shows.
+do
+ local _, at = C_Map.GetWorldPosFromMapPos(1414, CreateVector2D(0.51, 0.5))
+ posX, posY = at:GetXY()
+ posX = posX - 20
+ assert(api.NavigateRoute("Test", { stops[1], stops[2] }, { tourLine = true }))
+ settle()
+ assert(not miniRoute.goalEdge and miniRoute.Goal.atlas == "adventureguide-ring", "the next tour stop is circled")
+ ns.RefreshJourneyPin()
+ assert(miniRoute.Goal.atlas == "adventureguide-ring", "and stays circled")
+ posX, posY = 0, 0
+ assert(api.Cancel("Test"))
+end
 assert(api.Navigate("Test", 1414, 0.51, 0.5, "Trainer", "trainer"))
 settle()
 -- The trainer's Class atlas fits the 22 by 22 look box at the stub atlas's 36 by 44 shape; a lone

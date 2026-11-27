@@ -31,8 +31,8 @@ function ns.DestinationPinScale()
 	return math.max(50, math.min(100, value)) / 100
 end
 
--- A stop with a known mark is only ringed, so the game's icon shows through; every other goal wears our own pin,
--- gold while Guide tracks it and bronze while the route is only planned.
+-- A stop that is ringed (Ringed, on the minimap) shows what stands there through the ring; every other goal wears our
+-- own pin, gold while Guide tracks it and bronze while the route is only planned.
 ---@param texture Texture
 ---@param ringed boolean
 ---@param size number
@@ -82,6 +82,11 @@ local provider, goal, paths, worldPaths, stops, stopIndex
 local function Tour()
 	local stop = goal and (goal.stop or goal)
 	return stop ~= nil and stop.tourLine == true
+end
+-- Addon textures draw over the minimap's own icons, so a stop with a known mark (a "?", a flight master) and every
+-- stop of a tour of close stops (often a herb or vein to be seen) is only circled there.
+local function Ringed()
+	return goal ~= nil and (goal.look ~= nil or Tour())
 end
 -- The route's pools on the world map (UI/Canvas.lua), made at load.
 ---@type SPFCanvasPool, SPFCanvasPool
@@ -704,8 +709,7 @@ local function DrawMinimap(self)
 	view.x, view.y, view.map, view.radius, view.facing = x, y, map, radius, facing
 	view.width, view.height, view.scale, view.square = width, height, scale, square
 	view.walkSize = ns.db.minimapRouteScale
-	-- A goal with a known mark wears the wider ring (ns.SetJourneyRoute).
-	view.goal, view.goalRadius = goal, (goal and goal.look and MINIMAP_RING or MINIMAP_GOAL) / 2
+	view.goal, view.goalRadius = goal, (Ringed() and MINIMAP_RING or MINIMAP_GOAL) / 2
 	view.tour = Tour()
 	local linePaths = paths
 	if ns.db.minimapLine == false then
@@ -715,11 +719,11 @@ local function DrawMinimap(self)
 	if gx then
 		self.Goal:SetPoint("CENTER", self, "CENTER", gx * width / 2, gy * height / 2)
 		-- Off the minimap it only shows the way, a little faded, as the game's own tracked pin is at the minimap's
-		-- edge, and always as the goal pin: a ring for a known mark would circle nothing there.
+		-- edge, and always as the goal pin: a ring would circle nothing there.
 		self.Goal:SetAlpha(edge and EDGE_ALPHA or 1)
 		if (edge or false) ~= (self.goalEdge or false) then
 			self.goalEdge = edge
-			local ringed = not edge and goal and goal.look ~= nil
+			local ringed = not edge and Ringed()
 			local size = ringed and MINIMAP_RING or MINIMAP_GOAL
 			SetGoalArt(self.Goal, ringed, size, ns.GoalPinActive())
 		end
@@ -898,9 +902,7 @@ function ns.SetJourneyRoute(destination, route)
 		provider:RefreshAllData()
 	end
 	if minimap then
-		-- Addon textures draw over the minimap's own icons, so a stop with a known mark (a "?", a flight master) is only
-		-- circled there: the game's icon shows through the ring.
-		local ringed = destination ~= nil and destination.look ~= nil
+		local ringed = Ringed()
 		local size = ringed and MINIMAP_RING or MINIMAP_GOAL
 		SetGoalArt(minimap.Goal, ringed, size, ns.GoalPinActive())
 		minimap.goalEdge = nil
@@ -929,7 +931,7 @@ function ns.RefreshJourneyPin()
 	end
 	journeyPinActive = active
 	if minimap then
-		local ringed = not minimap.goalEdge and goal.look ~= nil
+		local ringed = not minimap.goalEdge and Ringed()
 		local size = ringed and MINIMAP_RING or MINIMAP_GOAL
 		SetGoalArt(minimap.Goal, ringed, size, active)
 	end

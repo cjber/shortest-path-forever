@@ -99,7 +99,7 @@
 ---@field policy? "normal"|"walking" -- "normal" (the default) plans by every transport; "walking" keeps every leg a walk along the walking map
 ---@field stopMarkers? boolean -- true (the default) draws each stop's pin on the world map; false draws the route line alone, for this journey only
 ---@field fadeLaterLegs? boolean -- true (the default) fades the world map's legs past the current stop; false draws them at full strength, for this journey only
----@field tourLine? boolean -- false (the default); true draws a tour of many close stops: solid walks, soft corners and only the next four later legs on the world map, for this journey only
+---@field tourLine? boolean -- false (the default); true draws a tour of many close stops: solid walks, soft corners, only the next four later legs on the world map and the next stop circled on the minimap, for this journey only
 
 --- A stop a route observer is told about, as a fresh copy.
 ---@class SPFAPIObservedStop
