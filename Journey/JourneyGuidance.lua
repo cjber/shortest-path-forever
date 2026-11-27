@@ -5,6 +5,23 @@ if ns.broken then
 	return
 end
 
+-- Journey stops runs each route under an owner of its own, starting with this.
+ns.STOPS_OWNER = "SPF:Stops:"
+
+-- Manual destinations have no owner. Nearby services submits under Shortest Path's name.
+---@param owner string?
+---@return boolean
+function ns.IsPlayerJourney(owner)
+	return owner == nil or owner == "Shortest Path Forever"
+end
+
+-- A route the player chose, Journey stops' included: a leading guide's step does not replace it.
+---@param owner string?
+---@return boolean
+function ns.IsOwnJourney(owner)
+	return ns.IsPlayerJourney(owner) or owner ~= nil and owner:sub(1, #ns.STOPS_OWNER) == ns.STOPS_OWNER
+end
+
 -- Copy the active guide for companion navigators through the public API's map projection. This is separate from the
 -- guide's private waypoint lifecycle because companion addons need the projected route, not the native waypoint state.
 ---@param project fun(point: SPFPoint): SPFAPIPlace?

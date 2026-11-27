@@ -146,8 +146,8 @@
     },
     {
       "source": "UI/JourneyStops.lua",
-      "sha256": "4da4a3a3a158a6052067adad391793ef55e7c840551da66ba9da9737a8b63854",
-      "review": "Read Text, Build and refresh: help and status are created by Text with GameFontHighlight; messages and formatted progress/order phrases reach status without font overrides. SharedButtonSmallTemplate buttons and row labels, PortraitFrameTemplate title, tooltip text and dynamic stop names are excluded because this producer does not establish their font objects.",
+      "sha256": "37677ba853a4be6705d01e15370b1104f9cab6981d17777f616cd147b3e43532",
+      "review": "Read Text, Build and refresh. Text creates help and status with GameFontHighlight. Restored journeys fill in the existing progress phrase with the number of remaining stops. SharedButtonSmallTemplate buttons and row labels, PortraitFrameTemplate title, tooltip text and dynamic stop names are excluded because this producer does not establish their font objects.",
       "bindings": [
         {
           "font": "GameFontHighlight",

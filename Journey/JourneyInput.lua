@@ -450,12 +450,10 @@ function ns.FocusedTrackingReset()
 	RememberFocused()
 end
 
--- Whether another addon leads the journey. The player's own journeys start without an API owner, or under this
--- addon's name through Nearby services.
+-- Whether the route under way is held against a change of focus: another addon's, or a Journey stops list.
 ---@return boolean
-local function GuideLeads()
-	local owner = ns.JourneyOwner and ns.JourneyOwner()
-	return owner ~= nil and owner ~= "Shortest Path Forever"
+local function RouteHeld()
+	return not ns.IsPlayerJourney(ns.JourneyOwner and ns.JourneyOwner())
 end
 
 ---@param questID number
@@ -526,7 +524,7 @@ function ns.FocusedTrackingChanged(event, ownedWaypoint, waypointChanged)
 		if changed then
 			focusedQuestGoal = nil
 		end
-		if owned or not (ns.db and ns.db.focusedQuest and ns.db.journey) or GuideLeads() then
+		if owned or not (ns.db and ns.db.focusedQuest and ns.db.journey) or RouteHeld() then
 			return
 		end
 		if nodeChanged and node and not GoalIsNode(node) then
@@ -562,7 +560,7 @@ function ns.FocusedTrackingChanged(event, ownedWaypoint, waypointChanged)
 		elseif ns.db.mapPinRoutes and ns.JourneyToUserWaypoint() then
 			focusedWaypointGoal = ns.JourneyGoal()
 		end
-	elseif previousGoal and not GuideLeads() and ns.JourneyGoal() == previousGoal then
+	elseif previousGoal and not RouteHeld() and ns.JourneyGoal() == previousGoal then
 		ns.ClearJourney()
 	end
 end

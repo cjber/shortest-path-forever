@@ -69,6 +69,8 @@
 ---@field StopOrder SPFStopOrder
 ---@field JourneyStopsEditor SPFJourneyStopsModule
 ---@field ShowJourneyStops fun()
+---@field KeepJourneyStops fun(owner: string, stops: SPFAPIStop[])
+---@field ForgetKeptJourney fun()
 ---@field EstimateContextRevision fun(): integer
 ---@field WorldPoint fun(uiMapID: integer, x: number, y: number): SPFPoint?
 ---@field FarmingCursor SPFFarmingCursorFactory
@@ -463,7 +465,8 @@
 ---@field taxiVersion number
 ---@field taxiScanned? boolean
 ---@field guideWaypoint? SPFGuideWaypoint
----@field journey? SPFKeptJourney -- the player's own journey, kept across a reload (Resume.lua)
+---@field journey? SPFKeptJourney|SPFKeptStops -- the player's own journey, kept across a reload (Resume.lua)
+---@field journeyStops? {stops: SPFAPIStop[], manual: boolean} -- the Journey stops draft
 ---@field bind? SPFBindPoint
 ---@class SPFGuideWaypoint
 ---@field uiMapID number
@@ -480,6 +483,7 @@
 ---@field milestones table<string, number>
 -- A journey's goal as Resume.lua keeps it.
 ---@class SPFKeptJourney
+---@field stops nil
 ---@field map number
 ---@field x number
 ---@field y number
@@ -487,6 +491,8 @@
 ---@field label? string
 ---@field questID? number
 ---@field handins? number[] -- the quests handed in at the kept stop, validated on the way in and out (Resume.lua)
+---@class SPFKeptStops
+---@field stops SPFAPIStop[]
 -- Where the character stood when it last bound at an inn, with GetBindLocation's name then.
 ---@class SPFBindPoint : SPFPoint
 ---@field name string
