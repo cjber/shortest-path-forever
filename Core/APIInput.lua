@@ -159,6 +159,25 @@ function Input.Ready()
 	return Input.Loaded() and not InCombatLockdown()
 end
 
+-- A live origin is the journey's own snapshot, including its followed floor or measured height band.
+---@param heightOnly? boolean
+---@return SPFPoint?, ("loading"|"combat"|"unavailable")?
+function Input.PlayerStart(heightOnly)
+	if not Input.Loaded() then
+		return Input.Loading()
+	end
+	if InCombatLockdown() then
+		return nil, "combat"
+	end
+	if not (IsInInstance() or UnitOnTaxi("player")) then
+		local point = ns.JourneySearch.Here(heightOnly)
+		if point then
+			return point
+		end
+	end
+	return nil, "unavailable"
+end
+
 ---@return nil, "loading"
 function Input.Loading()
 	local _, answer = APIKit.NotReady("loading")

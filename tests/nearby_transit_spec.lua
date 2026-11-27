@@ -14,6 +14,7 @@ ns.TaxiNodes = { departure, landing }
 ns.TaxiPaths = { { from = 1, to = 2, seconds = 40 } }
 ns.known = { [1] = true, [2] = true }
 ns.Floor = {
+	Sample = function() end,
 	Height = function()
 		return here.z
 	end,

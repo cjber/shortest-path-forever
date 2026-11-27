@@ -4,6 +4,7 @@ local _, ns = ...
 
 ns.Credits = {
 	players = {
+		{ name = "hailtohell", what = "Other addons can draw walks from your floor" },
 		{ name = "forleong", what = "TomTom arrow handoff with the RestedXP bridge" },
 		{ name = "xh43k", what = "A switch for routing to the map pin" },
 		{ name = "Nedula", what = "Minimap walking route size" },

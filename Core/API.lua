@@ -235,7 +235,7 @@ function ns.JourneyStops()
 end
 
 ---@class SPFPublicAPI
-local API = { version = 2, minor = 12 }
+local API = { version = 2, minor = 13 }
 
 local function Differs(a, b)
 	for key, value in pairs(a) do
@@ -390,9 +390,8 @@ local function Answer(from, to, key, job, walk, bound, place, ceiling)
 	return nil, "unreachable"
 end
 
--- The reason tells a caller whether asking again later can help: "combat" after combat, "loading" when the addon is
--- still building its data, "invalid" never for bad input, "unreachable" when known flight paths or boat timings change.
----@return { at: number, seconds: number|false, legs?: SPFLeg[] }?, ("combat"|"invalid"|"unreachable"|"loading")?
+-- A live origin may be temporarily unavailable. A fixed origin only needs to project to a world point.
+---@return { at: number, seconds: number|false, legs?: SPFLeg[] }?, SPFAPINoRoute?
 local function Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound, place, ceiling)
 	if not Ready() then
 		if InCombatLockdown() then
@@ -400,15 +399,39 @@ local function Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound, 
 		end
 		return Loading()
 	end
-	local from, to = Point(fromMap, fromX, fromY), Point(toMap, toX, toY)
-	if not from or not to then
+	local to = Point(toMap, toX, toY)
+	if not to then
 		return APIKit.Invalid()
 	end
+	local player = canaccessvalue(fromMap) and fromMap == "player"
+	local from, refusal
+	if player then
+		if not (canaccessvalue(fromX) and canaccessvalue(fromY)) or fromX ~= nil or fromY ~= nil then
+			return APIKit.Invalid()
+		end
+		from, refusal = Input.PlayerStart(true)
+	else
+		from = Point(fromMap, fromX, fromY)
+	end
+	if refusal then
+		return nil, refusal
+	end
+	if not from then
+		return APIKit.Invalid()
+	end
+	-- Player floors can change without a change in XY. The fixed-point cache still rounds its map fractions.
+	local origin = player
+			and string.format(
+				"player:%d:%.17g:%.17g:%s",
+				from.map,
+				from.x,
+				from.y,
+				from.z and string.format("%.17g", from.z) or ""
+			)
+		or string.format("%d:%.4f:%.4f", fromMap, fromX, fromY)
 	local key = string.format(
-		"%d:%.4f:%.4f:%d:%.17g:%.17g:%s:%s:%s",
-		fromMap,
-		fromX,
-		fromY,
+		"%s:%d:%.17g:%.17g:%s:%s:%s",
+		origin,
 		toMap,
 		toX,
 		toY,
@@ -440,7 +463,7 @@ end
 ---@param bound? boolean
 ---@param place? SPFNearbyPlace refine Nearby's transit endpoint walks on the NPC's floor
 ---@param ceiling? number with place, the seconds to beat: above them the answer is only a lower bound
----@return number?, ("combat"|"invalid"|"unreachable"|"loading")?, SPFLeg[]?
+---@return number?, SPFAPINoRoute?, SPFLeg[]?
 function ns.EstimateIn(job, fromMap, fromX, fromY, toMap, toX, toY, walk, bound, place, ceiling)
 	local entry, reason = Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound, place, ceiling)
 	if not entry then
