@@ -16,6 +16,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 - Ships with the same shared code as your other Forever addons, so they keep working together.
 
+### Changed
+
+- The Thanks page lists more players. More of the people whose reports and ideas shipped are now thanked by name in game.
+
 ## [1.48.0] - 2026-11-26
 
 <!-- discord-image: docs/screenshots/tracker.png -->
