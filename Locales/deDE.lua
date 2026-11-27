@@ -658,3 +658,4 @@ L["With TomTom installed, point TomTom's arrow at each step instead of our arrow
 L["Journey stops remembers your list."] = "Die Reisehalte merken sich deine Liste." -- mt
 L["Mailbox"] = "Briefkasten" -- mt
 L["Skip this stop"] = "Diesen Halt überspringen" -- mt
+L["Destination queued until combat ends."] = "Ziel bis zum Ende des Kampfes vorgemerkt." -- mt

@@ -702,3 +702,4 @@ L["Journey stops remembers your list."] =
 	"Остановки путешествия теперь запоминают ваш список." -- mt
 L["Mailbox"] = "Почтовый ящик" -- mt
 L["Skip this stop"] = "Пропустить эту остановку" -- mt
+L["Destination queued until combat ends."] = "Пункт назначения ожидает окончания боя." -- mt
