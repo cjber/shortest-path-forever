@@ -661,8 +661,8 @@ L["Right-click to choose map services."] = "Clic droit pour choisir les services
 L["Use TomTom's arrow"] = "Utiliser la flèche de TomTom" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"Avec TomTom installé, pointe la flèche de TomTom vers chaque étape au lieu de notre flèche et du marqueur du jeu." -- mt
-L["Follow TomTom's arrow picks your waypoint back up."] =
-	"« Suivre la flèche de TomTom » reprend votre point de passage." -- mt
+L["Turning off Show direction arrow leaves TomTom's arrow alone."] =
+	"Désactiver « Afficher la flèche de direction » ne touche plus à la flèche de TomTom." -- mt
 L["Mailbox"] = "Boîte aux lettres" -- mt
 L["Skip this stop"] = "Passer cette étape de collecte" -- mt
 L["Destination queued until combat ends."] = "Destination en attente jusqu’à la fin du combat." -- mt

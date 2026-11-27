@@ -643,7 +643,8 @@ L["Right-click to choose map services."] = "右鍵點擊選擇地圖服務。" -
 L["Use TomTom's arrow"] = "使用 TomTom 的箭頭" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"安裝 TomTom 時，用 TomTom 的箭頭指向每一步，替代本插件箭頭與遊戲標記。" -- mt
-L["Follow TomTom's arrow picks your waypoint back up."] = "「跟隨TomTom的箭頭」會重新跟隨你的路徑點。" -- mt
+L["Turning off Show direction arrow leaves TomTom's arrow alone."] =
+	"關閉「顯示方向箭頭」不再影響TomTom的箭頭。" -- mt
 L["Mailbox"] = "郵箱" -- mt
 L["Skip this stop"] = "跳過此採集點" -- mt
 L["Destination queued until combat ends."] = "目的地已排入佇列，戰鬥結束後規劃。" -- mt

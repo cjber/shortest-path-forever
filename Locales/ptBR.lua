@@ -654,8 +654,8 @@ L["Right-click to choose map services."] = "Clique direito para escolher os serv
 L["Use TomTom's arrow"] = "Usar a seta do TomTom" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"Com o TomTom instalado, aponta a seta do TomTom para cada etapa em vez da nossa seta e do marcador do jogo." -- mt
-L["Follow TomTom's arrow picks your waypoint back up."] =
-	'"Seguir a seta do TomTom" volta a seguir o seu ponto de rota.' -- mt
+L["Turning off Show direction arrow leaves TomTom's arrow alone."] =
+	"Desativar “Mostrar seta de direção” não mexe mais na seta do TomTom." -- mt
 L["Mailbox"] = "Caixa de correio" -- mt
 L["Skip this stop"] = "Pular esta parada" -- mt
 L["Destination queued until combat ends."] = "Destino em espera até o fim do combate." -- mt
