@@ -113,7 +113,7 @@ end
 -- Not when it is cleared or replaced. A guide's journeys (Adventure Guide, RestedXP, a guide's TomTom waypoints) are
 -- left quiet: they hold at each stop and move on, and the guide gives its own cues.
 local ARRIVAL_SOUND = 567416
--- Who owned the journey under way, read when it started: API.lua has forgotten the owner by the time it ends.
+-- Who owns the journey under way, read while it runs: API.lua has forgotten the owner by the time it ends.
 local owner
 
 ---@param point SPFPoint?
@@ -135,4 +135,10 @@ ns.Init(function()
 	ns.OnTravelTick(CheckNewFlightPaths)
 	-- After every file has loaded, so API.lua's ns.JourneyChanged exists to hook.
 	hooksecurefunc(ns, "JourneyChanged", Arrived) -- taint-ok: ns is this addon's own namespace table.
+	-- Another owner asking for the same place takes the journey over without a new one: only "stop" says so.
+	ShortestPathForever.API.Subscribe(function(changes)
+		if changes.stop then
+			owner = ns.JourneyOwner()
+		end
+	end)
 end)

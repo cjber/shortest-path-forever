@@ -85,6 +85,22 @@ driver.move({ map = 1, x = 0, y = -600 })
 driver.update(0.1)
 assert(not ns.HasJourney() and #played == 4, "a Journey stops route pings at its end")
 
+-- Another owner asking for the place the journey already goes to takes it over, and its arrival is that owner's.
+assert(API.NavigateRoute("SPF:Stops:1:2", { { map = 1, x = 0.514, y = 0.5 } }))
+driver.update(0.1)
+assert(API.NavigateRoute("AGF", { { map = 1, x = 0.514, y = 0.5 } }))
+driver.update(0.1)
+driver.move({ map = 1, x = 0, y = -700 })
+driver.update(0.1)
+assert(not ns.HasJourney() and #played == 4, "a route a guide took over arrives quietly")
+assert(API.NavigateRoute("AGF", { { map = 1, x = 0.516, y = 0.5 } }))
+driver.update(0.1)
+assert(API.Navigate("Shortest Path Forever", 1, 0.516, 0.5))
+driver.update(0.1)
+driver.move({ map = 1, x = 0, y = -800 })
+driver.update(0.1)
+assert(not ns.HasJourney() and #played == 5, "a guide's route you took over pings")
+
 -- An unknown flight master gets one plan warning, then one more on approach, through the same raid-warning banner
 -- and taskbar flash as the timed transport alerts. No sound is guessed for a flight master.
 local unknown = { mode = "walk", to = { id = 9001, map = 1, x = 1000, y = 0, undiscovered = true } }
@@ -114,7 +130,7 @@ for _, tick in ipairs(ticks) do
 	tick()
 end
 assert(#warnings == 2 and warnings[2]:find("near", 1, true), "unknown current master warns on approach")
-assert(flashes == 2 and #played == 4, "both warnings flash, with no invented flight-master sound")
+assert(flashes == 2 and #played == 5, "both warnings flash, with no invented flight-master sound")
 
 -- A known master stays quiet; an unknown master in a later step gets a plan warning but no approach warning.
 warnings = {}
