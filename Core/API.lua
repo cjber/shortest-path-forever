@@ -672,7 +672,8 @@ function API.NavigateRoute(owner, stops, options)
 end
 
 function API.Navigate(owner, map, x, y, title, kind)
-	return API.NavigateRoute(owner, { { map = map, x = x, y = y, title = title, kind = kind } })
+	local stop = { map = map, x = x, y = y, title = title, kind = kind }
+	return not InCombatLockdown() and NavigateRoute(owner, { stop }, "normal", true, true)
 end
 
 -- The player's own pick of a place mid-fight (UI/Nearby.lua), planned when the fight ends. The public calls are
