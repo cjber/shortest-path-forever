@@ -422,9 +422,13 @@ local function restedPin(x, y)
 	pin.waypointSet, pin.zx, pin.zy = true, position.x, position.y
 end
 
+local redraw
 ns.PointGuideArrow = function(points, place)
-	if points and place then
+	redraw = points and place and function()
 		place(points[#points])
+	end
+	if redraw then
+		redraw()
 	end
 end
 env.AdventureGuideForever.API.RestedXPNativeUI = function()
@@ -450,8 +454,8 @@ driver.update(0)
 assert(ns.IsJourneyGuided() and ns.JourneyGoal() == ownedGoal, "two RestedXP writes in one frame preserve guidance")
 assert(driver.waypoint().position.x == 0.63, "the latest RestedXP pin stays in the slot")
 
-local function playerPin()
-	local point = env.UiMapPoint.CreateFromCoordinates(1, 0.3, 0.45)
+local function playerPin(x, y)
+	local point = env.UiMapPoint.CreateFromCoordinates(1, x or 0.3, y or 0.45)
 	env.C_Map.SetUserWaypoint(point)
 	return point
 end
@@ -492,4 +496,199 @@ assert(not ns.HasJourney(), "a pending RestedXP pin cannot restart a journey the
 restedPin(0.68, 0.4)
 driver.update(0)
 assert(not ns.HasJourney(), "a RestedXP pin written without a journey starts nothing")
+
+-- The arrow's side of a redraw (tests/arrow_spec.lua): its next tick places the marker again, standing or not.
+local stale
+ns.RedrawGuideMarker = function()
+	stale = true
+end
+local function tick()
+	if stale then
+		stale = nil
+		redraw()
+	end
+end
+
+-- RestedXP's own removal: it drops its record, then clears the pin that still matches it.
+local function restedClear()
+	local position = env.C_Map.GetUserWaypointPositionForMap(pin.zone)
+	pin.waypointSet = false
+	if position and position.x == pin.zx and position.y == pin.zy then
+		env.C_Map.ClearUserWaypoint()
+	end
+end
+
+local function questJourney()
+	env.C_Map.ClearUserWaypoint()
+	ns.StartJourney({ map = 1, x = 400, y = 400, label = "quest stop", questID = 777 })
+	driver.path.settle()
+	driver.update(0)
+	assert(driver.waypoint(), "the quest journey marks the map")
+	return ns.JourneyGoal()
+end
+
+for _, routes in ipairs({ false, true }) do
+	ns.db.mapPinRoutes = routes
+	local questGoal = questJourney()
+	restedPin(0.7, 0.4)
+	driver.update(0)
+	restedClear()
+	driver.update(0)
+	assert(ns.JourneyGoal() == questGoal, "RestedXP clearing its pin keeps the player's journey")
+	assert(ns.IsJourneyGuided() and not driver.waypoint(), "guidance goes on after RestedXP clears its pin")
+	tick()
+	assert(driver.waypoint(), "the journey marks the map again, with the player standing still")
+	driver.update(0)
+	env.C_Map.ClearUserWaypoint()
+	driver.update(0)
+	assert(not ns.HasJourney(), "the player removing the journey's own marker still ends it")
+
+	questGoal = questJourney()
+	restedPin(0.71, 0.4)
+	restedClear()
+	driver.update(0)
+	assert(ns.JourneyGoal() == questGoal and ns.IsJourneyGuided(), "a pin set and cleared in one frame is RestedXP's")
+
+	restedPin(0.72, 0.4)
+	driver.update(0)
+	restedClear()
+	restedPin(0.73, 0.4)
+	driver.update(0)
+	assert(ns.JourneyGoal() == questGoal and ns.IsJourneyGuided(), "RestedXP's next pin keeps the player's journey")
+	assert(driver.waypoint().position.x == 0.73, "RestedXP's next pin stays in the slot")
+	ns.ClearJourney()
+end
+
+ns.db.mapPinRoutes = true
+env.C_Map.ClearUserWaypoint()
+rxp.RXPFrame.activeSteps = {}
+playerPin()
+driver.path.settle()
+local pinGoal = assert(ns.JourneyGoal(), "the player's pin starts a route")
+rxp.RXPFrame.activeSteps = { { elements = { pin } } }
+restedPin(0.74, 0.4)
+driver.update(0)
+restedClear()
+driver.update(0)
+assert(ns.JourneyGoal() == pinGoal, "RestedXP clearing its pin keeps the route to the player's earlier pin")
+restedPin(0.75, 0.4)
+restedClear()
+driver.update(0)
+assert(ns.JourneyGoal() == pinGoal, "and so does a pin it sets and clears in one frame")
+
+playerPin(0.31)
+driver.update(0)
+assert(ns.HasJourney() and ns.JourneyGoal() ~= pinGoal, "the player's next pin routes while RestedXP has steps")
+env.C_Map.ClearUserWaypoint()
+driver.update(0)
+assert(not ns.HasJourney(), "and removing it ends that route")
+
+-- Another arrow leads, so the journey marks no pin of its own over the player's.
+ns.TomTomArrowActive = function()
+	return true
+end
+playerPin(0.35)
+driver.update(0)
+assert(ns.HasJourney(), "the player's pin routes while another arrow leads")
+env.C_Map.ClearUserWaypoint()
+driver.update(0)
+assert(not ns.HasJourney(), "removing the pin that stayed the player's ends its route")
+ns.TomTomArrowActive = nil
+
+restedPin(0.78, 0.4)
+driver.update(0)
+rxp.RXPFrame.activeSteps = {}
+playerPin(0.32)
+driver.update(0)
+assert(ns.HasJourney(), "the player's pin over RestedXP's routes once its steps are over")
+env.C_Map.ClearUserWaypoint()
+driver.update(0)
+assert(not ns.HasJourney(), "and removing it ends that route too")
+rxp.RXPFrame.activeSteps = { { elements = { pin } } }
+
+restedPin(0.79, 0.4)
+driver.update(0)
+restedClear()
+playerPin(0.79, 0.4)
+driver.update(0)
+assert(ns.HasJourney(), "the player's pin where a finished step stood is theirs")
+ns.ClearJourney()
+
+playerPin(0.33)
+playerPin(0.33)
+driver.update(0)
+assert(ns.HasJourney(), "a pin written twice before it is judged still routes")
+ns.ClearJourney()
+
+playerPin()
+local replacement = { map = 1, x = 900, y = 900, label = "chosen next" }
+ns.StartJourney(replacement)
+local chosen = ns.JourneyGoal()
+driver.update(0)
+assert(ns.JourneyGoal() == chosen, "a pin still being judged cannot replace a journey started after it")
+
+-- The ownership callback, held so a spec can act between a write and its judgement.
+local function holdJudgement(body)
+	local pending = {}
+	local after = env.C_Timer.After
+	env.C_Timer.After = function(_, callback)
+		pending[#pending + 1] = callback
+	end
+	body()
+	env.C_Timer.After = after
+	for _, callback in ipairs(pending) do
+		callback()
+	end
+end
+
+driver.update(0)
+ns.ClearJourney()
+holdJudgement(function()
+	playerPin(0.34)
+	driver.fire("PLAYER_ENTERING_WORLD")
+end)
+assert(not ns.HasJourney(), "a pin still being judged across a loading screen starts nothing")
+
+local loading = questJourney()
+holdJudgement(function()
+	restedPin(0.76, 0.4)
+	driver.fire("PLAYER_ENTERING_WORLD")
+end)
+assert(not ns.charDB.guideWaypoint, "RestedXP's pin is not remembered as the guide's own")
+redraw()
+assert(
+	ns.JourneyGoal() == loading and driver.waypoint().position.x ~= 0.76,
+	"a loading screen leaves the guide marking"
+)
+ns.ClearJourney()
+
+env.Enum.SuperTrackingMapPinType = { TaxiNode = 1 }
+env.C_SuperTrack.GetSuperTrackedMapPin = function() end
+ns.TaxiNodes[5] = { map = 1, x = 700, y = 700 }
+ns.db.focusedQuest = true
+ns.FocusedTrackingReset()
+holdJudgement(function()
+	env.C_SuperTrack.GetSuperTrackedMapPin = function()
+		return 1, 5
+	end
+	restedPin(0.755, 0.4)
+	driver.fire("SUPER_TRACKING_CHANGED")
+	assert(not ns.HasJourney(), "a focus chosen while a pin is judged waits for it")
+end)
+assert(ns.JourneyGoal() and ns.JourneyGoal().x == 700, "and is answered once the pin is judged")
+ns.ClearJourney()
+env.C_SuperTrack.GetSuperTrackedMapPin = function() end
+ns.FocusedTrackingReset()
+driver.update(0)
+holdJudgement(function()
+	env.C_SuperTrack.GetSuperTrackedMapPin = function()
+		return 1, 5
+	end
+	restedPin(0.77, 0.4)
+	driver.fire("SUPER_TRACKING_CHANGED")
+	ns.ClearJourney()
+end)
+assert(not ns.HasJourney(), "a focus held back from before a cleared journey starts nothing")
+driver.fire("SUPER_TRACKING_CHANGED")
+assert(not ns.HasJourney(), "nor does the next report of the same focus")
 print("restedxp: ok")

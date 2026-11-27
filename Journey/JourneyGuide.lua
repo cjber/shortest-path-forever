@@ -860,10 +860,14 @@ function Guide.TrackingChanged(event, ownerWaypoint)
 		return
 	end
 	if ownerWaypoint then
-		-- The step's pin took the native slot. Keep the guide and the waypoint it borrowed at the start.
+		-- The step's pin took or left the native slot. Keep the guide and the waypoint it borrowed at the start.
 		guide.expectedWaypoint = waypoint
 		guide.waypointTarget, guide.uiMap, guide.fading, guide.waypointNavigation = nil, nil, nil, nil
 		RememberTracking(guide)
+		-- Standing still redraws nothing, so an emptied slot asks the arrow to mark it again.
+		if not waypoint and ns.RedrawGuideMarker then
+			ns.RedrawGuideMarker()
+		end
 		RefreshTracker()
 		return
 	end

@@ -914,6 +914,11 @@ function ns.RefreshGuideStops()
 	NotifyLead()
 end
 
+-- The next tick places the marker again, even while nothing has moved. Safe inside another addon's waypoint write.
+function ns.RedrawGuideMarker()
+	renderedPoint = nil
+end
+
 -- Refresh arrow rendering without changing the canonical walk or its progress.
 function ns.ArrowBearingChanged()
 	-- The frame also runs the marker-only poll, so it is made even while another arrow keeps it hidden.

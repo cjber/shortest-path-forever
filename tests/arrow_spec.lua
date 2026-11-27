@@ -117,6 +117,19 @@ ns.PointGuideArrow(nil)
 queued(frame, 0.1)
 assert(frame.hidden and placed == 1 and ns.GuideTargets() == nil, "a queued tick cannot revive cleared guidance")
 
+ns.PointGuideArrow(points, place)
+queued(frame, 10)
+queued(frame, 10)
+local quiet = placed
+queued(frame, 0.1)
+assert(placed == quiet, "a settled arrow places nothing while you stand still")
+ns.RedrawGuideMarker()
+assert(placed == quiet, "asking for the marker writes nothing inside the caller")
+queued(frame, 0.1)
+assert(placed == quiet + 1, "the next tick places the marker again")
+ns.PointGuideArrow(nil)
+placed = 1
+
 ns.RefreshCompass = function()
 	ns.RefreshCompass = nil
 	ns.PointGuideArrow(nil)
