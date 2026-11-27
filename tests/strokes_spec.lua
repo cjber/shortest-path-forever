@@ -293,6 +293,64 @@ end
 Strokes.Map(strokes, { { mode = "walk", points = { point(0, 0.5), point(1, 0.5) } } }, mapView({ scale = 100 }))
 check(strokes.n == 4096, "bounded strokes: " .. strokes.n)
 
+-- A walk whose spaced breadcrumbs all fall in the gaps at its ends gets one between them (#1418).
+do
+	local radius = 10
+	local function between(apart, points)
+		local a, b = point(0.3, 0.5), point(0.3 + apart / CANVAS, 0.5)
+		local marks = { { x = a.x, y = a.y, radius = radius }, { x = b.x, y = b.y, radius = radius } }
+		local walk = points and points(a, b) or { a, b }
+		Strokes.Map(strokes, { { mode = "walk", points = walk } }, mapView({ marks = marks }))
+		return dots(strokes), a, b
+	end
+	local drawn, a, b = between(32)
+	check(#drawn == 1 and close(drawn[1][1], (a.x + b.x) / 2 * CANVAS), "one dot, midway")
+	check(close(drawn[1][2], -a.y * CANVAS), "on the walk")
+	check(drawn[1][1] - a.x * CANVAS >= radius + 2 + DOT / 2 + RIM, "the usual gap")
+	-- Measured along the walk, whatever its segments.
+	drawn, a, b = between(32, function(from, to)
+		return { from, point(from.x + 0.004, from.y), point(from.x + 0.02, from.y), to }
+	end)
+	check(#drawn == 1 and close(drawn[1][1], (a.x + b.x) / 2 * CANVAS), "midway over several segments")
+	check(#between(28) == 0, "no room between the gaps")
+	-- A cave mouth between close stops is marked like any other, where the larger dot still clears them.
+	local function cave(west, east)
+		west.depthCut, east.depth = 0.49, 5
+		return { west, east }
+	end
+	local makeColor = _G.CreateColor
+	_G.CreateColor = function(r, g, blue)
+		return { r = r, g = g, b = blue }
+	end
+	between(32, cave)
+	check(strokes.n == 1 and close(strokes.width[1], DOT * 1.35), "the entrance dot is larger")
+	check(strokes.color[1] ~= colors.walk, "in the depth's colour")
+	between(31, cave)
+	check(strokes.n == 1 and close(strokes.width[1], DOT), "the usual dot where the larger would not clear")
+	_G.CreateColor = makeColor
+	local from, to = point(0.3, 0.5), point(0.332, 0.5)
+	local walk = { { mode = "walk", points = { from, to } } }
+	local marks = { { x = from.x, y = from.y, radius = radius }, { x = to.x, y = to.y, radius = radius } }
+	local function clipped(right)
+		return mapView({ marks = marks, clipLeft = 0, clipRight = right, clipTop = 0, clipBottom = 1 })
+	end
+	Strokes.Map(strokes, walk, clipped(0.317))
+	check(#dots(strokes) == 0, "no rim past the view")
+	-- The length left after a jump out of view is not the walk's: no dot from the middle of a part.
+	local far = { x = 0.5, y = 0.5, map = to.map, jump = true }
+	local jumped = { from, to, far, point(0.8, 0.5), point(0.832, 0.5) }
+	Strokes.Map(strokes, { { mode = "walk", points = jumped } }, clipped(0.337))
+	check(#dots(strokes) == 0, "none for a walk with a break")
+	ns.db = { routeStyle = "solid" }
+	Strokes.Map(strokes, walk, mapView({ marks = marks }))
+	check(#dots(strokes) == 0, "none on a solid walk")
+	walk[1].preview = true
+	Strokes.Map(strokes, walk, mapView({ marks = marks }))
+	check(#dots(strokes) == 1, "a preview stays dotted")
+	ns.db = nil
+	check(#between(80) > 1, "an open walk keeps its spacing")
+end
+
 -- The dots stop short of each stop's mark at any zoom (#51). Stop 3 goes back to stop 1's place: the route walks
 -- there, on to stop 2, and back. Marks keep their size on screen, so their reach grows as the map zooms out.
 local player, first, second = point(0.1, 0.5), point(0.3, 0.5), point(0.5, 0.5)
