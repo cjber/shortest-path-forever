@@ -669,14 +669,7 @@ function API.NavigateRoute(owner, stops, options)
 end
 
 function API.Navigate(owner, map, x, y, title, kind)
-	return NavigateRoute(
-		owner,
-		{ { map = map, x = x, y = y, title = title, kind = kind } },
-		"normal",
-		true,
-		true,
-		false
-	)
+	return NavigateRoute(owner, { { map = map, x = x, y = y, title = title, kind = kind } }, "normal", true, true)
 end
 
 function API.CurrentStop(owner)
