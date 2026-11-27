@@ -28,7 +28,8 @@ local TOUR_LATER_ALPHA, TOUR_CUT, TOUR_CUT_SHARE, TOUR_STEPS = 0.6, 3.5, 0.4, 4
 -- steps than its cut has room for at TOUR_STEP each.
 local FLIGHT_APART, WALK_APART, TOUR_STEP = 3, 5, 0.75
 -- Breadcrumbs stop short of each stop's mark, so the way runs up to a stop rather than under it: a dot is left out when
--- its rim would come within STOP_GAP of the mark, on screen, at either end of a leg.
+-- its rim would come within STOP_GAP of the mark, on screen, at either end of a leg. Between marks too close for that,
+-- the gaps narrow.
 local STOP_GAP = 2
 local ENTRANCE_SCALE, DEPTH_SHADES = 1.35, 16
 local depthColors = {}
@@ -222,7 +223,6 @@ local function Avoid(x, y, reach)
 	circleCount = circleCount + 3
 end
 
--- A stop mark the dots leave a gap around: its radius plus what leaves STOP_GAP on screen past a dot's rim.
 local function EntranceClear(x, y, extra)
 	for i = 1, circleCount, 3 do
 		local dx, dy = x - circles[i], y - circles[i + 1]
@@ -233,8 +233,24 @@ local function EntranceClear(x, y, extra)
 	return true
 end
 
-local function Circle(x, y, radius)
-	Avoid(x, y, radius + (STOP_GAP + dot / 2 + dotRim) / scale)
+-- A stop mark the dots leave a gap around: its radius plus what leaves STOP_GAP on screen past a dot's rim. apart is
+-- the way to the nearest other mark: more than one dot spacing stays open between the two, and a stretch that long
+-- always holds a dot.
+local function Circle(x, y, radius, apart)
+	local reach = radius + (STOP_GAP + dot / 2 + dotRim) / scale
+	Avoid(x, y, math.min(reach, math.max(0, (apart - (spacing + 1) / scale) / 2)))
+end
+
+-- The way from a mark to the nearest other one, in the view's units.
+local function Apart(marks, mark)
+	local nearest = math.huge
+	for _, other in ipairs(marks) do
+		if other ~= mark then
+			local dx, dy = (other.x - mark.x) * width, (other.y - mark.y) * height
+			nearest = math.min(nearest, math.sqrt(dx * dx + dy * dy))
+		end
+	end
+	return nearest
 end
 
 -- A solid stretch, from low to high of a segment, left open inside the avoided marks from the one at `mark` on.
@@ -535,7 +551,7 @@ function Strokes.Map(buffer, paths, view)
 	-- ApplyCurrentScale sets 1 / canvas scale), so their reach in canvas units grows as the map zooms out.
 	if view.marks then
 		for _, mark in ipairs(view.marks) do
-			Circle(mark.x * width, -mark.y * height, mark.radius / view.zoom)
+			Circle(mark.x * width, -mark.y * height, mark.radius / view.zoom, Apart(view.marks, mark))
 		end
 	end
 	local mapID, position = view.mapID, view.position
@@ -683,7 +699,7 @@ function Strokes.Minimap(buffer, paths, view)
 		if rim > 0 then
 			local pull = reach > rim and rim / reach or 1
 			markX, markY, edge = gx * pull, gy * pull, reach > 1 or nil
-			Circle((markX + 1) * width / 2, (markY - 1) * height / 2, view.goalRadius)
+			Circle((markX + 1) * width / 2, (markY - 1) * height / 2, view.goalRadius, math.huge)
 		end
 	end
 	local shortestSide = math.min(width, height)

@@ -312,6 +312,18 @@ for _, zoom in ipairs({ 2, 0.5 }) do
 	check(current > 0 and later > 0 and strokes.alpha[1] == 1, "the current leg is drawn first")
 end
 
+-- Marks too close for the full gap still keep a dot on the leg between them (#1418).
+for apart = 18, 40 do
+	local a, b = point(0.3, 0.5), point(0.3 + apart / CANVAS, 0.5)
+	local marks = { { x = a.x, y = a.y, radius = 12 }, { x = b.x, y = b.y, radius = 12 } }
+	Strokes.Map(strokes, { { mode = "walk", points = { a, b } } }, mapView({ marks = marks, current = 1 }))
+	check(#dots(strokes) > 0, "a dot between marks " .. apart .. " apart")
+	for _, centre in ipairs(dots(strokes)) do
+		local from, to = centre[1] - a.x * CANVAS, b.x * CANVAS - centre[1]
+		check(math.min(from, to) >= (apart - SPACING - 1) / 2 - 1e-6, "midway between marks " .. apart .. " apart")
+	end
+end
+
 -- A stop under the pointer shows its own leg at full strength, and only its own: stop 2's leg is lit while stop 3's
 -- stays faded (UI/Route.lua's ns.HoverStop).
 local legged = {

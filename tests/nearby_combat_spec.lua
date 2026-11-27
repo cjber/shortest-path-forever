@@ -30,6 +30,7 @@ local searches = 0
 ns.EstimateIn = function() end
 ns.JourneyGoal = function() end
 ns.JourneySearch = { Here = function() end }
+ns.Path.Cancel = function() end
 ns.Path.Run = function()
 	searches = searches + 1
 	return {}
@@ -38,4 +39,39 @@ picked, searches, notices = nil, 0, 0
 env.SlashCmdList.SPFNEAR("class")
 assert(searches > 0, "the places are compared")
 assert(notices == 1 and picked == nil and routed == 0, "the choice is confirmed and nothing starts in combat")
+-- A choice compared after the fight still starts when the old destination was reached in it, and not when the player
+-- cleared it.
+local chosen
+-- The chooser's searches are NearbyRank's own specs: here its answer arrives when the spec says.
+local function upvalue(fn, wanted)
+	for i = 1, math.huge do
+		local name, value = debug.getupvalue(fn, i)
+		if name == wanted then
+			return value, i
+		end
+		assert(name, "no upvalue " .. wanted)
+	end
+end
+local travel = upvalue(env.SlashCmdList.SPFNEAR, "Travel")
+local _, slot = upvalue(travel, "Choose")
+debug.setupvalue(travel, slot, function(candidates, _, _, _, callback)
+	chosen = function()
+		callback(candidates[1])
+	end
+	return function() end
+end)
+env.InCombatLockdown = function()
+	return false
+end
+for _, arrived in ipairs({ true, false }) do
+	local goal = { map = 1, x = 0.5, y = 0.5 }
+	ns.JourneyGoal = function()
+		return goal
+	end
+	routed = 0
+	env.SlashCmdList.SPFNEAR("class")
+	goal, ns.journeyArrived = nil, arrived
+	chosen()
+	assert(routed == (arrived and 1 or 0), "an arrival keeps the choice, a clear drops it: " .. tostring(arrived))
+end
 print("nearby_combat_spec: mid-fight Nearby picks are queued and confirmed")

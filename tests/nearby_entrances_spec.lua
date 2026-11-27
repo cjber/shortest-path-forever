@@ -2,6 +2,7 @@
 -- other continent's left out, the panel's travel times ordering the doors once they land and the straight line
 -- before then, and the door stop JourneyInput.lua builds when one is picked, in the panel's sections and the
 -- tracking menu.
+local notices = 0
 local timers, trackingMenus, journeys = {}, {}, {}
 -- Where Core.Locate puts a door: the fixture's zone map at the door's own fractions, in the zone its x names.
 local DOOR_ZONES = { [800] = "Westfall", [200] = "The Barrens", [100] = "Silverpine Forest" }
@@ -158,7 +159,9 @@ local function load()
 				stop = point,
 			}
 		end,
-		NoticeQueuedDestination = function() end,
+		NoticeQueuedDestination = function()
+			notices = notices + 1
+		end,
 		StartJourney = function(point)
 			journeys[#journeys + 1] = point
 			return true
@@ -277,4 +280,5 @@ assert(dungeon.callback() == env.MenuResponse.CloseAll, "a dungeon row starts a 
 local door = journeys[#journeys]
 assert(door and door.entrance == 36, "a dungeon row starts a journey whose stop carries the instance")
 assert(door.label == "Enter 36", "through the door stop of JourneyInput.lua")
+assert(notices == 1, "a door picked mid-fight is confirmed (#1413)")
 print("nearby_entrances: instance doors, their order in the panel and their journey: ok")

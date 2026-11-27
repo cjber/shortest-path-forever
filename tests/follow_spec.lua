@@ -75,6 +75,11 @@ ns.StartJourney = function(point)
 	return startJourney(point)
 end
 
+local notices = 0
+ns.NoticeQueuedDestination = function()
+	notices = notices + 1
+end
+
 local here = { map = 1, x = 2827.34, y = -289.24 }
 driver.move(here)
 assert(ns.StartFollowing("party1"), "start following")
@@ -181,5 +186,7 @@ member = { map = 1, x = 2000, y = -1800 }
 exists = false
 ns.FollowTick(1)
 assert(not ns.IsFollowing(), "a departed member ends the follow")
+
+assert(notices == 1, "only the player's start is confirmed mid-fight (#1413), never a replan")
 
 print("follow: ok")

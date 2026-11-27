@@ -95,6 +95,27 @@ assert(route and route:IsVisible() and route.used > 0, "the route is painted whe
 cursorX, cursorY = 0.48768, 0.48768
 assert(clickHandlers[1](map, "LeftButton"))
 assert(confirmations() == 3, "a pick out of combat is not queued")
+-- A pick mid-fight replacing a plotted one drops the old line: the new search only settles after the fight.
+local function pick(offset)
+	local to = { map = stop.map, x = stop.x + offset, y = stop.y, title = "Vendor", kind = "vendor" }
+	assert(ns.PickInCombat(to) == true)
+end
+fireEvent("PLAYER_REGEN_DISABLED")
+combat = true
+pick(0)
+combat = false
+fireEvent("PLAYER_REGEN_ENABLED")
+pump()
+assert(ns.JourneyPlan(), "the pick is plotted before the fight")
+fireEvent("PLAYER_REGEN_DISABLED")
+combat = true
+pick(0.002)
+mapTick()
+assert(not ns.JourneyPlan(), "the replaced destination's plan is dropped")
+assert(not (route:IsVisible() and route.used > 0), "and so is its line")
+combat = false
+fireEvent("PLAYER_REGEN_ENABLED")
+pump()
 assert(#errors == 0, table.concat(errors, "\n"))
 print("combat_destination_spec: destination accepted, confirmed and plotted after combat")
 ]], "@combat_destination_spec"))()
