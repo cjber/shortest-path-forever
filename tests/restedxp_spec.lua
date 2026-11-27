@@ -411,4 +411,85 @@ assert(not API.CurrentStop("RestedXP") and navigations == 0, "the guide setting 
 ns.db.restedxp = true
 env.AdventureGuideForever.API.RestedXPNativeUI = nativeUI
 ns.RefreshTracker = refreshTracker
+
+local pin = { zone = 1 }
+rxp.RXPFrame = { activeSteps = { { elements = { pin } } } }
+local function restedPin(x, y)
+	pin.waypointSet, pin.zx, pin.zy = nil, nil, nil
+	env.C_Map.SetUserWaypoint(env.UiMapPoint.CreateFromCoordinates(pin.zone, x, y))
+	env.C_SuperTrack.SetSuperTrackedUserWaypoint(true)
+	local position = env.C_Map.GetUserWaypointPositionForMap(pin.zone)
+	pin.waypointSet, pin.zx, pin.zy = true, position.x, position.y
+end
+
+ns.PointGuideArrow = function(points, place)
+	if points and place then
+		place(points[#points])
+	end
+end
+env.AdventureGuideForever.API.RestedXPNativeUI = function()
+	return false
+end
+assert(ns.ResumeRestedXP(), "RestedXP guides again")
+driver.update(0)
+assert(ns.IsJourneyGuided() and driver.waypoint(), "guidance has published a waypoint")
+local ownedGoal = ns.JourneyGoal()
+ns.db.mapPinRoutes = false
+restedPin(0.6, 0.4)
+driver.update(0)
+assert(ns.IsJourneyGuided() and ns.JourneyGoal() == ownedGoal, "RestedXP's first waypoint write preserves guidance")
+
+ns.db.mapPinRoutes = true
+restedPin(0.61, 0.4)
+driver.update(0)
+assert(ns.JourneyGoal() == ownedGoal, "RestedXP's waypoint never replaces its journey with a player route")
+
+restedPin(0.62, 0.4)
+restedPin(0.63, 0.4)
+driver.update(0)
+assert(ns.IsJourneyGuided() and ns.JourneyGoal() == ownedGoal, "two RestedXP writes in one frame preserve guidance")
+assert(driver.waypoint().position.x == 0.63, "the latest RestedXP pin stays in the slot")
+
+local function playerPin()
+	local point = env.UiMapPoint.CreateFromCoordinates(1, 0.3, 0.45)
+	env.C_Map.SetUserWaypoint(point)
+	return point
+end
+
+ns.db.mapPinRoutes = false
+restedPin(0.64, 0.4)
+local player = playerPin()
+driver.update(0)
+assert(not ns.IsJourneyGuided() and ns.JourneyGoal() == ownedGoal, "a later player pin ends guidance with routing off")
+assert(driver.waypoint() == player, "ending guidance preserves the player's pin")
+
+ns.db.mapPinRoutes = true
+assert(ns.ResumeRestedXP(), "the player resumes the RestedXP route")
+driver.update(0)
+restedPin(0.65, 0.4)
+playerPin()
+driver.update(0)
+local playerGoal = ns.JourneyGoal()
+assert(ns.JourneyOwner() == nil and playerGoal and playerGoal.y > 9999, "a later player pin starts their route")
+
+assert(ns.ResumeRestedXP(), "the player hands navigation back to RestedXP")
+driver.update(0)
+local originalGuidePin = assert(driver.waypoint(), "the resumed guide marks the map")
+ns.db.mapPinRoutes = false
+restedPin(0.66, 0.4)
+env.C_Map.SetUserWaypoint(originalGuidePin)
+driver.update(0)
+assert(not ns.IsJourneyGuided(), "repinning the guide's old point still ends guidance after the slot changed")
+assert(driver.waypoint() == originalGuidePin, "the guide leaves the player's replacement pin in place")
+
+ns.db.mapPinRoutes = true
+assert(ns.ResumeRestedXP(), "RestedXP guides before the journey is cleared")
+driver.update(0)
+restedPin(0.67, 0.4)
+ns.ClearJourney()
+driver.update(0)
+assert(not ns.HasJourney(), "a pending RestedXP pin cannot restart a journey the player cleared")
+restedPin(0.68, 0.4)
+driver.update(0)
+assert(not ns.HasJourney(), "a RestedXP pin written without a journey starts nothing")
 print("restedxp: ok")

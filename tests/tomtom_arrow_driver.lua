@@ -188,6 +188,7 @@ return function(opts, restoredGuide)
 			DrawArrow = function() end,
 		}
 		local login = e.CreateFrame("Frame")
+		login:RegisterEvent("PLAYER_ENTERING_WORLD")
 		login:SetScript("OnEvent", function(_, event)
 			if event == "PLAYER_ENTERING_WORLD" then
 				e.RXP.UpdateMap()

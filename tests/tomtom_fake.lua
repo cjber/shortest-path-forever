@@ -320,6 +320,10 @@ function Fake.Bridge(env)
 
 	local frame = env.CreateFrame("Frame")
 	local ticksOn = { PLAYER_ENTERING_WORLD = true, PLAYER_CONTROL_GAINED = true, PLAYER_ALIVE = true }
+	frame:RegisterEvent("PLAYER_LOGIN")
+	for event in pairs(ticksOn) do
+		frame:RegisterEvent(event)
+	end
 	frame:SetScript("OnEvent", function(_, event)
 		if event == "PLAYER_LOGIN" then
 			local elapsed = 0

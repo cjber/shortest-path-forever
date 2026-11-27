@@ -502,11 +502,23 @@ local function JourneyToNode(node)
 	JourneyToPin(nil, { nodeID = node, name = ns.TaxiName and ns.TaxiName(node) or nil }, true)
 end
 
----@param event string
-function ns.FocusedTrackingChanged(event)
+-- Remember each synchronous event, even when the route decision waits for the writer's ownership record.
+---@return boolean
+function ns.FocusedWaypointChanged()
 	local guide = ns.JourneyGuide
-	local owned = guide and guide.OwnsReported and guide.OwnsReported(event) or false
+	local waypoint = UserWaypoint()
+	local changed = not (guide and guide.SameWaypoint and guide.SameWaypoint(waypoint, focusedWaypoint))
+	focusedWaypoint = waypoint
+	return changed
+end
+
+---@param event string
+---@param ownedWaypoint? boolean
+---@param waypointChanged? boolean
+function ns.FocusedTrackingChanged(event, ownedWaypoint, waypointChanged)
 	if event == "SUPER_TRACKING_CHANGED" then
+		local guide = ns.JourneyGuide
+		local owned = guide and guide.OwnsReported and guide.OwnsReported(event) or false
 		local questID, node = SuperTrackedQuest(), SuperTrackedNode()
 		local changed, nodeChanged = questID ~= focusedQuest, node ~= focusedNode
 		focusedQuest, focusedNode = questID, node
@@ -533,12 +545,10 @@ function ns.FocusedTrackingChanged(event)
 		end
 		return
 	end
-	local waypoint = UserWaypoint()
-	local changed = not (guide and guide.SameWaypoint and guide.SameWaypoint(waypoint, focusedWaypoint))
-	focusedWaypoint = waypoint
-	if owned or not changed then
+	if ownedWaypoint or not waypointChanged then
 		return
 	end
+	local waypoint = UserWaypoint()
 	local previousGoal = focusedWaypointGoal
 	focusedWaypointGoal = nil
 	if not (ns.db and ns.db.journey) then

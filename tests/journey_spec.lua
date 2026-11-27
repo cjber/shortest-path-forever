@@ -169,10 +169,27 @@ assert(
 )
 ns.ClearJourney()
 
--- Real Auberdine geometry, the actual Guide consumer and next-frame notifications from our own writes.
+-- Real Auberdine geometry and the actual Guide consumer, with synchronous waypoint notifications.
 for _, destination in ipairs({ { map = 1, x = 6400, y = 100 }, { map = 0, x = 2271.09, y = -5340.8 } }) do
 	local live = assert(loadfile("tests/journey_driver.lua"))()
 	local addon = live.ns
+	local create = live.env.CreateFrame
+	live.env.CreateFrame = function(...)
+		local widget = create(...)
+		local show = widget.Show
+		widget.Show = function(self)
+			local onShow = self.hidden and rawget(self, "OnShow")
+			show(self)
+			if onShow then
+				onShow(self)
+			end
+		end
+		return widget
+	end
+	-- Movement events wake this test's arrow. The stock arrow also polls for movement without events.
+	live.env.C_Timer.NewTicker = function()
+		return { Cancel = function() end }
+	end
 	for _, file in ipairs({
 		"Data/Routes.lua",
 		"Data/Transports.lua",
@@ -267,7 +284,7 @@ for _, destination in ipairs({ { map = 1, x = 6400, y = 100 }, { map = 0, x = 22
 			travelled = travelled + length / frames
 			local bend = addon.GuideTargets()
 			local marker, tracking = live.waypoint()
-			assert(marker and tracking and addon.IsJourneyGuided(), "deferred writes must retain Guide ownership")
+			assert(marker and tracking and addon.IsJourneyGuided(), "synchronous writes must retain Guide ownership")
 			assert(math.abs(marker.position.x - (0.5 - bend.y / 50000)) < 1e-9)
 			assert(math.abs(marker.position.y - (0.5 - bend.x / 50000)) < 1e-9)
 			if marker ~= previous then
@@ -341,7 +358,7 @@ for _, destination in ipairs({ { map = 1, x = 6400, y = 100 }, { map = 0, x = 22
 	assert(live.waypoint() and addon.IsJourneyGuided())
 	addon.ClearJourney()
 	print(
-		"Auberdine -> map " .. destination.map .. ": Guide bends, deferred events, position recovery and trimming: ok"
+		"Auberdine -> map " .. destination.map .. ": Guide bends, waypoint events, position recovery and trimming: ok"
 	)
 end
 
