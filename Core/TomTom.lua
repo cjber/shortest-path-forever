@@ -614,15 +614,37 @@ function ns.TomTomArrowWaypoint()
 	return arrowWaypoint
 end
 
+-- The place of the guide's own stop, when the guide holds the journey and the waypoint is its bridge's: the waypoint
+-- stands for that stop, wherever the bridge last left it.
+---@param uid TomTomWaypoint
+---@return {map: number, x: number, y: number}?
+local function GuideStop(uid)
+	if uid.source ~= "RXPGuides" or ns.JourneyOwner() ~= "RestedXP" then
+		return nil
+	end
+	local goal = ns.JourneyGoal()
+	return goal and (goal.stop or goal).submitted
+end
+
 ---@param uid any
 local function Follow(uid)
 	-- TomTom's corpse arrow is left to the corpse run (Journey/Corpse.lua), which keeps the journey you were on.
 	-- Polestar's own target, which it copies into TomTom (from = "Polestar"), is Polestar's to guide or hand over.
 	-- Waypoints Shortest Path itself added to drive TomTom's arrow are recognised by table identity and ignored.
-	if type(uid) ~= "table" or uid.corpse or uid.from == "Polestar" then
+	if type(uid) ~= "table" then
+		return
+	end
+	if uid.corpse or uid.from == "Polestar" then
+		-- The arrow moved on: a waypoint waiting for the end of combat is no longer the one it points to.
+		waiting = nil
 		return
 	end
 	if ns.IsOwnTomTomWaypoint and ns.IsOwnTomTomWaypoint(uid) then
+		return
+	end
+	-- The bridge's waypoint is RestedXP's step, which Adventure Guide leads while it shows the guide itself.
+	if uid.source == "RXPGuides" and ns.RestedXPIntegrated and ns.RestedXPIntegrated() then
+		waiting = nil
 		return
 	end
 	if not live then
@@ -646,9 +668,21 @@ local function Follow(uid)
 		return
 	end
 	waiting = nil
+	-- A guide plans its step first, with its quests and held until the guide moves on; following the bridge's waypoint
+	-- then takes that stop over, by asking for its place. The end of combat reaches the guide and us in either order.
+	-- With no journey to disturb, the guide plans its step even if it planned it before.
+	if uid.source == "RXPGuides" and ns.RefreshRestedXP then
+		local plan = ns.HasJourney() and ns.RefreshRestedXP or ns.ReplanRestedXP
+		plan()
+	end
+	local map, x, y = uid[1], uid[2], uid[3]
+	local guide = GuideStop(uid)
+	if guide then
+		map, x, y = guide.map, guide.x, guide.y
+	end
 	-- API.NavigateRoute checks the map and point; TomTom's waypoint is a uiMapID and a 0-1 point, as the shim's is.
 	-- Questie's and Zygor's quests, recorded when the waypoint was set, go with it.
-	if RouteToWaypoint(uid, uid[1], uid[2], uid[3], Text(uid.title) and uid.title or nil) then
+	if RouteToWaypoint(uid, map, x, y, Text(uid.title) and uid.title or nil) then
 		following = uid
 	end
 	SyncArrow()
@@ -664,7 +698,36 @@ local function Unfollow(uid)
 	end
 	if uid ~= nil and uid == following then
 		following = nil
-		API.Cancel(WaypointOwner(uid))
+		-- A guide's step let go goes back to the guide.
+		if API.Cancel(WaypointOwner(uid)) and uid.source == "RXPGuides" and ns.ReplanRestedXP then
+			ns.ReplanRestedXP()
+		end
+	end
+end
+
+-- Follows a waypoint set earlier. A journey already planned (a guide's, or the player's own) is not replaced by it;
+-- a guide's bridge waypoint takes the guide's stop over, except while a corpse run has it waiting.
+---@param uid TomTomWaypoint?
+local function FollowEarlier(uid)
+	local tomtom = hooked
+	local handover = uid and GuideStop(uid) and not (ns.Corpse and ns.Corpse.Active())
+	if uid and tomtom and (not ns.HasJourney() or handover) then
+		local valid = tomtom.IsValidWaypoint
+		if type(valid) ~= "function" or valid(tomtom, uid) then
+			Follow(uid)
+		end
+	end
+end
+
+-- The setting was turned on in combat, so the arrow's waypoint is picked up when combat ends.
+local pickingUp = false
+
+local function PickUp()
+	pickingUp = InCombatLockdown()
+	if pickingUp then
+		watcher:RegisterEvent("PLAYER_REGEN_ENABLED")
+	else
+		FollowEarlier(ns.TomTomArrowWaypoint())
 	end
 end
 
@@ -702,8 +765,9 @@ local function ArrowSelectionChanged()
 	SyncArrow()
 end
 
--- The settings checkbox, TomTom loading and the addon's own load all call this.
-function ns.RefreshTomTomFollow()
+-- The settings checkboxes, TomTom loading and the addon's own load all call this.
+---@param toggled? boolean the player just changed "Follow TomTom's arrow"
+function ns.RefreshTomTomFollow(toggled)
 	local tomtom = TomTom
 	if
 		not hooked
@@ -776,9 +840,16 @@ function ns.RefreshTomTomFollow()
 	if not (ns.db and ns.db.tomtomFollow) then
 		Unfollow(following)
 		waiting = nil
+	elseif toggled then
+		PickUp()
 	end
 	SyncArrow()
 end
+
+-- A pick, stop or clear by the player is later than anything waiting for combat to end.
+hooksecurefunc(ns, "PlayerRequest", function() -- taint-ok: Shortest Path owns this addon table.
+	waiting, pickingUp = nil, false
+end)
 
 -- A journey that ends, or is replaced by the player or another addon, leaves no waypoint behind.
 hooksecurefunc(ns, "JourneyChanged", function()
@@ -842,20 +913,16 @@ ns.Init(function()
 		elseif event == "PLAYER_REGEN_ENABLED" then
 			self:UnregisterEvent(event)
 			Follow(waiting)
+			if pickingUp then
+				PickUp()
+			end
 		elseif event == "PLAYER_ENTERING_WORLD" then
 			self:UnregisterEvent(event)
 			C_Timer.After(0, function()
 				live = true
 				local uid = restored
 				restored = nil
-				-- A journey already planned (a guide's, or the player's own) is not replaced by an old waypoint.
-				local tomtom = hooked
-				if uid and tomtom and not ns.HasJourney() then
-					local valid = tomtom.IsValidWaypoint
-					if type(valid) ~= "function" or valid(tomtom, uid) then
-						Follow(uid)
-					end
-				end
+				FollowEarlier(uid)
 			end)
 		elseif name == "Questie" then
 			HookQuestie()

@@ -474,7 +474,7 @@ ns.Init(function()
 		L["Follow TomTom's arrow"],
 		L["With TomTom installed, a journey here follows the waypoint its arrow points to."],
 		function()
-			ns.RefreshTomTomFollow()
+			ns.RefreshTomTomFollow(true)
 		end
 	)
 	Checkbox(
