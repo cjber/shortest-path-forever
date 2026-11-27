@@ -501,18 +501,6 @@ function Layer:RefreshAllData()
 	end
 end
 
--- The objective quests a stop marks, as UI/QuestPins.lua reads them (#472, #859). Its hand-ins come after them, so a
--- stop that only hands a quest in still has one to show.
----@param point SPFPoint
----@return integer[]
-local function StopQuests(point)
-	local quests = { point.questID }
-	for _, questID in ipairs(point.questIDs or {}) do
-		quests[#quests + 1] = questID
-	end
-	return quests
-end
-
 -- Stops whose buttons would overlap at this zoom share one, as the map's docks do: at their middle, faded, or at the
 -- stop being guided to and at full strength when it is among them. The buttons are rebuilt only when that grouping
 -- changes, and the line redrawn around them.
@@ -543,7 +531,7 @@ function Layer:RefreshStops()
 				details = point.details,
 				look = point.look,
 				ground = ns.PathGrid.ground(point.map, point.x, point.y, point.z),
-				quests = StopQuests(point),
+				quests = ns.StopQuests(point),
 				handins = point.handins,
 			}
 		end
