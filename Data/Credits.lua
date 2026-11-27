@@ -4,6 +4,8 @@ local _, ns = ...
 
 ns.Credits = {
 	players = {
+		{ name = "GamingExports", what = "Destinations picked in combat are queued and their line shows" },
+		{ name = "fredranger", what = "Flight times only count flights flown from end to end" },
 		{ name = "static2290", what = "Start Journey stops while following a map pin" },
 		{ name = "static2290", what = "Add Journey stops directly from the map" },
 		{ name = "static2290", what = "Remember Journey stops and resume the remaining route" },
