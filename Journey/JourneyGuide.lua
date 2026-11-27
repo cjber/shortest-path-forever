@@ -530,7 +530,7 @@ local function OwnsWaypoint()
 		-- The journey's own guide addon pinning its step is no choice of the player's (#1311). Keep guiding, with that
 		-- pin as the one on the map now; pause, cast and the pin from before the journey stay as they were. Our pin is
 		-- gone, so the caller must not clear one: the next write puts ours back.
-		if ns.OwnerWroteWaypoint and ns.OwnerWroteWaypoint() then
+		if ns.RestedXPWroteWaypoint and ns.JourneyOwner() == "RestedXP" and ns.RestedXPWroteWaypoint() then
 			guide.expectedWaypoint = C_Map.GetUserWaypoint()
 			guide.waypoint, guide.waypointTarget, guide.uiMap, guide.fading, guide.waypointNavigation =
 				nil, nil, nil, nil, nil

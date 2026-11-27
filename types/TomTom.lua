@@ -20,6 +20,7 @@
 ---@field [integer] number -- map, then x and y in 0-1
 ---@field title? string
 ---@field from? string
+---@field source? string -- an addon's original waypoint source option
 ---@field corpse? boolean -- TomTom's own corpse waypoint (TomTom_Corpse.lua)
 
 ---@class TomTom

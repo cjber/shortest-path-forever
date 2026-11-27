@@ -10,6 +10,12 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [Unreleased]
+
+### Fixed
+
+- **The RestedXP TomTom bridge keeps its arrow at login.** A map pin that RestedXP sets for its own step no longer starts a separate journey, and Follow TomTom's arrow leaves the bridge's step to the guide while Follow RestedXP guides or Use TomTom's arrow is on. Either could pause the bridge, leaving no guide arrow. Thanks to forleong for the report. (#1390)
+
 ## [1.48.1] - 2026-11-27
 
 <!-- forever-core-sync -->

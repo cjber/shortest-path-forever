@@ -623,6 +623,15 @@ local function Follow(uid)
 	if not (ns.db and ns.db.tomtomFollow and ns.db.journey) then
 		return
 	end
+	-- The RestedXP TomTom bridge's waypoint is the guide's step. Follow RestedXP guides already plans to it, and with
+	-- Use TomTom's arrow our own waypoint would replace it, which pauses the bridge.
+	if
+		uid.source == "RXPGuides"
+		and (ns.db.restedxp or ns.db.tomtomArrow)
+		and C_AddOns.IsAddOnLoaded("RestedXP-TomTom")
+	then
+		return
+	end
 	-- Polestar following the same arrow with "Hand guiding to Shortest Path Forever" on sends this waypoint here as
 	-- its own journey; following it as well would plan it twice.
 	if PolestarSetting("nav.followTomTom") and PolestarSetting("nav.spfHandoff") then

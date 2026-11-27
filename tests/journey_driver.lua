@@ -1,4 +1,5 @@
-local root = ... or "."
+local root, registeredEvents = ...
+root = root or "."
 local ns = { db = { journey = true, offPathTolerance = 15, mapPinRoutes = true }, charDB = {} }
 -- The harness is a mouse client: no gamepad interface, so UI/MenuModifier.lua keeps its entries in place.
 function ns.GamepadUI()
@@ -14,6 +15,7 @@ local secret = setmetatable({}, {
 	end,
 })
 local function frame()
+	local registered = {}
 	local f = setmetatable({}, {
 		__index = function(_, key)
 			if key:match("^%u") then
@@ -23,6 +25,19 @@ local function frame()
 	})
 	function f:SetScript(name, fn)
 		self[name] = fn
+	end
+	function f.RegisterEvent(_, event)
+		registered[event] = true
+	end
+	f.RegisterUnitEvent = f.RegisterEvent
+	function f.UnregisterEvent(_, event)
+		registered[event] = nil
+	end
+	function f.UnregisterAllEvents()
+		registered = {}
+	end
+	function f.IsEventRegistered(_, event)
+		return registered[event] == true
 	end
 	function f:Show()
 		self.hidden = false
@@ -55,7 +70,7 @@ local function frame()
 end
 local function fire(event, ...)
 	for _, f in ipairs(frames) do
-		if rawget(f, "OnEvent") then
+		if rawget(f, "OnEvent") and (not registeredEvents or f:IsEventRegistered(event)) then
 			f:OnEvent(event, ...)
 		end
 	end
@@ -156,6 +171,9 @@ local env = setmetatable({
 		end,
 		GetUserWaypoint = function()
 			return waypoint
+		end,
+		GetUserWaypointPositionForMap = function(map)
+			return waypoint and waypoint.uiMapID == map and waypoint.position or nil
 		end,
 		SetUserWaypoint = function(point)
 			waypoint = point

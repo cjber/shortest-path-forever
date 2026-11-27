@@ -545,6 +545,9 @@ function ns.FocusedTrackingChanged(event)
 		return
 	end
 	if waypoint then
+		if ns.RestedXPWroteWaypoint and ns.RestedXPWroteWaypoint() then
+			return
+		end
 		if GoalIsWaypoint(waypoint) then
 			if previousGoal and ns.JourneyGoal() == previousGoal then
 				focusedWaypointGoal = previousGoal
