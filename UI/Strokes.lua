@@ -105,6 +105,8 @@ ns.Strokes = Strokes
 local out
 ---@type number, number, number, number, number, number, number
 local scale, width, height, dot, dotRim, spacing, walked
+-- Whether a dotted segment of the current path lies in the view.
+local inView
 ---@type number, number, number?
 local fade, later, route
 -- Walk distance of the cave mouth, until its first regular breadcrumb has been considered.
@@ -304,6 +306,7 @@ local function Segment(x1, y1, x2, y2, low, high, color, dashed, a, b, entranceL
 	if not low then
 		return
 	end
+	inView = true
 	-- The caller clipped a walk a dot's reach inside its frame, so every rim fits and joints need no trim, which
 	-- would drop the dots at each bend. A dot on a joint belongs to the later segment: both ends share a tolerance,
 	-- so rounding in the running total cannot push it out of both.
@@ -383,12 +386,8 @@ end
 local function MiddleDot(view, path, points, color)
 	local left, px, py = walked / 2, nil, nil
 	for index = 1, #points do
-		local point, previous = points[index], points[index - 1]
-		local x, y = view.position(point, view.mapID)
-		if previous then
-			if not (px and x) or previous.map ~= point.map or (previous.jump and not path.preview) then
-				return
-			end
+		local x, y = view.position(points[index], view.mapID)
+		if px and x then
 			local dx, dy = (x - px) * width, (py - y) * height
 			local length = math.sqrt(dx * dx + dy * dy) * scale
 			if length > 0 and left <= length then
@@ -402,7 +401,7 @@ local function MiddleDot(view, path, points, color)
 					and Clear(Near(px * width, -py * height, x * width, -y * height), cx, cy)
 				then
 					local hx, hy = dx * dot / 2 / length, dy * dot / 2 / length
-					local depth = not path.preview and DepthAt(previous, point, t) or nil
+					local depth = not path.preview and DepthAt(points[index - 1], points[index], t) or nil
 					Stroke(cx - hx, cy - hy, cx + hx, cy + hy, Ink(color, depth), true)
 				end
 				return
@@ -598,7 +597,8 @@ function Strokes.Map(buffer, paths, view)
 		local crossing = OverviewCrossing(view, path, color)
 		local apart = path.mode == "flight" and not path.preview and FLIGHT_APART
 			or path.mode == "walk" and not WalkingRouteDotted(view.tour) and WALK_APART
-		local drawn = out.n
+		local drawn, broken = out.n, false
+		inView = false
 		for index = 1, crossing and 0 or #points do
 			local point = points[index]
 			local x, y = position(point, mapID)
@@ -621,6 +621,8 @@ function Strokes.Map(buffer, paths, view)
 				if path.mode == "portal" or path.mode == "passage" then
 					Mark(x, y, color)
 				elseif previous then
+					broken = broken
+						or not (px and x and previous.map == point.map and (path.preview or not previous.jump))
 					if path.preview then
 						-- A hop still planning has no geometry to draw; a straight line would cross the sea.
 						if previous.map ~= point.map then
@@ -657,7 +659,7 @@ function Strokes.Map(buffer, paths, view)
 			end
 		end
 		Flush(color)
-		if path.mode == "walk" and out.n == drawn and walked > 0 and WalkingRouteDotted(view.tour) then
+		if path.mode == "walk" and inView and not broken and out.n == drawn then
 			MiddleDot(view, path, points, color)
 		end
 	end

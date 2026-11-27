@@ -313,6 +313,26 @@ do
 	end)
 	check(#drawn == 1 and close(drawn[1][1], (a.x + b.x) / 2 * CANVAS), "midway over several segments")
 	check(#between(28) == 0, "no room between the gaps")
+	local from, to = point(0.3, 0.5), point(0.332, 0.5)
+	local walk = { { mode = "walk", points = { from, to } } }
+	local marks = { { x = from.x, y = from.y, radius = radius }, { x = to.x, y = to.y, radius = radius } }
+	local function clipped(right)
+		return mapView({ marks = marks, clipLeft = 0, clipRight = right, clipTop = 0, clipBottom = 1 })
+	end
+	Strokes.Map(strokes, walk, clipped(0.317))
+	check(#dots(strokes) == 0, "no rim past the view")
+	-- The length left after a jump out of view is not the walk's: no dot from the middle of a part.
+	local far = { x = 0.5, y = 0.5, map = to.map, jump = true }
+	local jumped = { from, to, far, point(0.8, 0.5), point(0.832, 0.5) }
+	Strokes.Map(strokes, { { mode = "walk", points = jumped } }, clipped(0.337))
+	check(#dots(strokes) == 0, "none for a walk with a break")
+	ns.db = { routeStyle = "solid" }
+	Strokes.Map(strokes, walk, mapView({ marks = marks }))
+	check(#dots(strokes) == 0, "none on a solid walk")
+	walk[1].preview = true
+	Strokes.Map(strokes, walk, mapView({ marks = marks }))
+	check(#dots(strokes) == 1, "a preview stays dotted")
+	ns.db = nil
 	check(#between(80) > 1, "an open walk keeps its spacing")
 end
 
