@@ -53,7 +53,7 @@ With the gamepad interface on, you open and turn the world map; Shortest Path wo
 
 - `/path` opens settings under **Options → AddOns → Shortest Path Forever**. `/spfnear` opens the Nearby services tab.
 - Alt-click the world map to choose a destination over a Questie icon. Shift-click the map, minimap or a Shortest Path icon; for quests, choose **Plan journey** in the right-click menu. **Key to plan a journey** in **Guidance**: Shift or Alt.
-- Placing the game's map pin starts a journey; **Route to your map pin** in **Guidance** turns that off, and Shift- or Alt-click still plans. While you edit your Journey stops list, a placed pin joins the list instead. **Route to the focused quest** starts journeys from a super-tracked quest or flight point too.
+- Placing the game's map pin starts a journey; **Route to your map pin** in **Guidance** turns that off, and Shift- or Alt-click still plans. **Route to the focused quest** starts journeys from a super-tracked quest or flight point too.
 - In **Map marks**, scale each kind of icon, and choose whether journey stops hide the game's quest markers. Right-click a flight master icon to mark its path known or unknown.
 - In **Interface**, choose what shows, metres, sizes and a compass background. While moving the arrow or compass, Shift-drag or use the arrow keys for fine placement.
 - The shared Forever column sits left of the game's quest tracker. Drag a heading to move it; right-click a heading for **Lock the tracker** to stop dragging. **Resume guide** returns to RestedXP, Guidelime or Dugi Guides; your journey survives a reload.
