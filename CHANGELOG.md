@@ -10,6 +10,13 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.49.1] - 2026-11-27
+
+### Fixed
+
+- Destinations picked in combat are no longer lost or silent. A message says yours is queued, including picks from Nearby services, and the journey plots when the fight ends. A route already plotted also shows its line when you open the map or change maps mid-fight. Thanks to GamingExports for the report. (#1413)
+- **Flight times no longer shrink after some rides.** A ride that left the path it was matched to could save a time of a few seconds for a long flight, so journeys using it looked far shorter than they are. A flight is now timed only when flown from end to end, and earlier timings are measured afresh. Thanks to fredranger for the report. (#1421)
+
 ## [1.49.0] - 2026-11-27
 
 <!-- discord-image: docs/screenshots/stops.png -->
