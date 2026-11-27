@@ -222,8 +222,8 @@ local function Avoid(x, y, reach)
 	circleCount = circleCount + 3
 end
 
--- A stop mark the dots leave a gap around: its radius plus what leaves STOP_GAP on screen past a dot's rim.
-local function EntranceClear(x, y, extra)
+-- Whether a point is outside every mark's reach, widened by extra.
+local function ClearOfMarks(x, y, extra)
 	for i = 1, circleCount, 3 do
 		local dx, dy = x - circles[i], y - circles[i + 1]
 		if dx * dx + dy * dy < (circles[i + 2] + extra) ^ 2 then
@@ -233,6 +233,7 @@ local function EntranceClear(x, y, extra)
 	return true
 end
 
+-- A stop mark the dots leave a gap around: its radius plus what leaves STOP_GAP on screen past a dot's rim.
 local function Circle(x, y, radius)
 	Avoid(x, y, radius + (STOP_GAP + dot / 2 + dotRim) / scale)
 end
@@ -257,6 +258,30 @@ local function Open(x1, y1, dx, dy, low, high, color, mark)
 	Open(x1, y1, dx, dy, math.max(low, (-b + root) / a), high, color, mark + 3)
 end
 
+-- How deep the walk is at fraction t of the segment from a to b; cut is where a surface change is drawn.
+local function DepthAt(a, b, t)
+	local aDepth, bDepth = a and a.depth, b and b.depth
+	if aDepth and bDepth then
+		return aDepth + t * (bDepth - aDepth)
+	elseif t >= (a and a.depthCut or 0.5) then
+		return bDepth
+	end
+	return aDepth
+end
+
+local function Ink(color, depth)
+	if not depth then
+		return color
+	end
+	-- Quantize only the color. The surface data decides which dots are underground.
+	local shade = math.floor(depth / (depth + 20) * DEPTH_SHADES)
+	if not depthColors[shade] then
+		local strength = shade / DEPTH_SHADES
+		depthColors[shade] = CreateColor(0.62 - 0.38 * strength, 0.86 - 0.24 * strength, 1)
+	end
+	return depthColors[shade]
+end
+
 -- Clip before subdividing: even continent-sized walks need only the visible breadcrumbs. Dots sit at every SPACING
 -- along the whole walk, walked carrying the distance across segment joins so bends never bunch them.
 local function Segment(x1, y1, x2, y2, low, high, color, dashed, a, b, entranceLow, entranceHigh)
@@ -274,9 +299,8 @@ local function Segment(x1, y1, x2, y2, low, high, color, dashed, a, b, entranceL
 	end
 	local start = walked
 	walked = start + length
-	local aDepth, bDepth, cut = a and a.depth, b and b.depth, a and a.depthCut or 0.5
-	if not aDepth then
-		entranceDistance = bDepth and (start + length * cut) or nil
+	if not (a and a.depth) then
+		entranceDistance = b and b.depth and (start + length * (a and a.depthCut or 0.5)) or nil
 	end
 	if not low then
 		return
@@ -290,22 +314,7 @@ local function Segment(x1, y1, x2, y2, low, high, color, dashed, a, b, entranceL
 	for distance = first, high * length - 0.001, spacing do
 		local t = distance / length
 		if count == 0 or Clear(count, x1 + t * dx, y1 + t * dy) then
-			local depth = aDepth
-			if aDepth and bDepth then
-				depth = aDepth + t * (bDepth - aDepth)
-			elseif t >= cut then
-				depth = bDepth
-			end
-			local ink = color
-			if depth then
-				-- Quantize only the color. The surface data decides which dots are underground.
-				local shade = math.floor(depth / (depth + 20) * DEPTH_SHADES)
-				if not depthColors[shade] then
-					local strength = shade / DEPTH_SHADES
-					depthColors[shade] = CreateColor(0.62 - 0.38 * strength, 0.86 - 0.24 * strength, 1)
-				end
-				ink = depthColors[shade]
-			end
+			local depth = DepthAt(a, b, t)
 			local size, radius = dot, half
 			if depth and entranceDistance and start + distance >= entranceDistance then
 				local extra = dot * (ENTRANCE_SCALE - 1) / 2 / scale
@@ -314,7 +323,7 @@ local function Segment(x1, y1, x2, y2, low, high, color, dashed, a, b, entranceL
 					and entranceLow
 					and t >= entranceLow
 					and t <= entranceHigh
-					and EntranceClear(x1 + t * dx, y1 + t * dy, extra)
+					and ClearOfMarks(x1 + t * dx, y1 + t * dy, extra)
 				then
 					size, radius = dot * ENTRANCE_SCALE, half * ENTRANCE_SCALE
 				end
@@ -325,7 +334,7 @@ local function Segment(x1, y1, x2, y2, low, high, color, dashed, a, b, entranceL
 				y1 + (t - radius) * dy,
 				x1 + (t + radius) * dx,
 				y1 + (t + radius) * dy,
-				ink,
+				Ink(color, depth),
 				true,
 				size
 			)
@@ -367,6 +376,42 @@ local function Line(x1, y1, x2, y2, color, dashed, a, b)
 		entranceLow,
 		entranceHigh
 	)
+end
+
+-- Stops close together can leave a walk no breadcrumb outside the gaps at both ends. It then gets one at its middle,
+-- which may give up STOP_GAP but never lies under a mark.
+---@param view SPFMapView
+local function MiddleDot(view, path, points, color)
+	local left, px, py = walked / 2, nil, nil
+	for index = 1, #points do
+		local point, previous = points[index], points[index - 1]
+		local x, y = view.position(point, view.mapID)
+		if previous then
+			if not (px and x) or previous.map ~= point.map or (previous.jump and not path.preview) then
+				return
+			end
+			local dx, dy = (x - px) * width, (py - y) * height
+			local length = math.sqrt(dx * dx + dy * dy) * scale
+			if length > 0 and left <= length then
+				local t, reach = left / length, (dot / 2 + dotRim) / scale
+				local cx, cy = px * width + t * dx, -py * height + t * dy
+				if
+					cx >= minX * width + reach
+					and cx <= maxX * width - reach
+					and -cy >= minY * height + reach
+					and -cy <= maxY * height - reach
+					and ClearOfMarks(cx, cy, -STOP_GAP / scale)
+				then
+					local hx, hy = dx * dot / 2 / length, dy * dot / 2 / length
+					local depth = not path.preview and DepthAt(previous, point, t) or nil
+					Stroke(cx - hx, cy - hy, cx + hx, cy + hy, Ink(color, depth), true)
+				end
+				return
+			end
+			left = left - length
+		end
+		px, py = x, y
+	end
 end
 
 -- The segment of a tour's walk still waiting to learn whether it ends in a bend: its ends, as map fractions, and its
@@ -554,6 +599,7 @@ function Strokes.Map(buffer, paths, view)
 		local crossing = OverviewCrossing(view, path, color)
 		local apart = path.mode == "flight" and not path.preview and FLIGHT_APART
 			or path.mode == "walk" and not WalkingRouteDotted(view.tour) and WALK_APART
+		local drawn = out.n
 		for index = 1, crossing and 0 or #points do
 			local point = points[index]
 			local x, y = position(point, mapID)
@@ -612,6 +658,9 @@ function Strokes.Map(buffer, paths, view)
 			end
 		end
 		Flush(color)
+		if path.mode == "walk" and out.n == drawn and walked > 0 and WalkingRouteDotted(view.tour) then
+			MiddleDot(view, path, points, color)
+		end
 	end
 end
 

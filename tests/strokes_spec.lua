@@ -293,6 +293,29 @@ end
 Strokes.Map(strokes, { { mode = "walk", points = { point(0, 0.5), point(1, 0.5) } } }, mapView({ scale = 100 }))
 check(strokes.n == 4096, "bounded strokes: " .. strokes.n)
 
+-- Stops too close for a breadcrumb outside both gaps still get one between them, clear of both marks (#1418).
+do
+	local radius = 10
+	local function between(apart, points)
+		local a, b = point(0.3, 0.5), point(0.3 + apart / CANVAS, 0.5)
+		local marks = { { x = a.x, y = a.y, radius = radius }, { x = b.x, y = b.y, radius = radius } }
+		local walk = points and points(a, b) or { a, b }
+		Strokes.Map(strokes, { { mode = "walk", points = walk } }, mapView({ marks = marks }))
+		return dots(strokes), a, b
+	end
+	local drawn, a, b = between(28)
+	check(#drawn == 1 and close(drawn[1][1], (a.x + b.x) / 2 * CANVAS), "one dot, midway")
+	check(close(drawn[1][2], -a.y * CANVAS), "on the walk")
+	check(drawn[1][1] - a.x * CANVAS >= radius + DOT / 2 + RIM, "clear of the first mark")
+	-- Measured along the walk, whatever its segments.
+	drawn, a, b = between(28, function(from, to)
+		return { from, point(from.x + 0.004, from.y), point(from.x + 0.02, from.y), to }
+	end)
+	check(#drawn == 1 and close(drawn[1][1], (a.x + b.x) / 2 * CANVAS), "midway over several segments")
+	check(#between(22) == 0, "no room without lying under a mark")
+	check(#between(60) > 1, "an open walk keeps its spacing")
+end
+
 -- The dots stop short of each stop's mark at any zoom (#51). Stop 3 goes back to stop 1's place: the route walks
 -- there, on to stop 2, and back. Marks keep their size on screen, so their reach grows as the map zooms out.
 local player, first, second = point(0.1, 0.5), point(0.3, 0.5), point(0.5, 0.5)
