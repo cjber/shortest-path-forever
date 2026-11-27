@@ -218,8 +218,8 @@ L["Show portals"] = "Mostrar portais"
 L["Show routes on the world map"] = "Mostrar rotas no mapa-múndi"
 L["Show the compass"] = "Mostrar a bússola"
 L["Show the flight to take"] = "Mostrar o voo a pegar"
-L["Show the next direction and the game's navigation marker. When off, only the route on the map and minimap stays."] =
-	"Mostrar a próxima direção e o marcador de navegação do jogo. Desativado, só a rota no mapa e no minimapa permanece."
+L["Show Shortest Path's arrow and the game's navigation marker. TomTom's arrow has its own settings."] =
+	"Mostrar a seta do Shortest Path e o marcador de navegação do jogo. A seta do TomTom tem configurações próprias." -- mt
 L["Show the time left under the compass"] = "Tempo restante sob a bússola"
 L["Show the way to your corpse"] = "Mostrar o caminho até seu corpo"
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =

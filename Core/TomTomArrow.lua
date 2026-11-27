@@ -60,11 +60,11 @@ local function TomTomCrazyArrowEnabled(tomtom)
 	return not (arrow and arrow.enable == false)
 end
 
--- Whether settings and TomTom allow driving TomTom's arrow (real TomTom loaded with its floating arrow enabled,
--- opt-in setting on, and our direction arrow setting not off).
+-- Whether settings and TomTom allow driving TomTom's arrow: real TomTom loaded with its floating arrow enabled and the
+-- opt-in setting on. Show direction arrow is about our own arrow and plays no part.
 ---@return boolean
 local function TomTomArrowEnabled()
-	if not (ns.db and ns.db.tomtomArrow == true and ns.db.arrow ~= false) then
+	if not (ns.db and ns.db.tomtomArrow == true) then
 		return false
 	end
 	-- The bridge pauses when TomTom selects an unowned waypoint and waits for all foreign waypoints to go away.

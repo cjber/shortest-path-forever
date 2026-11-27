@@ -217,8 +217,8 @@ L["Show portals"] = "显示传送门"
 L["Show routes on the world map"] = "在世界地图上显示航线"
 L["Show the compass"] = "显示指南针"
 L["Show the flight to take"] = "显示要乘坐的航班"
-L["Show the next direction and the game's navigation marker. When off, only the route on the map and minimap stays."] =
-	"显示下一个方向和游戏的导航标记。关闭时，只保留地图和小地图上的路线。"
+L["Show Shortest Path's arrow and the game's navigation marker. TomTom's arrow has its own settings."] =
+	"显示 Shortest Path 的箭头和游戏的导航标记。TomTom 的箭头有单独的设置。" -- mt
 L["Show the time left under the compass"] = "在指南针下显示剩余时间"
 L["Show the way to your corpse"] = "显示前往尸体的路"
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =

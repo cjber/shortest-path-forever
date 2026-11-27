@@ -165,7 +165,7 @@ check("Follow TomTom's arrow still routes to the bridge's step with both guide s
 	assert(c.crazy.alpha == 0, "without Use TomTom's arrow, Shortest Path's arrow replaces TomTom's")
 end)
 
-check("turning the direction arrow off also hides the bridge's arrow", function()
+check("turning the direction arrow off leaves the bridge's arrow", function()
 	local c = Boot({ tomtomArrow = true, tomtomFollow = true, restedXPBridge = true, deferLogin = true }, false)
 	c.ns.db.restedxp, c.ns.db.arrow = false, false
 	c.login()
@@ -175,7 +175,9 @@ check("turning the direction arrow off also hides the bridge's arrow", function(
 	c.driver.update(0)
 	c.runTimers()
 	assert(c.API.CurrentStop("TomTom") == 1, "the journey must follow TomTom's arrow")
-	assert(c.crazy.alpha == 0, "no direction arrow shows")
+	assert(not c.bridge.paused and c.tomtom.Arrow() == c.bridge.Waypoint(), "the bridge keeps TomTom's arrow")
+	assert(not c.crazy.hidden and c.crazy.alpha > 0, "TomTom's arrow stays visible")
+	assert(not ourArrowShown(c) and c.env.C_Map.GetUserWaypoint() == nil, "our arrow and marker stay off")
 end)
 
 check("Follow TomTom's arrow still points TomTom's arrow along the route to a manual waypoint", function()

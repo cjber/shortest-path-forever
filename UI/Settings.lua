@@ -703,7 +703,7 @@ ns.Init(function()
 	Checkbox(
 		"arrow",
 		L["Show direction arrow"],
-		L["Show the next direction and the game's navigation marker. When off, only the route on the map and minimap stays."],
+		L["Show Shortest Path's arrow and the game's navigation marker. TomTom's arrow has its own settings."],
 		function()
 			ns.JourneyGuide.ArrowChanged()
 			ns.WakeTravel()

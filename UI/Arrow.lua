@@ -1136,7 +1136,7 @@ end
 -- (Core/RestedXP.lua, Guidelime.lua), so the player always has one arrow to follow.
 ---@return boolean
 function ns.ArrowLeads()
-	if not ns.db or ns.db.arrow == false then
+	if not ns.db then
 		return false
 	end
 	return (ArrowOurs() and ((path ~= nil and target ~= nil and not unseen) or arrival ~= nil))
