@@ -289,6 +289,9 @@ for i = 1, strokes.n do
 	dashed, solid = dashed + (strokes.dot[i] and 1 or 0), solid + (strokes.dot[i] and 0 or 1)
 end
 check(dashed == 23 and solid == 2, "dots to the last place on this map, then a cross: " .. dashed .. ", " .. solid)
+-- A tour draws the same hop as a solid line.
+Strokes.Map(strokes, { hop }, mapView({ tour = true }))
+check(strokes.n == 3 and #dots(strokes) == 0, "a tour's hop still planning is solid: " .. strokes.n)
 
 -- Flights are drawn through FlightLines.lua's rounded corners, ends exact (#67).
 local corner = { mode = "flight", points = { point(0.2, 0.2), point(0.6, 0.2), point(0.6, 0.6) } }

@@ -554,7 +554,11 @@ function Strokes.Map(buffer, paths, view)
 							Mark(px, py, color)
 							Mark(x, y, color)
 						elseif px and x then
-							Line(px, py, x, y, color, true)
+							if view.tour then
+								Soft(px, py, x, y, color)
+							else
+								Line(px, py, x, y, color, true)
+							end
 						end
 					elseif previous.jump or previous.map ~= point.map then
 						entranceDistance = nil
