@@ -35,6 +35,7 @@
 ---@field new fun(): SPFJourneyStopsController
 ---@field Current fun(): SPFJourneyStopsController
 ---@field Restore fun(points: SPFAPIStop[]): boolean?
+---@field WaypointReceiver fun(owned: boolean): (fun(): boolean)?
 
 ---@class SPFJourneyStopsWindow : Frame
 ---@field SetTitle fun(self: SPFJourneyStopsWindow, title: string)

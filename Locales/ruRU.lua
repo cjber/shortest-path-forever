@@ -570,8 +570,8 @@ L["Ordering stops by estimated travel time..."] =
 	"Упорядочивание остановок по расчётному времени пути..." -- mt
 L["Orders the stops by estimated travel time. You can change the order."] =
 	"Упорядочивает остановки по расчётному времени пути. Вы можете изменить порядок." -- mt
-L["Place a map waypoint, then add it to this journey."] =
-	"Поставьте точку на карте, затем добавьте её в это путешествие." -- mt
+L["Place pins on the map to add stops."] =
+	"Ставьте точки на карте, чтобы добавить остановки." -- mt
 L["Remove"] = "Удалить" -- mt
 L["Stop %d of %d."] = "Остановка %d из %d." -- mt
 L["Stop your current journey before starting this journey."] =

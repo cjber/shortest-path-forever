@@ -537,7 +537,7 @@ L["Journey stops"] = "Paradas del viaje" -- mt
 L["Ordering stops by estimated travel time..."] = "Ordenando las paradas por tiempo de viaje estimado..." -- mt
 L["Orders the stops by estimated travel time. You can change the order."] =
 	"Ordena las paradas según el tiempo de viaje estimado. Puedes cambiar el orden." -- mt
-L["Place a map waypoint, then add it to this journey."] = "Coloca un punto de ruta en el mapa y agrégalo a este viaje." -- mt
+L["Place pins on the map to add stops."] = "Coloca puntos de ruta en el mapa para agregar paradas." -- mt
 L["Remove"] = "Eliminar" -- mt
 L["Stop %d of %d."] = "Parada %d de %d." -- mt
 L["Stop your current journey before starting this journey."] = "Detén tu viaje actual antes de iniciar este viaje." -- mt

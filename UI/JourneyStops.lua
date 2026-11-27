@@ -401,7 +401,7 @@ end
 ns.JourneyStopsEditor = Editor
 
 local messages = {
-	idle = L["Place a map waypoint, then add it to this journey."],
+	idle = L["Place pins on the map to add stops."],
 	empty = L["Add at least one stop."],
 	ordering = L["Ordering stops by estimated travel time..."],
 	["context-changed"] = L["Travel options changed. Start again to order these stops."],
@@ -434,6 +434,18 @@ local rows, editButtons = {}, {}
 local startButton, pauseButton, resumeButton, stopButton
 ---@type fun()
 local refresh
+---@type (fun(): boolean)?
+local waypointReceiver
+
+-- Each opening accepts new pins until it closes, including reports held while ownership settles.
+---@param owned boolean Shortest Path wrote the pin
+---@return (fun(): boolean)?
+function Editor.WaypointReceiver(owned)
+	if not owned and waypointReceiver and C_Map.HasUserWaypoint() and Editor.Current():Editable() then
+		return waypointReceiver
+	end
+end
+
 ---@param parent Frame
 ---@param value string
 ---@param y number
@@ -470,7 +482,14 @@ local function Build()
 	window:SetSize(560, 560)
 	window:SetPoint("CENTER")
 	window:SetFrameStrata("DIALOG")
+	window:SetToplevel(true)
 	window:SetClampedToScreen(true)
+	-- Draggable, so it can be moved off the part of the map a pin is wanted on.
+	window:SetMovable(true)
+	window:EnableMouse(true)
+	window:RegisterForDrag("LeftButton")
+	window:SetScript("OnDragStart", window.StartMoving)
+	window:SetScript("OnDragStop", window.StopMovingOrSizing)
 	window:SetTitle(L["Journey stops"])
 	local icon = C_AddOns.GetAddOnMetadata(addonName, "X-Forever-Icon")
 	if icon then
@@ -605,6 +624,7 @@ local function Build()
 		content:SetHeight(math.max(288, #displayed * 28))
 	end
 	window:SetScript("OnHide", function()
+		waypointReceiver = nil
 		window:UnregisterAllEvents()
 		controller:Detach()
 	end)
@@ -620,6 +640,15 @@ local function Build()
 		window:RegisterEvent("PLAYER_DEAD")
 		window:RegisterEvent("PLAYER_ALIVE")
 		window:RegisterEvent("PLAYER_UNGHOST")
+		local function CaptureWaypoint()
+			if waypointReceiver ~= CaptureWaypoint or not controller:Editable() then
+				return false
+			end
+			controller:AddWaypoint()
+			refresh()
+			return true
+		end
+		waypointReceiver = CaptureWaypoint
 		controller:Attach(refresh)
 		refresh()
 	end)

@@ -460,6 +460,7 @@ local function StopGuide(reason)
 	if
 		not previous
 		or not previous.hasDriven
+		or previous.leaveWaypoint
 		or not SameWaypoint(C_Map.GetUserWaypoint(), previous.expectedWaypoint)
 	then
 		RefreshWaypointPins()
@@ -846,8 +847,8 @@ function Guide.QuestGone(questID)
 end
 
 ---@param event string
----@param ownerWaypoint? boolean
-function Guide.TrackingChanged(event, ownerWaypoint)
+---@param waypointOwner? "guide"|"RestedXP"|"stops"
+function Guide.TrackingChanged(event, waypointOwner)
 	RefreshWaypointPins()
 	if not guide or guide.writing or (not guide.hasDriven and WaypointUIHolding()) then
 		return
@@ -859,11 +860,16 @@ function Guide.TrackingChanged(event, ownerWaypoint)
 		end
 		return
 	end
-	if ownerWaypoint then
-		-- The step's pin took or left the native slot. Keep the guide and the waypoint it borrowed at the start.
+	-- Removing the pin a guide stepped aside for gives it nothing new to yield to.
+	if waypointOwner == "RestedXP" or waypointOwner == "stops" or (guide.leaveWaypoint and not waypoint) then
+		-- The native slot changed hands while the guide keeps leading the same route.
 		guide.expectedWaypoint = waypoint
 		guide.waypointTarget, guide.uiMap, guide.fading, guide.waypointNavigation = nil, nil, nil, nil
 		RememberTracking(guide)
+		if waypointOwner == "stops" then
+			guide.leaveWaypoint = true
+			YieldGuide()
+		end
 		-- Standing still redraws nothing, so an emptied slot asks the arrow to mark it again.
 		if not waypoint and ns.RedrawGuideMarker then
 			ns.RedrawGuideMarker()
