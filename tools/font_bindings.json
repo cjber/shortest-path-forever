@@ -146,7 +146,7 @@
     },
     {
       "source": "UI/JourneyStops.lua",
-      "sha256": "04dcac9742d7fb5075c8f592d61e7a6b2cf8a44e6ca54795761c8f4ea480a2e2",
+      "sha256": "7a35a3a3afa5c75cb39a57d02f61930f46f0babb66c1eff38ca47fef904c8ef5",
       "review": "Read Text, Build and refresh. Text creates help and status with GameFontHighlight. Restored journeys fill in the existing progress phrase with the number of remaining stops. SharedButtonSmallTemplate buttons and row labels, PortraitFrameTemplate title, tooltip text and dynamic stop names are excluded because this producer does not establish their font objects.",
       "bindings": [
         {
