@@ -698,8 +698,8 @@ L["Right-click to choose map services."] = "ПКМ, чтобы выбрать у
 L["Use TomTom's arrow"] = "Использовать стрелку TomTom" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"Если установлен TomTom, направляет стрелку TomTom на каждый шаг вместо нашей стрелки и игрового маркера." -- mt
-L["Journey stops remembers your list."] =
-	"Остановки путешествия теперь запоминают ваш список." -- mt
+L["Flight times no longer shrink after some rides."] =
+	"Время полёта больше не сокращается после некоторых перелётов." -- mt
 L["Mailbox"] = "Почтовый ящик" -- mt
 L["Skip this stop"] = "Пропустить эту остановку" -- mt
 L["Destination queued until combat ends."] = "Пункт назначения ожидает окончания боя." -- mt
