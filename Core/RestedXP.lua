@@ -134,12 +134,12 @@ local function HoldArrow()
 	end
 end
 
--- RestedXP records the pin it wrote and the position read back from the client. That record is available
--- independently of whether its arrow has published a target or its journey has started.
+-- Whether the player's user waypoint is the pin RestedXP's own waypoint element set for a step under way. RestedXP
+-- records what it wrote (waypointSet, and the position read back from the client) and clears the pin only on that
+-- same match, so this is RestedXP's own record of ownership.
 ---@return boolean
-function ns.RestedXPWroteWaypoint()
-	local rxp = RXP
-	local steps = rxp and rxp.RXPFrame and rxp.RXPFrame.activeSteps
+function ns.OwnerWroteWaypoint()
+	local steps = hooked and OwnsJourney() and hooked.RXPFrame and hooked.RXPFrame.activeSteps
 	if not steps then
 		return false
 	end

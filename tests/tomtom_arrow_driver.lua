@@ -10,12 +10,11 @@ local Fake = assert(loadfile("tests/tomtom_fake.lua"))()
 ---@field restedXPBridge? boolean
 ---@field deferLogin? boolean
 ---@field savedWaypoints? table[]
----@field keptJourney? table
 
 ---@param opts SPFTomTomArrowTestOptions
 ---@param restoredGuide? boolean
 return function(opts, restoredGuide)
-	local d = assert(loadfile("tests/journey_driver.lua"))(".", true)
+	local d = assert(loadfile("tests/journey_driver.lua"))()
 	local n, e = d.ns, d.env
 	local arrowFrame
 	local baseCreate = e.CreateFrame
@@ -136,8 +135,6 @@ return function(opts, restoredGuide)
 	n.db.tomtomFollow = opts.tomtomFollow == true
 	n.db.tomtomArrow = opts.tomtomArrow == true
 	n.db.arrow = opts.arrow ~= false
-	n.charDB.journey = opts.keptJourney
-	d.load("Journey/Resume.lua")
 	d.load("Journey/Itinerary.lua")
 
 	local fake
@@ -186,15 +183,15 @@ return function(opts, restoredGuide)
 			settings = { profile = { showEnabled = true } },
 			currentGuide = {},
 			activeWaypoints = restoredGuide and { element } or {},
-			RXPFrame = { activeSteps = {} },
 			UpdateMap = function() end,
 			UpdateGotoSteps = function() end,
 			DrawArrow = function() end,
 		}
 		local login = e.CreateFrame("Frame")
-		login:RegisterEvent("PLAYER_ENTERING_WORLD")
-		login:SetScript("OnEvent", function()
-			e.RXP.UpdateMap()
+		login:SetScript("OnEvent", function(_, event)
+			if event == "PLAYER_ENTERING_WORLD" then
+				e.RXP.UpdateMap()
+			end
 		end)
 		n.db.restedxp = true
 		n.JourneyPosition = function() end

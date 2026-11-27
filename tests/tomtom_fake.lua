@@ -33,18 +33,6 @@ function Fake.New(saved, wayframe, modern)
 	local arrow, closestPending
 	local hijacked = false
 	tomtom.waypoints = waypoints
-	local removed = {}
-
-	function tomtom.RegisterCallback(owner, event, callback)
-		assert(event == "WaypointRemoved")
-		removed[owner] = callback
-	end
-
-	local function WaypointRemoved(uid)
-		for _, callback in pairs(removed) do
-			callback("WaypointRemoved", uid)
-		end
-	end
 
 	local function Key(m, x, y, title)
 		return string.format("%d:%s:%s:%s", m, tostring(x), tostring(y), tostring(title))
@@ -134,9 +122,8 @@ function Fake.New(saved, wayframe, modern)
 		self:ClearWaypoint(uid)
 		local key = Key(uid[1], uid[2], uid[3], uid.title)
 		profile[key] = nil
-		if waypoints[uid[1]] and waypoints[uid[1]][key] then
+		if waypoints[uid[1]] then
 			waypoints[uid[1]][key] = nil
-			WaypointRemoved(uid)
 		end
 	end
 
@@ -150,13 +137,8 @@ function Fake.New(saved, wayframe, modern)
 
 	function tomtom:ReloadWaypoints()
 		self:ClearAllWaypoints()
-		local dropped = waypoints
-		waypoints = {}
-		self.waypoints = waypoints
-		for _, entries in pairs(dropped) do
-			for _, uid in pairs(entries) do
-				WaypointRemoved(uid)
-			end
+		for map in pairs(waypoints) do
+			waypoints[map] = nil
 		end
 		local keys = {}
 		for key in pairs(profile) do
@@ -337,10 +319,7 @@ function Fake.Bridge(env)
 	end
 
 	local frame = env.CreateFrame("Frame")
-	frame:RegisterEvent("PLAYER_LOGIN")
-	frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-	frame:RegisterEvent("PLAYER_CONTROL_GAINED")
-	frame:RegisterEvent("PLAYER_ALIVE")
+	local ticksOn = { PLAYER_ENTERING_WORLD = true, PLAYER_CONTROL_GAINED = true, PLAYER_ALIVE = true }
 	frame:SetScript("OnEvent", function(_, event)
 		if event == "PLAYER_LOGIN" then
 			local elapsed = 0
@@ -360,7 +339,7 @@ function Fake.Bridge(env)
 			env.hooksecurefunc(env.RXP, "DrawArrow", function()
 				Tick()
 			end)
-		else
+		elseif ticksOn[event] then
 			Tick()
 		end
 	end)

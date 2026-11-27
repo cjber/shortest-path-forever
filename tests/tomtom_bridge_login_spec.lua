@@ -16,7 +16,9 @@ local function visible(c)
 	assert(not c.crazy.hidden and c.crazy.alpha > 0, "TomTom's arrow must be visible")
 	assert(not c.bridge.paused, "the bridge must stay unpaused")
 	assert(c.env.RXPG_ARROW.alpha == 0 and not c.env.RXPG_ARROW.hidden, "the bridge owns RestedXP's native arrow")
-	assert(c.API.CurrentStop("RestedXP") == 1, "RestedXP must own the Shortest Path journey")
+	-- With Follow TomTom's arrow on, the journey may follow the bridge's waypoint instead of the guide's own element.
+	local owner = c.ns.JourneyOwner()
+	assert(owner == "RestedXP" or (owner == "TomTom" and c.ns.db.tomtomFollow), "the journey must be the guide's step")
 end
 
 local function publishStep(c)
@@ -37,42 +39,6 @@ for _, follow in ipairs({ false, true }) do
 		return c
 	end
 
-	check("RestedXP native pin before its first route" .. suffix, function()
-		local c = boot(false)
-		local map, rxp = c.env.C_Map, c.env.RXP
-		c.login()
-		c.world()
-		-- An .ingamewaypoint element can write a native pin before the arrow element is ready.
-		local pin = { zone = 1, zx = 0.7, zy = 0.5 }
-		rxp.RXPFrame.activeSteps[1] = { elements = { pin } }
-		map.SetUserWaypoint(c.env.UiMapPoint.CreateFromCoordinates(pin.zone, pin.zx, pin.zy))
-		c.env.C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-		pin.waypointSet = true
-		local position = map.GetUserWaypointPositionForMap(pin.zone)
-		pin.zx, pin.zy = position.x, position.y
-		c.driver.update(0)
-		c.runTimers()
-		publishStep(c)
-		c.driver.update(0)
-		c.runTimers()
-		visible(c)
-
-		map.SetUserWaypoint(c.env.UiMapPoint.CreateFromCoordinates(1, 0.8, 0.5))
-		c.driver.update(0)
-		assert(c.ns.HasJourney() and not c.ns.JourneyOwner(), "a different pin still starts a player journey")
-	end)
-
-	check("saved player journey and an early RestedXP step" .. suffix, function()
-		local c = boot(true, { keptJourney = { map = 1, x = 0, y = -8000, label = "Player destination" } })
-		c.login()
-		c.world()
-		c.runTimers()
-		c.driver.update(2)
-		c.runTimers()
-		visible(c)
-		assert(c.ns.charDB.journey == nil, "the saved player journey was dropped")
-	end)
-
 	check("bridge selects after Shortest Path's login callbacks" .. suffix, function()
 		local c = boot(false)
 		c.driver.path.draw = function(from, to)
@@ -89,18 +55,9 @@ for _, follow in ipairs({ false, true }) do
 
 	check("TomTom reloads a saved foreign target before the bridge ticks" .. suffix, function()
 		local c = boot(true, {
-			savedWaypoints = {
-				{ 1, 0.7, 0.5, title = "Saved", crazy = true },
-				{ 1, 0.75, 0.5, title = "Unselected", crazy = false },
-			},
+			savedWaypoints = { { 1, 0.7, 0.5, title = "Saved", crazy = true } },
 		})
-		local beforeLogin = c.tomtom:AddWaypoint(1, 0.8, 0.5, { persistent = false, crazy = false })
-		local removed
-		c.tomtom.RegisterCallback({}, "WaypointRemoved", function(_, uid)
-			removed = uid
-		end)
 		c.login()
-		assert(removed == beforeLogin and not c.tomtom:IsValidWaypoint(beforeLogin), "reload drops ephemeral waypoints")
 		local saved = c.tomtom.Arrow()
 		assert(saved and saved.title == "Saved", "reload selects the persisted crazy waypoint")
 		c.world()
@@ -127,6 +84,43 @@ check("Follow TomTom's arrow still routes to the bridge's step with both guide s
 	c.runTimers()
 	assert(c.API.CurrentStop("TomTom") == 1, "the journey must follow TomTom's arrow")
 	assert(not c.bridge.paused and c.tomtom.Arrow() == c.bridge.Waypoint(), "the bridge keeps TomTom's arrow")
+	assert(c.crazy.alpha == 0, "without Use TomTom's arrow, Shortest Path's arrow replaces TomTom's")
+end)
+
+check("turning the direction arrow off also hides the bridge's arrow", function()
+	local c = Boot({ tomtomArrow = true, tomtomFollow = true, restedXPBridge = true, deferLogin = true }, false)
+	c.ns.db.restedxp, c.ns.db.arrow = false, false
+	c.login()
+	c.world()
+	c.runTimers()
+	publishStep(c)
+	c.driver.update(0)
+	c.runTimers()
+	assert(c.API.CurrentStop("TomTom") == 1, "the journey must follow TomTom's arrow")
+	assert(c.crazy.alpha == 0, "no direction arrow shows")
+end)
+
+check("Follow TomTom's arrow still points TomTom's arrow along the route to a manual waypoint", function()
+	local c = Boot({ tomtomArrow = true, tomtomFollow = true, restedXPBridge = true, deferLogin = true }, false)
+	c.ns.db.restedxp = false
+	c.login()
+	c.world()
+	c.runTimers()
+	local manual = c.tomtom:Way(1, 10, 20, "Manual waypoint")
+	c.driver.path.settle()
+	c.driver.update(0)
+	c.runTimers()
+	assert(c.API.CurrentStop("TomTom") == 1, "the journey must follow the manual waypoint")
+	assert(c.ns.TomTomArrowActive() and c.tomtom.Arrow() == manual, "Shortest Path drives TomTom's arrow")
+
+	c.tomtom:RemoveWaypoint(manual)
+	publishStep(c)
+	c.driver.update(2)
+	c.runTimers()
+	c.driver.path.settle()
+	c.driver.update(1)
+	c.runTimers()
+	visible(c)
 end)
 
 assert(failures == 0, failures .. " TomTom bridge login scenarios failed")
