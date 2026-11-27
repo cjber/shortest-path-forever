@@ -105,6 +105,10 @@ ns.Strokes = Strokes
 local out
 ---@type number, number, number, number, number, number, number
 local scale, width, height, dot, dotRim, spacing, walked
+-- Where along the walk the first dot sits.
+local phase = 0
+-- Whether a dotted segment of the current path lies in the view.
+local inView
 ---@type number, number, number?
 local fade, later, route
 -- Walk distance of the cave mouth, until its first regular breadcrumb has been considered.
@@ -281,11 +285,12 @@ local function Segment(x1, y1, x2, y2, low, high, color, dashed, a, b, entranceL
 	if not low then
 		return
 	end
+	inView = true
 	-- The caller clipped a walk a dot's reach inside its frame, so every rim fits and joints need no trim, which
 	-- would drop the dots at each bend. A dot on a joint belongs to the later segment: both ends share a tolerance,
 	-- so rounding in the running total cannot push it out of both.
 	local half = dot / 2 / length
-	local first = math.ceil((start + low * length - 0.001) / spacing) * spacing - start
+	local first = math.ceil((start + low * length - 0.001 - phase) / spacing) * spacing + phase - start
 	local count = Near(x1, y1, x2, y2)
 	for distance = first, high * length - 0.001, spacing do
 		local t = distance / length
@@ -367,6 +372,24 @@ local function Line(x1, y1, x2, y2, color, dashed, a, b)
 		entranceLow,
 		entranceHigh
 	)
+end
+
+-- A short walk between stops can have every spaced breadcrumb fall inside the gaps at its ends although there is room
+-- between them. It is dotted again with the one dot at its middle.
+---@param view SPFMapView
+local function MiddleDot(view, path, points, color)
+	local usual = spacing
+	spacing, phase, walked, entranceDistance = walked, walked / 2, 0, nil
+	local previous, px, py
+	for index = 1, #points do
+		local point = points[index]
+		local x, y = view.position(point, view.mapID)
+		if px and x then
+			Line(px, py, x, y, color, true, not path.preview and previous or nil, not path.preview and point or nil)
+		end
+		previous, px, py = point, x, y
+	end
+	spacing, phase = usual, 0
 end
 
 -- The segment of a tour's walk still waiting to learn whether it ends in a bend: its ends, as map fractions, and its
@@ -554,6 +577,8 @@ function Strokes.Map(buffer, paths, view)
 		local crossing = OverviewCrossing(view, path, color)
 		local apart = path.mode == "flight" and not path.preview and FLIGHT_APART
 			or path.mode == "walk" and not WalkingRouteDotted(view.tour) and WALK_APART
+		local drawn, broken = out.n, false
+		inView = false
 		for index = 1, crossing and 0 or #points do
 			local point = points[index]
 			local x, y = position(point, mapID)
@@ -576,6 +601,8 @@ function Strokes.Map(buffer, paths, view)
 				if path.mode == "portal" or path.mode == "passage" then
 					Mark(x, y, color)
 				elseif previous then
+					broken = broken
+						or not (px and x and previous.map == point.map and (path.preview or not previous.jump))
 					if path.preview then
 						-- A hop still planning has no geometry to draw; a straight line would cross the sea.
 						if previous.map ~= point.map then
@@ -612,6 +639,9 @@ function Strokes.Map(buffer, paths, view)
 			end
 		end
 		Flush(color)
+		if path.mode == "walk" and inView and not broken and out.n == drawn then
+			MiddleDot(view, path, points, color)
+		end
 	end
 end
 
