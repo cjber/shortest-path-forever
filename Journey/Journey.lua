@@ -40,6 +40,7 @@ local RefreshTracker, StopGuide = Guide.RefreshTracker, Guide.Stop
 ---@class SPFTrackingReport
 ---@field waypoint? boolean
 ---@field waypointChanged? boolean
+---@field captureStop? fun(): boolean
 ---@field superTracking? boolean
 ---@type SPFTrackingReport?
 local pendingTracking
@@ -892,10 +893,12 @@ end
 ---@param event string
 ---@param waypointChanged? boolean
 ---@param waypointOwner? "guide"|"RestedXP"
-local function ReportTracking(event, waypointChanged, waypointOwner)
-	Guide.TrackingChanged(event, waypointOwner == "RestedXP")
+---@param captureStop? fun(): boolean
+local function ReportTracking(event, waypointChanged, waypointOwner, captureStop)
+	local captured = not waypointOwner and captureStop and captureStop()
+	Guide.TrackingChanged(event, captured and "stops" or waypointOwner)
 	if ns.FocusedTrackingChanged then
-		ns.FocusedTrackingChanged(event, waypointOwner ~= nil, waypointChanged)
+		ns.FocusedTrackingChanged(event, waypointOwner ~= nil, waypointChanged, captured)
 	end
 end
 
@@ -905,7 +908,7 @@ local function ResolveWaypoint(pending)
 	if pending.waypoint then
 		local owner = ns.RestedXPOwnsWaypoint() and "RestedXP" or nil
 		foreignPin = owner ~= nil
-		ReportTracking("USER_WAYPOINT_UPDATED", pending.waypointChanged, owner)
+		ReportTracking("USER_WAYPOINT_UPDATED", pending.waypointChanged, owner, pending.captureStop)
 	end
 	if pending.superTracking then
 		ReportTracking("SUPER_TRACKING_CHANGED")
@@ -925,6 +928,7 @@ local function TrackingChanged(event)
 	-- Capture our own write while Guide's synchronous guards are live. RestedXP records its pin after the event.
 	local owned = Guide.OwnsReported(event)
 	local changed = ns.FocusedWaypointChanged and ns.FocusedWaypointChanged()
+	local captureStop = changed and ns.JourneyStopsEditor and ns.JourneyStopsEditor.WaypointReceiver(owned)
 	if not owned and C_Map.HasUserWaypoint() and ns.RestedXPHasActiveSteps and ns.RestedXPHasActiveSteps() then
 		if not pendingTracking then
 			local pending = {}
@@ -936,17 +940,19 @@ local function TrackingChanged(event)
 		-- The client has one waypoint slot, so only the latest write can still be acted on.
 		foreignPin = true
 		pendingTracking.waypoint = true
-		pendingTracking.waypointChanged = pendingTracking.waypointChanged or changed
+		if changed then
+			pendingTracking.waypointChanged, pendingTracking.captureStop = true, captureStop
+		end
 	else
 		if pendingTracking then
-			pendingTracking.waypoint, pendingTracking.waypointChanged = nil, nil
+			pendingTracking.waypoint, pendingTracking.waypointChanged, pendingTracking.captureStop = nil, nil, nil
 		end
 		local owner = owned and "guide" or nil
 		if not owner and foreignPin and not C_Map.HasUserWaypoint() then
 			owner = "RestedXP"
 		end
 		foreignPin = false
-		ReportTracking(event, changed, owner)
+		ReportTracking(event, changed, owner, captureStop)
 	end
 end
 

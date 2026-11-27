@@ -63,7 +63,6 @@ capture("empty")
 -- Deliberately add farther first: submitted nearest-next order must differ from draft.
 for _, x in ipairs({0.506, 0.502, 0.504}) do
     waypoint(x)
-    find("Add map waypoint"):Click()
 end
 capture("draft")
 find("Start"):Click()

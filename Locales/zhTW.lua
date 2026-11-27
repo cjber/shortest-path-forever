@@ -528,8 +528,7 @@ L["Journey stops"] = "旅程停靠點" -- mt
 L["Ordering stops by estimated travel time..."] = "正在依預估旅行時間排列停靠點..." -- mt
 L["Orders the stops by estimated travel time. You can change the order."] =
 	"依預估旅行時間排列停靠點。你可以變更順序。" -- mt
-L["Place a map waypoint, then add it to this journey."] =
-	"請先在地圖上設定路線點，再將其加入此旅程。" -- mt
+L["Place pins on the map to add stops."] = "在地圖上設定路線點，即可新增旅程停靠點。" -- mt
 L["Remove"] = "移除" -- mt
 L["Stop %d of %d."] = "第%d個停靠點，共%d個。" -- mt
 L["Stop your current journey before starting this journey."] = "請先停止目前的旅程，再開始此旅程。" -- mt

@@ -397,11 +397,9 @@ function ns.JourneyToTrackedQuest()
 end
 
 -- Route to the focused quest: an opt-in journey (db.focusedQuest) from the quest or flight point the client is
--- super-tracking, so a controller needs no map click. The map pin the player placed always plans one: Ctrl-click,
--- the map's pin button, /mappin and a chat link all end in the client's user waypoint, the one thing every way of
--- placing it shares (#1336). Removing that pin ends the journey it planned (#1348). A guide's own journey is left
--- alone: its focus changes are its steps, not the player's choice. Journey.lua calls these after Guide.TrackingChanged,
--- so a guide the player took over has already yielded.
+-- super-tracking, so a controller needs no map click. Ctrl-click, the map's pin button, /mappin and a chat link
+-- all report the same user waypoint (#1336). A player's new pin adds a stop to an open draft or can start a
+-- journey. Removing a pin ends the journey it planned (#1348). Guide-owned reports are handled separately.
 ---@type number?
 local focusedQuest
 ---@type SPFPoint?
@@ -513,7 +511,8 @@ end
 ---@param event string
 ---@param ownedWaypoint? boolean
 ---@param waypointChanged? boolean
-function ns.FocusedTrackingChanged(event, ownedWaypoint, waypointChanged)
+---@param capturedStop? boolean
+function ns.FocusedTrackingChanged(event, ownedWaypoint, waypointChanged, capturedStop)
 	if event == "SUPER_TRACKING_CHANGED" then
 		local guide = ns.JourneyGuide
 		local owned = guide and guide.OwnsReported and guide.OwnsReported(event) or false
@@ -546,12 +545,12 @@ function ns.FocusedTrackingChanged(event, ownedWaypoint, waypointChanged)
 	if ownedWaypoint or not waypointChanged then
 		return
 	end
-	local waypoint = UserWaypoint()
 	local previousGoal = focusedWaypointGoal
 	focusedWaypointGoal = nil
-	if not (ns.db and ns.db.journey) then
+	if capturedStop or not (ns.db and ns.db.journey) then
 		return
 	end
+	local waypoint = UserWaypoint()
 	if waypoint then
 		if GoalIsWaypoint(waypoint) then
 			if previousGoal and ns.JourneyGoal() == previousGoal then

@@ -545,8 +545,7 @@ L["Journey stops"] = "여정 경유지" -- mt
 L["Ordering stops by estimated travel time..."] = "예상 이동 시간순으로 경유지 정렬 중..." -- mt
 L["Orders the stops by estimated travel time. You can change the order."] =
 	"예상 이동 시간에 따라 경유지 순서를 정합니다. 순서를 변경할 수 있습니다." -- mt
-L["Place a map waypoint, then add it to this journey."] =
-	"지도에 경유지를 지정한 후 이 여정에 추가하세요." -- mt
+L["Place pins on the map to add stops."] = "지도에 핀을 표시하여 경유지를 추가하세요." -- mt
 L["Remove"] = "제거" -- mt
 L["Stop %d of %d."] = "경유지 %d / %d." -- mt
 L["Stop your current journey before starting this journey."] =
