@@ -555,11 +555,10 @@ local function Solve(options, cache, check, weigh)
 					if first == start and last == goal and options.hazards and options.hazards.goalZone then
 						factor = options.hazards.Direct(origin.map, origin.x, origin.y, destination.x, destination.y)
 					end
-					local penalty
-					if factor > 1 or (choice and choice > yards) then
-						penalty = ((choice and math.max(choice - yards, 0) or 0) + yards * (factor - 1)) / speed * 1000
-						hasPenalty = true
-					end
+					local penalty = (factor > 1 or choice and choice > yards)
+							and ((choice and math.max(choice - yards, 0) or 0) + yards * (factor - 1)) / speed * 1000
+						or nil
+					hasPenalty = hasPenalty or penalty ~= nil
 					local edge = {
 						mode = "walk",
 						duration = yards / speed * 1000,
@@ -595,6 +594,7 @@ local function Solve(options, cache, check, weigh)
 			state = {},
 			time = {},
 			walking = {},
+			penalty = {},
 			key = {},
 			parent = {},
 			edge = {},
@@ -617,13 +617,8 @@ local function Solve(options, cache, check, weigh)
 		end
 		labels.node[1], labels.state[1], labels.time[1] = start, start, options.now
 		labels.walking[1] = 0
-		-- With no charged edge, arrival time alone determines the score.
-		local penalties
-		if hasPenalty then
-			penalties = labels.penalty or {}
-			labels.penalty = penalties
-			penalties[1] = 0
-		end
+		local penalties = hasPenalty and labels.penalty or nil
+		labels.penalty[1] = 0
 		local walkingLimit = ridden and (cutoff - options.now) / 2
 		labels.key[1], labels.parent[1] = options.now + (lower[start] or math.huge), nil
 		local labelCount = 1
@@ -733,11 +728,9 @@ local function Solve(options, cache, check, weigh)
 							end
 						end
 						local penalty = penalties and (penalties[current] + (edge.penalty or 0))
-						local score = penalty and finish + penalty or finish
-						local key = score + lower[edge.to]
+						local key = (penalty and finish + penalty or finish) + lower[edge.to]
 						local peers = states[target]
-						-- Keep real time for schedules. A label dominates a peer only if it can reach every departure
-						-- that peer can reach and has accumulated no more walking penalty.
+						-- A label dominates a peer only if it is no later and has charged no more.
 						local dominated = cutoff ~= nil and key >= cutoff
 						local walking
 						if ridden and not dominated then
@@ -776,9 +769,7 @@ local function Solve(options, cache, check, weigh)
 							if ridden then
 								labels.walking[id] = walking
 							end
-							if penalties then
-								penalties[id] = penalty
-							end
+							labels.penalty[id] = penalty
 							peers = peers or {}
 							labels.key[id], labels.parent[id], labels.edge[id] = key, current, edge
 							labels.depart[id], labels.wait[id], labels.estimated[id] = depart, wait, estimated
