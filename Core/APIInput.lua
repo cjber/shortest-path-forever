@@ -122,30 +122,30 @@ function Input.Quests(quests)
 end
 
 -- A route's options: its travel policy, "normal" or "walking", whether its stops draw pins on the world map, whether
--- the legs past the current stop draw faded, and whether it is drawn as a tour of many close stops. Anything else is
--- the caller's mistake, answered as one.
+-- the legs past the current stop draw faded, whether it is drawn as a tour of many close stops, and whether such a tour
+-- is a loop. Anything else is the caller's mistake, answered as one.
 ---@param options any
----@return SPFRoutePolicy?, boolean?, boolean?, boolean?
+---@return SPFRouteSwitches? switches every option, with its default where none was given
 function Input.RouteOptions(options)
 	if not canaccessvalue(options) or (options ~= nil and type(options) ~= "table") then
 		return nil
 	end
-	local chosen = { policy = "normal", stopMarkers = true, fadeLaterLegs = true, tourLine = false }
+	local chosen = { policy = "normal", stopMarkers = true, fadeLaterLegs = true, tourLine = false, loop = false }
 	for key, value in pairs(options or {}) do
 		if not (canaccessvalue(key) and chosen[key] ~= nil and canaccessvalue(value)) then
 			return nil
 		end
 		chosen[key] = value
 	end
-	local policy = chosen.policy --[[@as SPFRoutePolicy]]
-	local markers, fade, tour = chosen.stopMarkers, chosen.fadeLaterLegs, chosen.tourLine
 	if
-		(policy == "normal" or policy == "walking")
-		and type(markers) == "boolean"
-		and type(fade) == "boolean"
-		and type(tour) == "boolean"
+		(chosen.policy == "normal" or chosen.policy == "walking")
+		and type(chosen.stopMarkers) == "boolean"
+		and type(chosen.fadeLaterLegs) == "boolean"
+		and type(chosen.tourLine) == "boolean"
+		and type(chosen.loop) == "boolean"
+		and (chosen.tourLine or not chosen.loop)
 	then
-		return policy, markers, fade, tour
+		return chosen --[[@as SPFRouteSwitches]]
 	end
 end
 

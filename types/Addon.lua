@@ -543,6 +543,7 @@ ShortestPathForeverPathData = nil
 ---@field placeholder? boolean -- a straight stand-in for a walk no search has measured
 ---@field route? number
 ---@field stop? number -- the stop this path leads to, for a pointer hovering it (Itinerary.lua, Route.lua)
+---@field tier? "far"|"walked" -- a looping route's later hop past the near ones, drawn fainter (Itinerary.lua)
 ---@field color? ColorMixin
 ---@class SPFLeg
 ---@field mode SPFMode

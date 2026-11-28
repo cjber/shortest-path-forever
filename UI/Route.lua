@@ -363,6 +363,7 @@ function RoutePin:Draw()
 	-- The journey's own paths come first; Itinerary.lua's later hops recede, unless NavigateRoute asked for full strength.
 	mapView.current = journey and not (goal and (goal.stop or goal).unfaded) and #paths or math.huge
 	mapView.tour = journey and Tour()
+	mapView.loop = mapView.tour and ns.JourneyStops and select(3, ns.JourneyStops()) ~= nil or false
 	mapView.highlight = journey and hoveredStops or nil
 	-- A journey's dots run every few pixels whatever the zoom: only those near the view are drawn. Lines of other
 	-- pins (RouteTransports.lua) are short and do not follow the view.
@@ -516,7 +517,7 @@ function Layer:RefreshStops()
 	end
 	local first, marks = stopIndex or 1, {}
 	self.mirroredWaypoint = ns.CompanionMaps.OpenWaypointMarksStop(stops and stops[first] or goal)
-	for index = first, stops and #stops or 1 do
+	for _, index in ipairs(stops and ns.StopsToMark() or { 1 }) do
 		local point = stops and stops[index] or goal
 		local x, y = MapPosition(point, mapID)
 		if not (point.stop or point).unmarked and OnMap(x, y) and (index ~= first or not self.mirroredWaypoint) then

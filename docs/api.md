@@ -1,6 +1,6 @@
 # Addon API
 
-Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 13`) with uiMapIDs and normalized 0-1 coordinates.
+Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 14`) with uiMapIDs and normalized 0-1 coordinates.
 Version 2 removes peer sharing and `Leaderboard`; callers must accept versions 1 and 2 and reject future versions. Check that a function exists before calling it, because an older
 addon may not have it yet. The full types are in [`types/API.lua`](../types/API.lua). On ForeverCore 1.3.2 or
 later, the API is also listed by `ForeverCore.APIKit.Addons()`.
@@ -18,6 +18,7 @@ the addon can use it once it shows the requested map.
 
 ## Minor history
 
+- Version 2, `minor = 14` adds `NavigateRoute`'s `loop` option.
 - Version 2, `minor = 13` adds the `"player"` origin to `WalkPath`, `EstimateWalks`, `Estimate` and `EstimateDetail`.
 - Version 2, `minor = 12` adds `NavigateRoute`'s `tourLine` option.
 - Version 2, `minor = 11` adds the `"skipped"` result of `Ended`.
@@ -105,6 +106,12 @@ the addon can use it once it shows the requested map.
   them at full strength). The minimap circles the next stop instead of covering it, and its line stops short of that
   circle and of your arrow, so what stands there shows. The
   default is `false`, and it too belongs to that journey.
+  `{ tourLine = true, loop = true }` takes the stops as a closed loop of 2 to 2048: after the last comes the first, and
+  the journey runs until it is cancelled or replaced. The world map draws the whole loop as one flowing line that
+  passes through every stop: the leg under way and the next nine bright, the rest faint, the stops already walked
+  dimmed, with arrows showing which way it runs. The minimap still shows the leg under way exactly. `CurrentStop`
+  counts round the loop. To carry on from another stop, submit the same loop starting there. `loop` without
+  `tourLine` is invalid.
   Any other options table, key, policy or non-boolean switch answers
   `nil, "invalid"` and changes nothing. A route keeps its policy until the
   same owner or another one submits again.
