@@ -68,6 +68,18 @@ assert(not ns.HasJourney(), "the setting is off by default, so a focused quest s
 ns.db.focusedQuest = true
 focus(102)
 assert(goalQuest() == 102, "a focused quest starts a journey to it")
+local routeBend
+local originalArrow = ns.PointGuideArrow
+ns.PointGuideArrow = function(_, callback)
+	routeBend = callback
+end
+local bend = { map = 1, x = 200, y = 0 }
+ns.JourneyGuide.To(bend, { bend }, ns.JourneyGoal())
+assert(routeBend and routeBend(bend) == false, "the route arrow leads without super-tracking a waypoint")
+assert(not driver.waypoint(), "routing from quest focus leaves the native waypoint slot alone")
+assert(env.C_SuperTrack.GetSuperTrackedQuestID() == 102, "the quest remains focused while guiding")
+assert(ns.JourneyPinTracked(), "the quest route is still guided")
+ns.PointGuideArrow = originalArrow
 local same = ns.JourneyGoal()
 focus(102)
 assert(ns.JourneyGoal() == same, "focusing the same quest again does not replan the journey")
