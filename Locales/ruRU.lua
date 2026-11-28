@@ -698,8 +698,8 @@ L["Right-click to choose map services."] = "ПКМ, чтобы выбрать у
 L["Use TomTom's arrow"] = "Использовать стрелку TomTom" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"Если установлен TomTom, направляет стрелку TomTom на каждый шаг вместо нашей стрелки и игрового маркера." -- mt
-L["Turning off Show direction arrow leaves TomTom's arrow alone."] =
-	"Отключение «Показывать стрелку направления» больше не затрагивает стрелку TomTom." -- mt
+L["The compass can stay on screen without a journey."] =
+	"Компас может оставаться на экране и без путешествия." -- mt
 L["Mailbox"] = "Почтовый ящик" -- mt
 L["Skip this stop"] = "Пропустить эту остановку" -- mt
 L["Destination queued until combat ends."] = "Пункт назначения ожидает окончания боя." -- mt

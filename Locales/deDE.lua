@@ -655,8 +655,7 @@ L["Right-click to choose map services."] = "Rechtsklick, um Dienste auf der Kart
 L["Use TomTom's arrow"] = "TomTom-Pfeil verwenden" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"Wenn TomTom installiert ist, richtet sich der TomTom-Pfeil auf jeden Schritt statt unseres Pfeils und der Spielmarkierung." -- mt
-L["Turning off Show direction arrow leaves TomTom's arrow alone."] =
-	"Wenn „Richtungspfeil zeigen“ aus ist, bleibt der Pfeil von TomTom unberührt." -- mt
+L["The compass can stay on screen without a journey."] = "Der Kompass kann auch ohne Reise auf dem Bildschirm bleiben." -- mt
 L["Mailbox"] = "Briefkasten" -- mt
 L["Skip this stop"] = "Diesen Halt überspringen" -- mt
 L["Destination queued until combat ends."] = "Ziel bis zum Ende des Kampfes vorgemerkt." -- mt

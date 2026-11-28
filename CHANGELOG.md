@@ -10,6 +10,18 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.50.0] - 2026-11-28
+
+<!-- discord-image: docs/screenshots/compass.png -->
+
+### Added
+
+- **The compass can stay on screen without a journey.** A new setting shows which way you are facing when there are no directions to follow. It needs Show the compass. (#1430)
+
+### Fixed
+
+- Removing a waypoint from TomTom's arrow keeps it removed while Shortest Path guides you to the same target. (#1433)
+
 ## [1.49.4] - 2026-11-27
 
 ### Fixed
