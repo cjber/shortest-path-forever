@@ -145,6 +145,13 @@ do
 	assert(Hazards.Profile(west, east).key == roadsOff.key, "the allowance has no effect with Follow roads off")
 	ns.db.roadDetour = nil
 
+	ns.db.flightAllowance = 3
+	local withFlight = Hazards.Profile(west, east)
+	assert(withFlight.flightAllowance == 3 and withFlight.key ~= roadsOff.key, "flight allowance invalidates plans")
+	ns.db.flightAllowance = 0
+	assert(Hazards.Profile(west, east).key == roadsOff.key, "zero restores the default policy")
+	ns.db.flightAllowance = nil
+
 	-- Where the journey starts or ends is never avoided: a goal in the high zone, or in the town.
 	profile = Hazards.Profile(west, { map = 1, x = 500, y = 0 })
 	assert(not profile.zones[200], "the goal's zone")

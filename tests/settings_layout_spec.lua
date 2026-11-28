@@ -51,6 +51,7 @@ local expected = {
 	"avoidHighZones",
 	"followRoads",
 	"roadDetour",
+	"flightAllowance",
 	"useWaterWalking",
 	"@Avoided transport",
 	"useHearthstone",

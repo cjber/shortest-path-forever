@@ -104,11 +104,6 @@ def centroid(pts):
     return (ox + cx / (3 * a), oy + cy / (3 * a))
 
 
-def seg_in_box(a, b, box):
-    """Does segment a-b touch the axis-aligned box (x0, x1, y0, y1)?"""
-    return clip_segment(a, b, box) is not None
-
-
 def nearest_point2(px, py, pts):
     """The point of a convex polygon nearest a point in the horizontal plane: the point itself inside its outline,
     else the nearest point of its edges."""

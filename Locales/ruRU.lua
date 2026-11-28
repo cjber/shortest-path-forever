@@ -706,3 +706,7 @@ L["Destination queued until combat ends."] = "Пункт назначения о
 L["Keep the compass visible without a journey"] = "Показывать компас и без путешествия"
 L["Shows your heading when there are no directions to follow. Requires Show the compass."] =
 	"Показывает, куда вы смотрите, когда нет указаний маршрута. Требуется настройка «Показывать компас»."
+L["Flight detour allowance"] = "Допустимый крюк на перелёте" -- mt
+L["How much extra time you are willing to spend to take a flight instead of walking."] =
+	"Сколько дополнительного времени вы готовы потратить на перелёт вместо пешего пути." -- mt
+L["%d min"] = "%d мин" -- mt

@@ -579,6 +579,8 @@ local function Solve(options, cache, check, weigh)
 	-- A fourth copy of the nodes marks the one unknown flight point this route walked up to and learned in person.
 	-- Only that departure may then fly: every landing and connecting point still comes from the known set.
 	local FLIGHT, WALKED, LEARNED = count, count * 2, count * 3
+	-- A flight search keeps arrivals that have flown separate from arrivals that still need to fly.
+	local FLOWN = count * 4
 	---@type table<number, SPFAnchor>?
 	local anchors = options.anchors
 	-- Ignoring arrival modes and revisits gives an admissible remaining-time bound (Routing/PlanBounds.lua).
@@ -598,7 +600,7 @@ local function Solve(options, cache, check, weigh)
 			discarded = {},
 		}
 	end
-	local function Search(withoutHearth, withoutTeleports, cutoff, ridden, assumeKnown, ownLabels)
+	local function Search(withoutHearth, withoutTeleports, cutoff, ridden, assumeKnown, ownLabels, requireFlight)
 		local labels
 		if ownLabels then
 			labels = NewLabels()
@@ -655,6 +657,8 @@ local function Solve(options, cache, check, weigh)
 			if not labels.discarded[current] then
 				local node, earliest = labels.node[current], labels.time[current]
 				local state = labels.state[current]
+				local flown = state > FLOWN
+				state = flown and state - FLOWN or state
 				if node == goal then
 					finishAt = current
 					break
@@ -668,7 +672,8 @@ local function Solve(options, cache, check, weigh)
 				local canLeaveNode = assumeKnown or not flying or not nodes[node].undiscovered
 				learned = learned or (labels.edge[current] ~= nil and labels.edge[current].gossip == true)
 				for _, edge in ipairs(edges[node]) do
-					local canLeave = canLeaveNode
+					local usesFlight = requireFlight and (flown or edge.mode == "flight")
+					local canLeave = canLeaveNode and (not requireFlight or edge.to ~= goal or usesFlight)
 					if edge.mode == "flight" and not assumeKnown then
 						local departureKnown = not nodes[node].undiscovered or learned
 						if not departureKnown or (nodes[edge.to].undiscovered and not edge.gossip) then
@@ -719,6 +724,7 @@ local function Solve(options, cache, check, weigh)
 								target = edge.to + WALKED
 							end
 						end
+						target = usesFlight and target + FLOWN or target
 						local peers = states[target] or {}
 						-- A label that cannot arrive before the cutoff leads nowhere, and dominates nothing that could: a peer
 						-- at the same node has the same remaining bound.
@@ -913,6 +919,14 @@ local function Solve(options, cache, check, weigh)
 	planned, withoutHearth, withoutTeleports = ns.Savings.Apply(planned, function(hearth, noTeleports, cutoff)
 		return Search(hearth, noTeleports, cutoff)
 	end, savings)
+	if next(taxis) and (options.flightAllowance or 0) > 0 then
+		local flight = ns.Savings.PreferFlight(planned, options.flightAllowance or 0, function(cutoff)
+			return Search(true, withoutTeleports or teleportMinimum > 0, cutoff, false, false, false, true)
+		end)
+		if flight then
+			return flight
+		end
+	end
 	-- A long way on foot is one line with nothing to follow through whatever lies between, so a ride nearly as quick
 	-- wins. It never spends the hearthstone (that would trade a cooldown for a slower arrival), nor, with a minimum
 	-- set, a class teleport: a ride arrives after this walk, so a teleport on it saves less than any minimum.
@@ -932,17 +946,9 @@ local function Solve(options, cache, check, weigh)
 	end
 	if planned then
 		MarkUnknownFlight(planned)
-		-- The charge decided it when walking straight there would have won on real time, by the same margin a long walk
-		-- gives a ride, but the ride won once the yards inside the goal's zone were charged. A teleport is no ride.
 		local walked = direct and direct.yards / speed * 1000
 		local margin = walked and walked >= LONG_WALK and RIDE_MARGIN or 1
-		local rides = #planned.legs > 1
-		for _, leg in ipairs(planned.legs) do
-			rides = rides and leg.mode ~= "teleport"
-		end
-		if walked and rides and walked * margin < planned.arrive - options.now then
-			planned.rideNote = ns.Hazards.RideNote(options.hazards)
-		end
+		planned.rideNote = ns.Savings.RideNote(planned, walked and walked * margin, options.now, options.hazards)
 	end
 	return planned
 end

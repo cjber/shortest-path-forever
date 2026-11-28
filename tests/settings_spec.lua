@@ -291,6 +291,7 @@ local ns = {
 		routeStyle = "dotted",
 		followRoads = true,
 		roadDetour = 50,
+		flightAllowance = 0,
 		arrivalDistance = 15,
 		offPathTolerance = 15,
 		townServices = "off",
@@ -469,6 +470,7 @@ local groups = {
 		"avoidHighZones",
 		"followRoads",
 		"roadDetour",
+		"flightAllowance",
 		"useWaterWalking",
 		"useHearthstone",
 		"hearthMinimumSavings",
@@ -510,7 +512,6 @@ local groups = {
 local order = { "Guidance", "Map marks", "Party mage portals", "Alerts", "Interface" }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 87, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer

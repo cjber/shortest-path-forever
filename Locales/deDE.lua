@@ -663,3 +663,7 @@ L["Destination queued until combat ends."] = "Ziel bis zum Ende des Kampfes vorg
 L["Keep the compass visible without a journey"] = "Kompass auch ohne Reise anzeigen"
 L["Shows your heading when there are no directions to follow. Requires Show the compass."] =
 	"Zeigt deine Blickrichtung an, wenn keine Wegführung aktiv ist. Erfordert „Kompass zeigen“."
+L["Flight detour allowance"] = "Flugumweg" -- mt
+L["How much extra time you are willing to spend to take a flight instead of walking."] =
+	"Wie viel zusätzliche Zeit du für einen Flug statt eines Fußwegs einplanen möchtest." -- mt
+L["%d min"] = "%d Min." -- mt
