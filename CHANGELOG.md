@@ -15,7 +15,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 ### Fixed
 
 - Starting a journey inside a guide stop's area now shows the arrival pin and its objectives immediately. Reported by [bhuddleston42](https://github.com/bhuddleston42).
-- Routes now use walking surfaces that were wrongly cut off from the rest of the map, so paths no longer detour or fail around those areas.
+- **Routes use walking surfaces that were cut off from the map.** Walking surfaces that were wrongly cut off from the rest of the map are connected again, so paths no longer detour or fail around those areas. (#1320)
 
 ## [1.50.0] - 2026-11-28
 
