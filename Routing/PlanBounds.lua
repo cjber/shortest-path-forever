@@ -5,7 +5,7 @@ if ns.broken then
 	return
 end
 
--- The planner's remaining-time bound: the least time from each node to the goal, ignoring arrival modes, revisits and
+-- The planner's remaining-score bound: the least cost from each node to the goal, ignoring arrival modes, revisits and
 -- flight knowledge, with every unanchored route waiting half its period. It is admissible, and keeps the labels the
 -- search needs for correctness from exploring unrelated routes before reaching the destination.
 local PlanBounds = {}
@@ -78,7 +78,7 @@ function PlanBounds.Lower(topology, edges, goal, options, check)
 			local adjacent = (list == 1 and backward or added)[current] or NO_EDGES
 			for i = 1, #adjacent, 2 do
 				local node, edge = adjacent[i], adjacent[i + 1]
-				local cost = best + edge.duration
+				local cost = best + edge.duration + (edge.penalty or 0)
 				if edge.route and not edge.aboard and not (anchors and anchors[edge.route]) then
 					cost = cost + options.routes[edge.route].period / 2
 				end

@@ -230,6 +230,9 @@ L["Show on map"] = "Показать на карте"
 L["Show other faction's routes"] = "Показывать маршруты другой фракции"
 L["Show portals"] = "Показывать порталы"
 L["Show routes on the world map"] = "Показывать маршруты на карте мира"
+L["Keep the compass visible without a journey"] = "Показывать компас и без путешествия"
+L["Shows your heading when there are no directions to follow. Requires Show the compass."] =
+	"Показывает, куда вы смотрите, когда нет указаний маршрута. Требуется настройка «Показывать компас»."
 L["Show the compass"] = "Показывать компас"
 L["Show the flight to take"] = "Показывать нужный полет"
 L["Show Shortest Path's arrow and the game's navigation marker. TomTom's arrow has its own settings."] =

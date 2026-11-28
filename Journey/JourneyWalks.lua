@@ -392,9 +392,15 @@ function Walks.Landings(teleports, water)
 		for i, target in ipairs(entry and entry.targets or {}) do
 			local cost = costs and costs[i]
 			if cost ~= nil then
-				walks[#walks + 1] = { from = place, to = target, cost = cost }
+				walks[#walks + 1] =
+					{ from = place, to = target, cost = cost, choice = entry.job.choices and entry.job.choices[i] }
 			elseif radius > math.sqrt((target.x - place.x) ^ 2 + (target.y - place.y) ^ 2) then
-				walks[#walks + 1] = { from = place, to = target, cost = radius, estimated = true }
+				walks[#walks + 1] = {
+					from = place,
+					to = target,
+					cost = entry.job.choices and ns.Path.LowerBound(target.map, place, target) or radius,
+					estimated = true,
+				}
 			end
 		end
 	end

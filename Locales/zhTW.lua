@@ -215,6 +215,9 @@ L["Show on map"] = "在地圖上顯示"
 L["Show other faction's routes"] = "顯示另一陣營的航線"
 L["Show portals"] = "顯示傳送門"
 L["Show routes on the world map"] = "在世界地圖上顯示航線"
+L["Keep the compass visible without a journey"] = "沒有旅程時仍顯示羅盤"
+L["Shows your heading when there are no directions to follow. Requires Show the compass."] =
+	"沒有路線指引時顯示你的朝向。需要開啟「顯示羅盤」。"
 L["Show the compass"] = "顯示羅盤"
 L["Show the flight to take"] = "顯示要搭乘的航班"
 L["Show Shortest Path's arrow and the game's navigation marker. TomTom's arrow has its own settings."] =

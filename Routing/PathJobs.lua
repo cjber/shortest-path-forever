@@ -256,6 +256,7 @@ end
 
 -- A candidate can be ruled in or out without refining all its intermediate clusters into drawing points.
 -- callback(cost, reason, job) uses the same exact graph cost as Find and FindMany.
+-- job.choice keeps the weighted cost for comparing journeys with zone charges.
 ---@param map number
 ---@param from SPFPoint
 ---@param to SPFPoint
@@ -302,8 +303,8 @@ end
 
 -- callback(costs, reason, job) completes once; optional progress(costs, nil, job) runs after each slice.
 -- costs[i] is nil until settled, the real running-yard cost on the hazard-selected route afterwards, or false when
--- unreachable. job.radius
--- bounds every unsettled target, including a popped entrance whose expansion has not finished. Pause/Resume
+-- unreachable. job.choices keeps the weighted cost when the profile charges for zones. job.radius bounds the
+-- weighted cost of every unsettled target, including an entrance whose expansion has not finished. Pause/Resume
 -- retain the frontier. Missing data or an invalid source completes with all false plus a reason.
 ---@param map number
 ---@param from SPFPoint

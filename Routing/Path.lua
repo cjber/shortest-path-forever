@@ -854,10 +854,11 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 	}, ":")
 	st.paths = st.paths or {}
 	local cached = st.paths[key]
-	local hops, cost, directFrom, directTo
+	local hops, cost, choice, directFrom, directTo
 	local x0, y0, cs = st.x0, st.y0, st.cs
 	if cached and cached.sx == from.x and cached.sy == from.y and cached.gx == to.x and cached.gy == to.y then
-		hops, cost, directFrom, directTo = cached.hops, cached.cost, cached.directFrom, cached.directTo
+		hops, cost, choice, directFrom, directTo =
+			cached.hops, cached.cost, cached.choice, cached.directFrom, cached.directTo
 	else
 		local direct, directReal
 		if sk == gk then
@@ -984,7 +985,7 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 		if not found then
 			return nil, "unreachable"
 		end
-		cost = areal[GOAL]
+		cost, choice = areal[GOAL], ag[GOAL]
 		hops = { GOAL }
 		while hops[#hops] ~= START do
 			hops[#hops + 1] = apar[hops[#hops]]
@@ -996,6 +997,7 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 		st.paths[key] = {
 			hops = hops,
 			cost = cost,
+			choice = choice,
 			directFrom = directFrom,
 			directTo = directTo,
 			sx = from.x,
@@ -1006,6 +1008,9 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 		st.pathCount = (st.pathCount or 0) + 1
 	end
 	if costOnly then
+		if hz and hz.chargeHighZones then
+			job.choice = choice
+		end
 		return cost
 	end
 
@@ -1412,6 +1417,10 @@ end
 -- One sliced Dijkstra owns the heap swap and frontier locals across endpoint searches
 local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 	local costs = job and job.costs or {}
+	local choices = job and hz and hz.chargeHighZones and {} or nil
+	if job then
+		job.choices = choices
+	end
 	local function failed(reason)
 		for i = 1, #targets do
 			costs[i] = false
@@ -1620,6 +1629,9 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 			closed[u] = true
 			if u < 0 then
 				costs[-u], left = real[u], left - 1
+				if choices then
+					choices[-u] = dist[u]
+				end
 				if job then
 					job.revision = job.revision + 1
 				end
