@@ -261,6 +261,34 @@ local function JourneysOff()
 	return true
 end
 
+-- The player's own picks, stops and clears, counted: a Nearby choice still running gives way to a later one. The
+-- addon's own changes of journey (an arrival, a quest handed in, a guide's next step) are not counted.
+local requests = 0
+
+---@return integer
+function ns.PlayerRequests()
+	return requests
+end
+
+function ns.PlayerRequest()
+	requests = requests + 1
+end
+
+-- A destination the player picked. One picked mid-fight plots when the fight ends: say so, or the pick looks refused
+-- (#1413).
+function ns.PlayerPicked()
+	ns.PlayerRequest()
+	if InCombatLockdown() and ns.db.journey then
+		ns.Notice(L["Destination queued until combat ends."])
+	end
+end
+
+-- The player's own clear. Menus and settings pass their own arguments to callbacks, so it takes none.
+function ns.PlayerClear()
+	ns.PlayerRequest()
+	ns.ClearJourney()
+end
+
 local function PlanQuest(questID, clickedMap, isWaypoint)
 	if JourneysOff() then
 		return false
@@ -307,6 +335,7 @@ local function PlanQuest(questID, clickedMap, isWaypoint)
 	point.label, point.questID = location.label, questID
 	-- The goal's live objectives: the arrow and any pin read them from the client's quest log.
 	point.questIDs = { questID }
+	ns.PlayerPicked()
 	ns.StartJourney(point)
 	return true
 end
@@ -345,6 +374,7 @@ function ns.JourneyToMapPoint(uiMapID, x, y, label)
 		return false
 	end
 	point.label = label
+	ns.PlayerPicked()
 	ns.StartJourney(point)
 	return true
 end
@@ -397,11 +427,9 @@ function ns.JourneyToTrackedQuest()
 end
 
 -- Route to the focused quest: an opt-in journey (db.focusedQuest) from the quest or flight point the client is
--- super-tracking, so a controller needs no map click. The map pin the player placed always plans one: Ctrl-click,
--- the map's pin button, /mappin and a chat link all end in the client's user waypoint, the one thing every way of
--- placing it shares (#1336). Removing that pin ends the journey it planned (#1348). A guide's own journey is left
--- alone: its focus changes are its steps, not the player's choice. Journey.lua calls these after Guide.TrackingChanged,
--- so a guide the player took over has already yielded.
+-- super-tracking, so a controller needs no map click. Ctrl-click, the map's pin button, /mappin and a chat link
+-- all report the same user waypoint (#1336). A player's new pin adds a stop to an open draft or can start a
+-- journey. Removing a pin ends the journey it planned (#1348). Guide-owned reports are handled separately.
 ---@type number?
 local focusedQuest
 ---@type SPFPoint?
@@ -450,12 +478,10 @@ function ns.FocusedTrackingReset()
 	RememberFocused()
 end
 
--- Whether another addon leads the journey. The player's own journeys start without an API owner, or under this
--- addon's name through Nearby services.
+-- Whether the route under way is held against a change of focus: another addon's, or a Journey stops list.
 ---@return boolean
-local function GuideLeads()
-	local owner = ns.JourneyOwner and ns.JourneyOwner()
-	return owner ~= nil and owner ~= "Shortest Path Forever"
+local function RouteHeld()
+	return not ns.IsPlayerJourney(ns.JourneyOwner and ns.JourneyOwner())
 end
 
 ---@param questID number
@@ -502,11 +528,24 @@ local function JourneyToNode(node)
 	JourneyToPin(nil, { nodeID = node, name = ns.TaxiName and ns.TaxiName(node) or nil }, true)
 end
 
----@param event string
-function ns.FocusedTrackingChanged(event)
+-- Remember each synchronous event, even when the route decision waits for the writer's ownership record.
+---@return boolean
+function ns.FocusedWaypointChanged()
 	local guide = ns.JourneyGuide
-	local owned = guide and guide.OwnsReported and guide.OwnsReported(event) or false
+	local waypoint = UserWaypoint()
+	local changed = not (guide and guide.SameWaypoint and guide.SameWaypoint(waypoint, focusedWaypoint))
+	focusedWaypoint = waypoint
+	return changed
+end
+
+---@param event string
+---@param ownedWaypoint? boolean
+---@param waypointChanged? boolean
+---@param capturedStop? boolean
+function ns.FocusedTrackingChanged(event, ownedWaypoint, waypointChanged, capturedStop)
 	if event == "SUPER_TRACKING_CHANGED" then
+		local guide = ns.JourneyGuide
+		local owned = guide and guide.OwnsReported and guide.OwnsReported(event) or false
 		local questID, node = SuperTrackedQuest(), SuperTrackedNode()
 		local changed, nodeChanged = questID ~= focusedQuest, node ~= focusedNode
 		focusedQuest, focusedNode = questID, node
@@ -514,7 +553,7 @@ function ns.FocusedTrackingChanged(event)
 		if changed then
 			focusedQuestGoal = nil
 		end
-		if owned or not (ns.db and ns.db.focusedQuest and ns.db.journey) or GuideLeads() then
+		if owned or not (ns.db and ns.db.focusedQuest and ns.db.journey) or RouteHeld() then
 			return
 		end
 		if nodeChanged and node and not GoalIsNode(node) then
@@ -533,17 +572,15 @@ function ns.FocusedTrackingChanged(event)
 		end
 		return
 	end
-	local waypoint = UserWaypoint()
-	local changed = not (guide and guide.SameWaypoint and guide.SameWaypoint(waypoint, focusedWaypoint))
-	focusedWaypoint = waypoint
-	if owned or not changed then
+	if ownedWaypoint or not waypointChanged then
 		return
 	end
 	local previousGoal = focusedWaypointGoal
 	focusedWaypointGoal = nil
-	if not (ns.db and ns.db.journey) then
+	if capturedStop or not (ns.db and ns.db.journey) then
 		return
 	end
+	local waypoint = UserWaypoint()
 	if waypoint then
 		if GoalIsWaypoint(waypoint) then
 			if previousGoal and ns.JourneyGoal() == previousGoal then
@@ -552,7 +589,7 @@ function ns.FocusedTrackingChanged(event)
 		elseif ns.db.mapPinRoutes and ns.JourneyToUserWaypoint() then
 			focusedWaypointGoal = ns.JourneyGoal()
 		end
-	elseif previousGoal and not GuideLeads() and ns.JourneyGoal() == previousGoal then
+	elseif previousGoal and not RouteHeld() and ns.JourneyGoal() == previousGoal then
 		ns.ClearJourney()
 	end
 end
@@ -594,6 +631,7 @@ local function OnMinimapClick(_, button)
 	end
 	local point = ns.MinimapPoint()
 	if point then
+		ns.PlayerPicked()
 		ns.StartJourney(point)
 	else
 		ns.Notice(L["no journey can be planned to that spot."])
@@ -620,6 +658,7 @@ function JourneyToPin(mapID, info, flight, x, y)
 		return false
 	end
 	point.label = info and info.name
+	ns.PlayerPicked()
 	ns.StartJourney(point)
 	return true
 end
@@ -819,7 +858,7 @@ ns.Init(function()
 	RememberFocused()
 	Binding("ShortestPathForeverTravelToPinButton", ns.JourneyToUserWaypoint)
 	Binding("ShortestPathForeverTravelToTrackedQuestButton", ns.JourneyToTrackedQuest)
-	Binding("ShortestPathForeverClearJourneyButton", ns.ClearJourney)
+	Binding("ShortestPathForeverClearJourneyButton", ns.PlayerClear)
 	-- Questie owns Shift-click on its icons. While Shift is the journey key, Alt-click over a Questie icon plans
 	-- there through our own event frame, and Alt-click anywhere else is left alone. When Alt is chosen, that one key
 	-- plans everywhere, Questie icons included, and Shift no longer plans a journey. TomTom's map overlay passes
@@ -853,6 +892,7 @@ ns.Init(function()
 			point.z = ns.SpawnHeight(point.map, point.x, point.y, QUESTIE_ICON_REACH)
 		end
 		if point and OnZone(ns.InstanceEntrance(point)) then
+			ns.PlayerPicked()
 			ns.StartJourney(point)
 		end
 	end)

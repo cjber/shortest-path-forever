@@ -1,3 +1,4 @@
+local compassRefreshes = 0
 -- Settings rows must reach their layout only through Settings.RegisterInitializer, which inserts them from
 -- Blizzard's secure attribute delegate. Settings.CreateCheckbox inserts from the caller instead, which taints
 -- the settings search, and a restricted button in its results (Social's Discord Sign In) is then blocked and
@@ -255,7 +256,8 @@ local ns = {
 	RefreshTomTom = function()
 		tomtomRefreshed = tomtomRefreshed + 1
 	end,
-	RefreshTomTomFollow = function()
+	RefreshTomTomFollow = function(toggled)
+		assert(toggled == true, "the checkbox says the player changed the setting")
 		tomtomFollowRefreshed = tomtomFollowRefreshed + 1
 	end,
 	Way = function(message)
@@ -279,6 +281,7 @@ local ns = {
 		-- Dugi is opt-in: its viewer has no published API.
 		dugi = false,
 		zygor = false,
+		compassWithoutJourney = false,
 		compassTime = false,
 		arrivalSound = false,
 		focusedQuest = false,
@@ -328,6 +331,9 @@ local ns = {
 	},
 	RefreshTaxiRoute = function()
 		taxiRefreshed = taxiRefreshed + 1
+	end,
+	RefreshCompass = function()
+		compassRefreshes = compassRefreshes + 1
 	end,
 	CompassMoving = function()
 		return compassMoving
@@ -491,6 +497,7 @@ local groups = {
 		"arrowLabel",
 		"arrowObjectives",
 		"compass",
+		"compassWithoutJourney",
 		"compassTime",
 		"compassMove",
 		"compassScale",
@@ -503,7 +510,7 @@ local groups = {
 local order = { "Guidance", "Map marks", "Party mage portals", "Alerts", "Interface" }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 86, #rows)
+assert(#rows == 87, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -865,43 +872,7 @@ assert(Row("tomtomFollow").tooltip:find("TomTom", 1, true), "the row names the a
 Row("tomtomFollow").setting.onChanged()
 assert(tomtomFollowRefreshed == 1, "the follower follows its setting")
 assert(Row("arrivalSound").setting.default == false, "the arrival sound is off by default")
--- /path report shows the report, its lines run through SafeCall; lines that fail still show the rest.
-local shownReport
-ns.core.SafeCall = function(_, fn, ...)
-	return pcall(fn, ...)
-end
-ns.core.Report = {
-	Text = function(lines)
-		return table.concat(lines, "\n")
-	end,
-	Show = function(text)
-		shownReport = text
-	end,
-}
-ns.ReportLines = function()
-	return { "Journey: none" }
-end
-ns.core.Report.Command = function(command)
-	if command == "report" then
-		local ok, lines = ns.core.SafeCall("report lines", ns.ReportLines)
-		ns.core.Report.Show(ns.core.Report.Text(ok and lines or { "Report lines failed: " .. tostring(lines) }))
-		return true
-	end
-	return false
-end
-env.SlashCmdList.SHORTESTPATHFOREVER("report")
-assert(shownReport == "Journey: none", "/path report shows the report")
-ns.ReportLines = function()
-	error("broke", 0)
-end
-env.SlashCmdList.SHORTESTPATHFOREVER("report")
-assert(shownReport == "Report lines failed: broke", "failing lines are said in their place")
 assert(Row("compassTime").setting.default == false, "the compass shows no time unless asked")
--- /path way takes TomTom's /way line, whether or not /way itself is free.
-env.SlashCmdList.SHORTESTPATHFOREVER("way Elwynn Forest 42.1 65.3 Goldshire")
-assert(ways[1] == "Elwynn Forest 42.1 65.3 Goldshire", "/path way hands on the rest of the line")
-env.SlashCmdList.SHORTESTPATHFOREVER("way")
-assert(ways[2] == "", "a bare /path way still answers, with its usage")
 assert(Row("whatsNew").setting.default == true)
 -- New participation defaults on, while the runtime preserves every saved false choice.
 assert(Row("stats").setting.default == true, "the travel journal is on by default")
@@ -913,6 +884,12 @@ assert(trackerSlider.options.format(150) == "150%", "the tracker slider shows a 
 assert(trackerSlider.setting:GetValue() == 100, "the tracker slider reads the shared host")
 trackerSlider.setting:SetValue(150)
 assert(trackerScale == 1.5, "the tracker slider drives the shared host scale")
+local compassWithoutJourney = Row("compassWithoutJourney")
+assert(compassWithoutJourney.kind == "checkbox" and compassWithoutJourney.setting.default == false)
+assert(compassWithoutJourney.setting.variable == "ShortestPathForever_compassWithoutJourney")
+local beforeCompassRefresh = compassRefreshes
+compassWithoutJourney.setting:SetValue(true)
+assert(compassRefreshes == beforeCompassRefresh + 1, "the heading option refreshes the compass at once")
 local compassSlider = Row("compassScale")
 assert(compassSlider.kind == "slider" and compassSlider.setting.default == 100, "compass scale defaults to 100%")
 assert(compassSlider.options.format(150) == "150%", "the compass slider shows a percent")
@@ -983,7 +960,7 @@ assert(trackerState.locked == true and lock:GetValue(), "locking writes the shar
 lock:SetValue(false)
 assert(trackerState.locked == false and not lock:GetValue(), "unlocking writes them back")
 
--- tests/settings_layout_spec.lua reuses this harness for the heading order and the reduced clients.
+-- The layout and slash command specs reuse this harness.
 return {
 	env = env,
 	ns = ns,
@@ -991,6 +968,7 @@ return {
 	buttons = buttons,
 	settings = settings,
 	registered = registered,
+	ways = ways,
 	getPolicyChanged = function()
 		return policyChanged
 	end,

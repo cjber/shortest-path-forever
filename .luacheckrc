@@ -190,6 +190,8 @@ read_globals[#read_globals + 1] = "IsOutdoors"
 
 read_globals[#read_globals + 1] = "IsPlayerMoving"
 read_globals[#read_globals + 1] = "InCombatLockdown"
+-- APIInput.lua: a live origin has no walking map position in an instance.
+read_globals[#read_globals + 1] = "IsInInstance"
 read_globals[#read_globals + 1] = "C_AddOnProfiler"
 read_globals[#read_globals + 1] = "UpdateAddOnMemoryUsage"
 read_globals[#read_globals + 1] = "GetAddOnMemoryUsage"

@@ -5,16 +5,12 @@ if ns.broken then
 	return
 end
 
--- A journey you planned yourself (a map or minimap click, /way, a quest,
--- Nearby services) survives a /reload or logging back in: its goal is kept in charDB.journey and started again once
--- the world is up and combat is over. Addons that own their journeys (Adventure Guide, TomTom's arrow, RestedXP,
--- Polestar through the API) start theirs again themselves and go first: any journey started by then wins and the
--- kept one is dropped. It is kept until it ends or you clear it.
+-- The player's own journey survives a reload or relog. Its goal or remaining stops are kept in charDB.journey and
+-- started again once the world is up and combat is over. Addons that own their journeys start them again themselves.
+-- Any journey started by then wins and the kept one is dropped. Otherwise it is kept until it ends or you clear it.
 
 -- Seconds after the loading screen, so owners and TomTom's restored arrow can start theirs first.
 local SETTLE = 2
--- Nearby services starts its journeys through the API under this addon's own name: those are the player's too.
-local OWN = "Shortest Path Forever"
 
 ---@param value any
 ---@return number?
@@ -50,9 +46,11 @@ end
 
 -- The journey kept from before the reload, taken at its loading screen. It waits for the owners, then for combat to
 -- end, and is dropped as soon as any other journey starts or ends.
----@type SPFKeptJourney?
+---@type (SPFKeptJourney|SPFKeptStops)?
 local kept
 local entered, settled = false, false
+---@type {owner: string, stops: SPFAPIStop[]}?
+local itinerary
 
 ---@param point SPFPoint?
 local function Keep(point)
@@ -64,7 +62,19 @@ local function Keep(point)
 		return
 	end
 	local owner = ns.JourneyOwner()
-	if not (point and (owner == nil or owner == OWN)) then
+	if point and itinerary and owner == itinerary.owner then
+		local index = ShortestPathForever.API.CurrentStop(itinerary.owner)
+		if index then
+			local remaining = {}
+			for i = index, #itinerary.stops do
+				remaining[#remaining + 1] = itinerary.stops[i]
+			end
+			ns.charDB.journey = { stops = remaining }
+			return
+		end
+	end
+	itinerary = nil
+	if not point or not ns.IsPlayerJourney(owner) then
 		ns.charDB.journey = nil
 		return
 	end
@@ -80,19 +90,39 @@ local function Keep(point)
 	}
 end
 
+-- The editor hands over its validated submission once the API accepts it. A same-place handover can
+-- change owners without calling JourneyChanged, so keep it here as well as when its stop advances.
+---@param owner string
+---@param stops SPFAPIStop[]
+function ns.KeepJourneyStops(owner, stops)
+	itinerary = { owner = owner, stops = stops }
+	Keep(ns.JourneyGoal())
+end
+
 hooksecurefunc(ns, "JourneyChanged", Keep) -- taint-ok: ns is this addon's own namespace table.
+
+-- A journey the player is starting replaces the one waiting to resume.
+function ns.ForgetKeptJourney()
+	kept = nil
+end
 
 local frame
 
--- The one attempt is over.
+-- The kept journey was started or dropped.
 local function Done()
-	frame:UnregisterAllEvents()
+	frame:UnregisterEvent("PLAYER_ENTERING_WORLD")
+	frame:UnregisterEvent("PLAYER_REGEN_ENABLED")
 end
 
--- Starts the kept journey, or forgets it when Journeys are off or another journey is under way.
+-- Starts the kept journey, or forgets it when Journeys are off or another journey is under way. A stops route the API
+-- refuses for now, as in a dungeon where you have no position, waits for a later loading screen or end of combat.
 local function Resume()
 	local resume = kept
 	if not (resume and settled) or InCombatLockdown() then
+		return
+	end
+	local wanted = ns.db.journey and not ns.JourneyGoal()
+	if wanted and resume.stops ~= nil and ns.JourneyStopsEditor.Restore(resume.stops) == false then
 		return
 	end
 	kept = nil
@@ -100,9 +130,10 @@ local function Resume()
 	if ns.charDB.journey == resume then
 		ns.charDB.journey = nil
 	end
-	if not ns.db.journey or ns.JourneyGoal() then
+	if not wanted or resume.stops ~= nil then
 		return
 	end
+	---@cast resume SPFKeptJourney
 	local map, x, y = Finite(resume.map), Finite(resume.x), Finite(resume.y)
 	if not (map and x and y) then
 		return
@@ -122,15 +153,22 @@ end
 ns.Init(function()
 	frame = CreateFrame("Frame")
 	frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+	frame:RegisterEvent("PLAYER_LOGOUT")
 	frame:SetScript("OnEvent", function(_, event)
 		if event == "PLAYER_REGEN_ENABLED" then
 			Resume()
+		elseif event == "PLAYER_LOGOUT" then
+			-- A same-place handover to another owner can leave the goal unchanged.
+			if itinerary then
+				Keep(ns.JourneyGoal())
+			end
 		elseif not entered then
-			-- Only the loading screen that ends a login or reload: later ones keep the journey running anyway.
+			-- The loading screen that ends a login or reload takes the kept journey.
 			entered = true
 			local journey = ns.charDB.journey
 			kept = type(journey) == "table" and journey or nil
 			if not kept then
+				ns.charDB.journey = nil
 				Done()
 				return
 			end
@@ -139,6 +177,8 @@ ns.Init(function()
 				settled = true
 				Resume()
 			end)
+		elseif kept then
+			C_Timer.After(SETTLE, Resume)
 		end
 	end)
 end)

@@ -218,8 +218,8 @@ L["Show portals"] = "Mostrar portais"
 L["Show routes on the world map"] = "Mostrar rotas no mapa-múndi"
 L["Show the compass"] = "Mostrar a bússola"
 L["Show the flight to take"] = "Mostrar o voo a pegar"
-L["Show the next direction and the game's navigation marker. When off, only the route on the map and minimap stays."] =
-	"Mostrar a próxima direção e o marcador de navegação do jogo. Desativado, só a rota no mapa e no minimapa permanece."
+L["Show Shortest Path's arrow and the game's navigation marker. TomTom's arrow has its own settings."] =
+	"Mostrar a seta do Shortest Path e o marcador de navegação do jogo. A seta do TomTom tem configurações próprias." -- mt
 L["Show the time left under the compass"] = "Tempo restante sob a bússola"
 L["Show the way to your corpse"] = "Mostrar o caminho até seu corpo"
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =
@@ -535,8 +535,7 @@ L["Journey stops"] = "Paradas da jornada" -- mt
 L["Ordering stops by estimated travel time..."] = "Ordenando paradas por tempo de viagem estimado..." -- mt
 L["Orders the stops by estimated travel time. You can change the order."] =
 	"Ordena as paradas pelo tempo de viagem estimado. Você pode alterar a ordem." -- mt
-L["Place a map waypoint, then add it to this journey."] =
-	"Coloque um ponto de rota no mapa e adicione-o a esta jornada." -- mt
+L["Place pins on the map to add stops."] = "Coloque pontos de rota no mapa para adicionar paradas." -- mt
 L["Remove"] = "Remover" -- mt
 L["Stop %d of %d."] = "Parada %d de %d." -- mt
 L["Stop your current journey before starting this journey."] =
@@ -655,6 +654,10 @@ L["Right-click to choose map services."] = "Clique direito para escolher os serv
 L["Use TomTom's arrow"] = "Usar a seta do TomTom" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"Com o TomTom instalado, aponta a seta do TomTom para cada etapa em vez da nossa seta e do marcador do jogo." -- mt
-L["Walking routes can now be dotted or solid."] = "Agora as rotas a pé podem ser pontilhadas ou sólidas." -- mt
+L["The compass can stay on screen without a journey."] = "A bússola pode ficar na tela sem uma jornada." -- mt
 L["Mailbox"] = "Caixa de correio" -- mt
 L["Skip this stop"] = "Pular esta parada" -- mt
+L["Destination queued until combat ends."] = "Destino em espera até o fim do combate." -- mt
+L["Keep the compass visible without a journey"] = "Manter a bússola visível sem uma jornada"
+L["Shows your heading when there are no directions to follow. Requires Show the compass."] =
+	"Mostra a direção para a qual você está olhando quando não há instruções a seguir. Requer a opção “Mostrar a bússola”."

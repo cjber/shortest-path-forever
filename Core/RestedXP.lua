@@ -86,13 +86,13 @@ end
 
 -- The current stop's label, renamed without replanning: a guide relabels its step as quests complete at one spot.
 -- RestedXP splits a step into several stops at one place; they share the step's name.
-local function Rename(title, map, x, y)
-	local stop = API.CurrentStop(OWNER)
+local function Rename(owner, title, map, x, y)
+	local stop = API.CurrentStop(owner)
 	if not stop or title == targetTitle or not API.RenameStop then
 		return
 	end
 	targetTitle = title
-	API.RenameStop(OWNER, stop, title, function(point)
+	API.RenameStop(owner, stop, title, function(point)
 		return point.map == map and point.x == x and point.y == y
 	end)
 end
@@ -115,6 +115,7 @@ local function Integrated()
 	local frontend = AdventureGuideForever and AdventureGuideForever.API
 	return frontend ~= nil and type(frontend.RestedXPIntegrated) == "function" and frontend.RestedXPIntegrated() == true
 end
+ns.RestedXPIntegrated = Integrated
 
 local function OwnsJourney()
 	return ns.JourneyOwner and ns.JourneyOwner() == OWNER
@@ -134,16 +135,23 @@ local function HoldArrow()
 	end
 end
 
--- Whether the player's user waypoint is the pin RestedXP's own waypoint element set for a step under way. RestedXP
+local function ActiveSteps()
+	local rxp = RXP
+	return rxp and rxp.RXPFrame and rxp.RXPFrame.activeSteps
+end
+
+---@return boolean
+function ns.RestedXPHasActiveSteps()
+	local steps = ActiveSteps()
+	return steps ~= nil and #steps > 0
+end
+
+-- Whether the current user waypoint is the pin RestedXP's own waypoint element set for a step under way. RestedXP
 -- records what it wrote (waypointSet, and the position read back from the client) and clears the pin only on that
 -- same match, so this is RestedXP's own record of ownership.
 ---@return boolean
-function ns.OwnerWroteWaypoint()
-	local steps = hooked and OwnsJourney() and hooked.RXPFrame and hooked.RXPFrame.activeSteps
-	if not steps then
-		return false
-	end
-	for _, step in ipairs(steps) do
+function ns.RestedXPOwnsWaypoint()
+	for _, step in ipairs(ActiveSteps() or {}) do
 		for _, element in ipairs(step.elements or {}) do
 			if element.waypointSet == true and element.zone then
 				local position = C_Map.GetUserWaypointPositionForMap(element.zone)
@@ -184,7 +192,7 @@ local function Sync()
 	-- Manual destinations have no API owner; Nearby uses this addon's owner. Native guide updates must
 	-- not replace either while it is active. Resume guide is the explicit hand-back action.
 	local owner = ns.JourneyOwner()
-	if not resuming and ns.HasJourney() and (owner == nil or owner == "Shortest Path Forever") then
+	if not resuming and ns.HasJourney() and ns.IsOwnJourney(owner) then
 		Restore()
 		return
 	end
@@ -253,17 +261,25 @@ local function Sync()
 		end
 		target, targetTitle, targetQuests = key, title, questKey
 	end
-	if API.CurrentStop(OWNER) then
-		Rename(title, map, x / 100, y / 100)
+	-- The step's stop is ours, or TomTom's once its follower has taken the bridge's step over.
+	local holder = API.CurrentStop(OWNER) and OWNER or ns.TomTomFollowsBridge and ns.TomTomFollowsBridge() and "TomTom"
+	if holder then
+		Rename(holder, title, map, x / 100, y / 100)
 		if questKey ~= targetQuests then
 			targetQuests = questKey
-			local index = API.CurrentStop(OWNER)
+			local index = API.CurrentStop(holder)
 			if index then
-				ns.SetStopQuests(OWNER, index, quests, actions)
+				ns.SetStopQuests(holder, index, quests, actions)
 			end
 		end
 	end
 	HoldArrow()
+end
+
+-- Forgets the step planned, so the guide plans its current one again.
+function ns.ReplanRestedXP()
+	target, targetTitle, targetQuests = nil, nil, nil
+	Sync()
 end
 
 -- Let the player hand control back after pausing a guide, without waiting for its next native update. Returns whether
@@ -274,9 +290,8 @@ function ns.ResumeRestedXP()
 	if frontend and Integrated() and type(frontend.ResumeRestedXP) == "function" then
 		return frontend.ResumeRestedXP() == true
 	end
-	target, targetTitle, targetQuests = nil, nil, nil
 	resuming = true
-	Sync()
+	ns.ReplanRestedXP()
 	resuming = false
 	return API.CurrentStop(OWNER) ~= nil
 end

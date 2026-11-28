@@ -11,6 +11,7 @@
 ---@field owner? string unique owner of exactly one finite submission
 ---@field index? integer
 ---@field from? SPFAPIPlace
+---@field goal? SPFPoint the journey under way when ordering began
 ---@field job? SPFStopOrderJob
 ---@field unsubscribe? fun()
 ---@field CancelOrder fun(self: SPFJourneyStopsController)
@@ -32,6 +33,9 @@
 
 ---@class SPFJourneyStopsModule
 ---@field new fun(): SPFJourneyStopsController
+---@field Current fun(): SPFJourneyStopsController
+---@field Restore fun(points: SPFAPIStop[]): boolean?
+---@field WaypointReceiver fun(owned: boolean): (fun(): boolean)?
 
 ---@class SPFJourneyStopsWindow : Frame
 ---@field SetTitle fun(self: SPFJourneyStopsWindow, title: string)

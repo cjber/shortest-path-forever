@@ -761,7 +761,10 @@ function ns.RefreshArrowLines()
 		ShowArrival(arrival)
 	else
 		RefreshTravelLines(destination)
-		Wake()
+		-- A hidden frame runs no update loop, and the marker poll skips its turn while one is marked as running.
+		if frame:IsShown() then
+			Wake()
+		end
 	end
 end
 
@@ -909,6 +912,11 @@ function ns.RefreshGuideStops()
 		NotifyGuidance()
 	end
 	NotifyLead()
+end
+
+-- The next tick places the marker again, even while nothing has moved. Safe inside another addon's waypoint write.
+function ns.RedrawGuideMarker()
+	renderedPoint = nil
 end
 
 -- Refresh arrow rendering without changing the canonical walk or its progress.
@@ -1128,7 +1136,7 @@ end
 -- (Core/RestedXP.lua, Guidelime.lua), so the player always has one arrow to follow.
 ---@return boolean
 function ns.ArrowLeads()
-	if not ns.db or ns.db.arrow == false then
+	if not ns.db then
 		return false
 	end
 	return (ArrowOurs() and ((path ~= nil and target ~= nil and not unseen) or arrival ~= nil))

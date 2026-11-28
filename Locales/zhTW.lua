@@ -217,8 +217,8 @@ L["Show portals"] = "顯示傳送門"
 L["Show routes on the world map"] = "在世界地圖上顯示航線"
 L["Show the compass"] = "顯示羅盤"
 L["Show the flight to take"] = "顯示要搭乘的航班"
-L["Show the next direction and the game's navigation marker. When off, only the route on the map and minimap stays."] =
-	"顯示下一個方向和遊戲的導航標記。關閉時，只保留地圖和小地圖上的路線。"
+L["Show Shortest Path's arrow and the game's navigation marker. TomTom's arrow has its own settings."] =
+	"顯示 Shortest Path 的箭頭和遊戲的導航標記。TomTom 的箭頭有自己的設定。" -- mt
 L["Show the time left under the compass"] = "在羅盤下顯示剩餘時間"
 L["Show the way to your corpse"] = "顯示前往屍體的路"
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =
@@ -528,8 +528,7 @@ L["Journey stops"] = "旅程停靠點" -- mt
 L["Ordering stops by estimated travel time..."] = "正在依預估旅行時間排列停靠點..." -- mt
 L["Orders the stops by estimated travel time. You can change the order."] =
 	"依預估旅行時間排列停靠點。你可以變更順序。" -- mt
-L["Place a map waypoint, then add it to this journey."] =
-	"請先在地圖上設定路線點，再將其加入此旅程。" -- mt
+L["Place pins on the map to add stops."] = "在地圖上設定路線點，即可新增旅程停靠點。" -- mt
 L["Remove"] = "移除" -- mt
 L["Stop %d of %d."] = "第%d個停靠點，共%d個。" -- mt
 L["Stop your current journey before starting this journey."] = "請先停止目前的旅程，再開始此旅程。" -- mt
@@ -644,6 +643,10 @@ L["Right-click to choose map services."] = "右鍵點擊選擇地圖服務。" -
 L["Use TomTom's arrow"] = "使用 TomTom 的箭頭" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"安裝 TomTom 時，用 TomTom 的箭頭指向每一步，替代本插件箭頭與遊戲標記。" -- mt
-L["Walking routes can now be dotted or solid."] = "步行路線現在可以顯示為點線或實線。" -- mt
+L["The compass can stay on screen without a journey."] = "沒有旅程時，羅盤也可以留在畫面上。" -- mt
 L["Mailbox"] = "郵箱" -- mt
 L["Skip this stop"] = "跳過此採集點" -- mt
+L["Destination queued until combat ends."] = "目的地已排入佇列，戰鬥結束後規劃。" -- mt
+L["Keep the compass visible without a journey"] = "沒有旅程時仍顯示羅盤"
+L["Shows your heading when there are no directions to follow. Requires Show the compass."] =
+	"沒有路線指引時顯示你的朝向。需要開啟「顯示羅盤」。"

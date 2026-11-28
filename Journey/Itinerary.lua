@@ -218,17 +218,20 @@ function ns.ItineraryChanged(invalidate)
 	end
 end
 
--- The drawn itinerary after the current stop. A planned hop draws its legs; consecutive unplanned hops are one
--- straight placeholder, which the map shows as end marks where it changes continent.
+-- The drawn itinerary after the current stop, through every stop or the next `hopLimit` of them. A planned hop draws
+-- its legs; consecutive unplanned hops are one straight placeholder, which the map shows as end marks where it changes
+-- continent.
+---@param hopLimit integer?
 ---@return SPFDrawPath[]
-function ns.JourneyPreview()
+function ns.JourneyPreview(hopLimit)
 	local drawn = {}
 	local points, index = ns.JourneyStops()
 	if not (points and index) then
 		return drawn
 	end
 	local chain = { points[index] }
-	for stop = index, #points - 1 do
+	local last = hopLimit and math.min(#points, index + hopLimit) or #points
+	for stop = index, last - 1 do
 		local hop, to = hops[Key(points[stop], points[stop + 1])], points[stop + 1]
 		if hop and hop.paths then
 			if #chain > 1 then
@@ -245,7 +248,7 @@ function ns.JourneyPreview()
 		end
 	end
 	if #chain > 1 then
-		drawn[#drawn + 1] = { mode = "walk", points = chain, preview = true, stop = points[#points].number }
+		drawn[#drawn + 1] = { mode = "walk", points = chain, preview = true, stop = points[last].number }
 	end
 	return drawn
 end
@@ -308,6 +311,7 @@ local function CopyWords(into, from)
 		or into.number ~= from.number
 		or into.unmarked ~= from.unmarked
 		or into.unfaded ~= from.unfaded
+		or into.tourLine ~= from.tourLine
 		or not SameList(into.details, from.details)
 		or not SameList(into.questIDs, from.questIDs)
 		or not SameList(into.handins, from.handins)
@@ -329,6 +333,7 @@ local function CopyWords(into, from)
 	into.number = from.number
 	into.unmarked = from.unmarked
 	into.unfaded = from.unfaded
+	into.tourLine = from.tourLine
 	return changed
 end
 
@@ -378,9 +383,15 @@ function ns.ResubmitRoute(route, points)
 	if not old or (moved ~= route.index and old.map ~= points[moved].map) then
 		return nil
 	end
+	-- A retarget keeps the old line until its search settles, which in combat is only after the fight: moving the
+	-- current stop then starts the journey afresh.
+	if moved == route.index and InCombatLockdown() then
+		return nil
+	end
 	-- The pins' and the lines' switches belong to the whole submission, whichever stop moved.
 	for index, point in ipairs(points) do
-		previous[index].unmarked, previous[index].unfaded = point.unmarked, point.unfaded
+		local kept = previous[index]
+		kept.unmarked, kept.unfaded, kept.tourLine = point.unmarked, point.unfaded, point.tourLine
 	end
 	previous[moved] = points[moved]
 	if moved == route.index then

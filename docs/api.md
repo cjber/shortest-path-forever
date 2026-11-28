@@ -1,6 +1,6 @@
 # Addon API
 
-Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 11`) with uiMapIDs and normalized 0-1 coordinates.
+Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 13`) with uiMapIDs and normalized 0-1 coordinates.
 Version 2 removes peer sharing and `Leaderboard`; callers must accept versions 1 and 2 and reject future versions. Check that a function exists before calling it, because an older
 addon may not have it yet. The full types are in [`types/API.lua`](../types/API.lua). On ForeverCore 1.3.2 or
 later, the API is also listed by `ForeverCore.APIKit.Addons()`.
@@ -18,6 +18,8 @@ the addon can use it once it shows the requested map.
 
 ## Minor history
 
+- Version 2, `minor = 13` adds the `"player"` origin to `WalkPath`, `EstimateWalks`, `Estimate` and `EstimateDetail`.
+- Version 2, `minor = 12` adds `NavigateRoute`'s `tourLine` option.
 - Version 2, `minor = 11` adds the `"skipped"` result of `Ended`.
 - Version 2, `minor = 10` adds `SetArrowShown` and `NavigateRoute`'s `fadeLaterLegs` option.
 - Version 2, `minor = 9` adds `SuspendMapPins` and `ResumeMapPins`.
@@ -66,8 +68,21 @@ the addon can use it once it shows the requested map.
   `{waypoints, yards, navVersion}` table and a nil reason. Each waypoint is a fresh `{map, x, y}` in uiMapID and
   0-1 fractions. The list starts at `from`, includes the bends in order, and ends at the destination's snapped
   point. `yards` is the running-yard cost used by `EstimateWalks`.
+
+  Pass `"player"` as `from` for either walking call, for example `WalkPath(owner, "player", to, callback)`.
+  The search uses the player's position and followed floor at the time of the call. If the floor is unknown,
+  the search uses the same height band as journeys when one can be measured. If the surfaces still can't be
+  narrowed down, it can start on any nearby walkable surface. Fixed `{map, x, y}` origins describe a map point
+  even when the player stands there.
+
+  Use `Estimate("player", nil, nil, toMap, toX, toY)` or the same arguments to `EstimateDetail` for a travel
+  estimate from the player's current position. These estimates still omit endpoint terrain
+  searches. Their cache uses the player's exact world position and known height.
+
 - `NavVersion()` returns a string naming the walking data this build ships. Drop cached walk paths and costs when
-  it changes. Compare a path's `navVersion` with `NavVersion()` to check that it is current.
+  it changes. Compare a path's `navVersion` with `NavVersion()` to check the data version. For `"player"` origins,
+  request a fresh path or costs whenever you need the current position and floor, even if the version stays
+  the same.
 - `NavigateRoute(owner, stops, options)` guides through 1 to 64 `{map, x, y, title, tooltip, z}` stops in order, advancing on arrival
   and ending after the last. Remaining stops have numbered map pins, and the way between them is drawn as
   planned, walks along the walking map, once worked out behind the current leg; the tracker and arrow show
@@ -84,6 +99,12 @@ the addon can use it once it shows the requested map.
   journey and ends with it.
   `{ fadeLaterLegs = false }` draws the world map's legs past the current stop at full strength, for a loop whose
   whole shape matters; the default is `true`. Stop pins keep their own look, and it too belongs to that journey.
+  `{ tourLine = true }` draws a tour of many close stops so the way ahead stays readable: walks are solid lines,
+  whatever the player's line style, in their route colour, with slightly rounded corners on the world map, which
+  shows the leg under way and the next four, the later ones faded less than usual (`fadeLaterLegs = false` still draws
+  them at full strength). The minimap circles the next stop instead of covering it, and its line stops short of that
+  circle and of your arrow, so what stands there shows. The
+  default is `false`, and it too belongs to that journey.
   Any other options table, key, policy or non-boolean switch answers
   `nil, "invalid"` and changes nothing. A route keeps its policy until the
   same owner or another one submits again.
@@ -201,6 +222,7 @@ A read with nothing to answer returns `nil, reason`. `Estimate` and `EstimateDet
 | `"invalid"` | a point or map cannot be placed on this client |
 | `"unreachable"` | there is no way there with what this character knows |
 | `"loading"` | the addon is still building its data, so ask again later |
+| `"unavailable"` | a `"player"` origin is unavailable in an instance, on a taxi flight, or while the client has no player position |
 
 `CurrentStop` and `Ended` use `"loading"` while the addon is still building its data, and `"none"` when there is
 nothing to answer: no current stop, or no ended journey to report. `Journey` uses `"loading"` while the saved
@@ -211,7 +233,8 @@ to resume or `nil, "combat"` when combat blocks guidance. `JourneyState` uses `"
 
 `EstimateWalks` and `WalkPath` refuse to start with `nil` and one of `"invalid"` (an owner, place, callback or
 option they cannot use, a target on another walking map, or more than 256 targets for `EstimateWalks`),
-`"combat"`, `"loading"`, or `"nodata"` when this build has no walking map for `from`'s map. Once started,
+`"combat"`, `"loading"`, `"unavailable"` for `"player"` as above, or `"nodata"` when this build has no walking
+map for `from`'s map. Once started,
 both callbacks use `"nodata"`, `"outside"`, `"offmesh"`, `"unreachable"` or `"error"` for failures.
 `EstimateWalks` passes all costs as `false` on a batch failure, and `WalkPath` passes `nil` for the path.
 `WalkPath` also reports `"outside"` if a waypoint cannot be projected onto a uiMap.
@@ -375,13 +398,13 @@ waypoint TomTom's arrow was restored to, unless a journey is already under way. 
 through TomTom's *Remove all waypoints* or `/way reset all`, cancels the journey. TomTom's corpse arrow is not
 followed: the corpse run does that job and keeps the journey you were on.
 
-While Shortest Path supplies directions to the followed waypoint, it sets `TomTomCrazyArrow` to zero alpha and
-disables its mouse input. The frame stays shown so TomTom keeps processing waypoint arrivals. A hook on TomTom's
+While Shortest Path's own arrow points the way to the followed waypoint, it sets `TomTomCrazyArrow` to zero alpha
+and disables its mouse input. The frame stays shown so TomTom keeps processing waypoint arrivals. A hook on TomTom's
 `ShowHideCrazyArrow` maintains this handoff after options change; `ClearCrazyArrowPoint` releases it when the arrow
 is cleared without removing its waypoint. Hooks on `HijackCrazyArrow` and `ReleaseCrazyArrow` yield to another
-addon taking over the arrow and resume the handoff when it releases ownership. Calling `ShowHideCrazyArrow` restores TomTom's current
-settings when Shortest Path stops supplying directions, follow is disabled or the player dies. No TomTom saved
-settings are changed.
+addon taking over the arrow and resume the handoff when it releases ownership. Calling `ShowHideCrazyArrow` restores
+TomTom's current settings when Shortest Path's arrow stops pointing, *Show direction arrow* is turned off, follow is
+disabled or the player dies. No TomTom saved settings are changed.
 
 ## Alongside Polestar
 

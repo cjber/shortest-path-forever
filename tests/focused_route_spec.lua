@@ -93,6 +93,9 @@ end
 owner = "RestedXP"
 focus(104)
 assert(not ns.HasJourney(), "a quest focused while a guide leads its journey starts nothing")
+owner = ns.STOPS_OWNER .. "1:1"
+focus(105)
+assert(not ns.HasJourney(), "a quest focused while a Journey stops route runs leaves it be")
 owner = nil
 
 -- The player's own map pin starts a journey with quest focus routing off: Ctrl-click, the pin button and chat

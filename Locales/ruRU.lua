@@ -232,8 +232,8 @@ L["Show portals"] = "Показывать порталы"
 L["Show routes on the world map"] = "Показывать маршруты на карте мира"
 L["Show the compass"] = "Показывать компас"
 L["Show the flight to take"] = "Показывать нужный полет"
-L["Show the next direction and the game's navigation marker. When off, only the route on the map and minimap stays."] =
-	"Показывать следующее направление и навигационный маркер игры. Если выключено, остаётся только маршрут на карте и миникарте."
+L["Show Shortest Path's arrow and the game's navigation marker. TomTom's arrow has its own settings."] =
+	"Показывать стрелку Shortest Path и навигационный маркер игры. Стрелка TomTom настраивается отдельно." -- mt
 L["Show the time left under the compass"] = "Оставшееся время под компасом"
 L["Show the way to your corpse"] = "Показывать путь к телу"
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =
@@ -570,8 +570,8 @@ L["Ordering stops by estimated travel time..."] =
 	"Упорядочивание остановок по расчётному времени пути..." -- mt
 L["Orders the stops by estimated travel time. You can change the order."] =
 	"Упорядочивает остановки по расчётному времени пути. Вы можете изменить порядок." -- mt
-L["Place a map waypoint, then add it to this journey."] =
-	"Поставьте точку на карте, затем добавьте её в это путешествие." -- mt
+L["Place pins on the map to add stops."] =
+	"Ставьте точки на карте, чтобы добавить остановки." -- mt
 L["Remove"] = "Удалить" -- mt
 L["Stop %d of %d."] = "Остановка %d из %d." -- mt
 L["Stop your current journey before starting this journey."] =
@@ -698,7 +698,11 @@ L["Right-click to choose map services."] = "ПКМ, чтобы выбрать у
 L["Use TomTom's arrow"] = "Использовать стрелку TomTom" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"Если установлен TomTom, направляет стрелку TomTom на каждый шаг вместо нашей стрелки и игрового маркера." -- mt
-L["Walking routes can now be dotted or solid."] =
-	"Пешие маршруты теперь могут быть пунктирными или сплошными." -- mt
+L["The compass can stay on screen without a journey."] =
+	"Компас может оставаться на экране и без путешествия." -- mt
 L["Mailbox"] = "Почтовый ящик" -- mt
 L["Skip this stop"] = "Пропустить эту остановку" -- mt
+L["Destination queued until combat ends."] = "Пункт назначения ожидает окончания боя." -- mt
+L["Keep the compass visible without a journey"] = "Показывать компас и без путешествия"
+L["Shows your heading when there are no directions to follow. Requires Show the compass."] =
+	"Показывает, куда вы смотрите, когда нет указаний маршрута. Требуется настройка «Показывать компас»."

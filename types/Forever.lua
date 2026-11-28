@@ -94,11 +94,10 @@ function GameTooltip_AddColoredDoubleLine(tooltip, left, right, leftColor, right
 ---@field GetCanvasScale fun(self: WorldMapFrame): number
 ---@field GetCanvasZoomPercent fun(self: WorldMapFrame): number
 ---@field GetGlobalPinScale fun(self: WorldMapFrame): number
----@field ScrollContainer Frame
+---@field ScrollContainer ScrollFrame
 ---@field GetCanvasContainer? fun(self: WorldMapFrame): Frame?
 ---@field overlayFrames? Frame[] -- read only, to stack below other top-right map buttons (UI/MapButton.lua)
 ---@field dataProviders table<SPFMapProvider, boolean> -- read only, to find the waypoint provider (JourneyGuide.lua)
----@field GetViewRect fun(self: WorldMapFrame): {left: number, right: number, top: number, bottom: number}
 ---@field GetNormalizedCursorPosition fun(self: WorldMapFrame): number, number
 ---@field EnumeratePinsByTemplate fun(self: WorldMapFrame, template: string): fun(): SPFMapPin
 ---@field AddCanvasClickHandler fun(self: WorldMapFrame, handler: (fun(map: WorldMapFrame, button: string): boolean), priority?: number)

@@ -225,8 +225,8 @@ L["Show portals"] = "차원문 표시"
 L["Show routes on the world map"] = "세계 지도에 노선 표시"
 L["Show the compass"] = "나침반 표시"
 L["Show the flight to take"] = "탈 비행 경로 표시"
-L["Show the next direction and the game's navigation marker. When off, only the route on the map and minimap stays."] =
-	"다음 방향과 게임의 길 안내 표시를 보여줍니다. 끄면 지도와 미니맵의 경로만 남습니다."
+L["Show Shortest Path's arrow and the game's navigation marker. TomTom's arrow has its own settings."] =
+	"Shortest Path의 화살표와 게임의 길 안내 표시를 보여줍니다. TomTom 화살표는 자체 설정을 따릅니다." -- mt
 L["Show the time left under the compass"] = "나침반 아래에 남은 시간 표시"
 L["Show the way to your corpse"] = "시체까지 가는 길 표시"
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =
@@ -545,8 +545,7 @@ L["Journey stops"] = "여정 경유지" -- mt
 L["Ordering stops by estimated travel time..."] = "예상 이동 시간순으로 경유지 정렬 중..." -- mt
 L["Orders the stops by estimated travel time. You can change the order."] =
 	"예상 이동 시간에 따라 경유지 순서를 정합니다. 순서를 변경할 수 있습니다." -- mt
-L["Place a map waypoint, then add it to this journey."] =
-	"지도에 경유지를 지정한 후 이 여정에 추가하세요." -- mt
+L["Place pins on the map to add stops."] = "지도에 핀을 표시하여 경유지를 추가하세요." -- mt
 L["Remove"] = "제거" -- mt
 L["Stop %d of %d."] = "경유지 %d / %d." -- mt
 L["Stop your current journey before starting this journey."] =
@@ -668,7 +667,11 @@ L["Right-click to choose map services."] = "우클릭으로 지도 편의시설�
 L["Use TomTom's arrow"] = "TomTom 화살표 사용" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"TomTom이 설치되어 있으면 자체 화살표와 게임 표시 대신 TomTom 화살표로 각 단계를 가리킵니다." -- mt
-L["Walking routes can now be dotted or solid."] =
-	"이제 도보 경로를 점선이나 실선으로 표시할 수 있습니다." -- mt
+L["The compass can stay on screen without a journey."] =
+	"여정이 없어도 나침반을 화면에 계속 표시할 수 있습니다." -- mt
 L["Mailbox"] = "우체통" -- mt
 L["Skip this stop"] = "이 채집 지점 건너뛰기" -- mt
+L["Destination queued until combat ends."] = "전투가 끝날 때까지 목적지가 대기합니다." -- mt
+L["Keep the compass visible without a journey"] = "여정 없이도 나침반 표시"
+L["Shows your heading when there are no directions to follow. Requires Show the compass."] =
+	"따라갈 길 안내가 없을 때 바라보는 방향을 표시합니다. '나침반 표시'를 켜야 합니다."

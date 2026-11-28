@@ -121,15 +121,16 @@ function Input.Quests(quests)
 	return true
 end
 
--- A route's options: its travel policy, "normal" or "walking", whether its stops draw pins on the world map, and
--- whether the legs past the current stop draw faded. Anything else is the caller's mistake, answered as one.
+-- A route's options: its travel policy, "normal" or "walking", whether its stops draw pins on the world map, whether
+-- the legs past the current stop draw faded, and whether it is drawn as a tour of many close stops. Anything else is
+-- the caller's mistake, answered as one.
 ---@param options any
----@return SPFRoutePolicy?, boolean?, boolean?
+---@return SPFRoutePolicy?, boolean?, boolean?, boolean?
 function Input.RouteOptions(options)
 	if not canaccessvalue(options) or (options ~= nil and type(options) ~= "table") then
 		return nil
 	end
-	local chosen = { policy = "normal", stopMarkers = true, fadeLaterLegs = true }
+	local chosen = { policy = "normal", stopMarkers = true, fadeLaterLegs = true, tourLine = false }
 	for key, value in pairs(options or {}) do
 		if not (canaccessvalue(key) and chosen[key] ~= nil and canaccessvalue(value)) then
 			return nil
@@ -137,9 +138,14 @@ function Input.RouteOptions(options)
 		chosen[key] = value
 	end
 	local policy = chosen.policy --[[@as SPFRoutePolicy]]
-	local markers, fade = chosen.stopMarkers, chosen.fadeLaterLegs
-	if (policy == "normal" or policy == "walking") and type(markers) == "boolean" and type(fade) == "boolean" then
-		return policy, markers, fade
+	local markers, fade, tour = chosen.stopMarkers, chosen.fadeLaterLegs, chosen.tourLine
+	if
+		(policy == "normal" or policy == "walking")
+		and type(markers) == "boolean"
+		and type(fade) == "boolean"
+		and type(tour) == "boolean"
+	then
+		return policy, markers, fade, tour
 	end
 end
 
@@ -151,6 +157,48 @@ end
 ---@return boolean
 function Input.Ready()
 	return Input.Loaded() and not InCombatLockdown()
+end
+
+-- A live origin is the journey's own snapshot, including its followed floor or measured height band.
+---@param heightOnly? boolean
+---@return SPFPoint?, ("loading"|"combat"|"unavailable")?
+function Input.PlayerStart(heightOnly)
+	if not Input.Loaded() then
+		return Input.Loading()
+	end
+	if InCombatLockdown() then
+		return nil, "combat"
+	end
+	if not (IsInInstance() or UnitOnTaxi("player")) then
+		local point = ns.JourneySearch.Here(heightOnly)
+		if point then
+			return point
+		end
+	end
+	return nil, "unavailable"
+end
+
+-- Where an estimate starts, and its part of the cache key. "player", with no fractions, is the live origin, which may
+-- be temporarily unavailable; a fixed origin only needs to project to a world point.
+---@param map any
+---@param x any
+---@param y any
+---@return SPFPoint? from, string? key, ("loading"|"combat"|"unavailable")? refusal
+function Input.Origin(map, x, y)
+	if not (canaccessvalue(map) and map == "player") then
+		local from = Input.Point(map, x, y)
+		return from, from and string.format("%d:%.4f:%.4f", map, x, y)
+	end
+	if not (canaccessvalue(x) and canaccessvalue(y)) or x ~= nil or y ~= nil then
+		return nil
+	end
+	local from, refusal = Input.PlayerStart(true)
+	if not from then
+		return nil, nil, refusal
+	end
+	-- Player floors can change without a change in XY. The fixed-point cache still rounds its map fractions.
+	local z = from.z and string.format("%.17g", from.z) or ""
+	return from, string.format("player:%d:%.17g:%.17g:%s", from.map, from.x, from.y, z)
 end
 
 ---@return nil, "loading"

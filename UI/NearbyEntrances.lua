@@ -179,5 +179,9 @@ function Entrances.Navigate(place)
 	if not stop then
 		return false
 	end
-	return ns.StartJourney(stop) == true
+	local started = ns.StartJourney(stop) == true
+	if started then
+		ns.PlayerPicked()
+	end
+	return started
 end

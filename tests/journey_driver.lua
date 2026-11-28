@@ -8,12 +8,14 @@ assert(loadfile(root .. "/Locales/enUS.lua"))("ShortestPathForever", ns)
 local now, here, target, shown, click, minimapClick = 0, { map = 1, x = 0, y = 0, z = 0 }
 local function noop() end
 local frames, events, waypoint, tracked, quest, trackingType = {}, {}, nil, false, 0, nil
+local timers = {}
 local secret = setmetatable({}, {
 	__sub = function()
 		error("secret position used")
 	end,
 })
 local function frame()
+	local registered = {}
 	local f = setmetatable({}, {
 		__index = function(_, key)
 			if key:match("^%u") then
@@ -21,6 +23,19 @@ local function frame()
 			end
 		end,
 	})
+	function f.RegisterEvent(_, event)
+		registered[event] = true
+	end
+	f.RegisterUnitEvent = f.RegisterEvent
+	function f.UnregisterEvent(_, event)
+		registered[event] = nil
+	end
+	function f.UnregisterAllEvents()
+		registered = {}
+	end
+	function f.IsEventRegistered(_, event)
+		return registered[event] == true
+	end
 	function f:SetScript(name, fn)
 		self[name] = fn
 	end
@@ -29,6 +44,9 @@ local function frame()
 	end
 	function f:Hide()
 		self.hidden = true
+	end
+	function f:IsShown()
+		return not self.hidden
 	end
 	function f:SetAlpha(value)
 		self.alpha = value
@@ -55,7 +73,7 @@ local function frame()
 end
 local function fire(event, ...)
 	for _, f in ipairs(frames) do
-		if rawget(f, "OnEvent") then
+		if f:IsEventRegistered(event) and rawget(f, "OnEvent") then
 			f:OnEvent(event, ...)
 		end
 	end
@@ -157,14 +175,19 @@ local env = setmetatable({
 		GetUserWaypoint = function()
 			return waypoint
 		end,
+		GetUserWaypointPositionForMap = function(map)
+			if waypoint and waypoint.uiMapID == map then
+				return waypoint.position
+			end
+		end,
 		SetUserWaypoint = function(point)
 			waypoint = point
-			defer("USER_WAYPOINT_UPDATED")
+			fire("USER_WAYPOINT_UPDATED")
 			return true
 		end,
 		ClearUserWaypoint = function()
 			waypoint = nil
-			defer("USER_WAYPOINT_UPDATED")
+			fire("USER_WAYPOINT_UPDATED")
 		end,
 	},
 	CreateVector2D = vector,
@@ -200,6 +223,11 @@ local env = setmetatable({
 			defer("SUPER_TRACKING_CHANGED")
 		end,
 	},
+	C_Timer = {
+		After = function(seconds, callback)
+			timers[#timers + 1] = { at = now + seconds * 1000, callback = callback }
+		end,
+	},
 	WorldMapFrame = {
 		dataProviders = {},
 		AddCanvasClickHandler = function(_, fn)
@@ -214,6 +242,13 @@ local env = setmetatable({
 		end,
 	},
 	Menu = { ModifyMenu = noop },
+	hooksecurefunc = function(owner, key, hook)
+		local original = owner[key]
+		owner[key] = function(...)
+			original(...)
+			hook(...)
+		end
+	end,
 	-- The client's own event queue, which runs a callback once its events have fired; here they already have.
 	EventUtil = {
 		ContinueAfterAllEvents = function(fn)
@@ -386,10 +421,17 @@ return {
 	end,
 	update = function(seconds)
 		now = now + seconds * 1000
-		local due = events
-		events = {}
-		for _, event in ipairs(due) do
+		local pendingEvents, pendingTimers = events, timers
+		events, timers = {}, {}
+		for _, event in ipairs(pendingEvents) do
 			fire(event)
+		end
+		for _, timer in ipairs(pendingTimers) do
+			if timer.at <= now then
+				timer.callback()
+			else
+				timers[#timers + 1] = timer
+			end
 		end
 		for _, f in ipairs(frames) do
 			if not f.hidden and rawget(f, "OnUpdate") then

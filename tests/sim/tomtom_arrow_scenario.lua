@@ -2,9 +2,7 @@
 local ForeverCore = dofile("tests/forever_core.lua")
 local FakeTomTom = assert(loadfile("tests/tomtom_fake.lua"))()
 
-scenario("TomTom arrow option drives TomTom without native marker or loops", {
-	addons = ForeverCore.addons(),
-}, function(sim)
+local function CheckTomTomArrow(sim, modern)
 	local player = sim.world.player
 	player.map, player.x, player.y = 1429, 0.1, 0.1
 	player.worldY, player.worldX, player.instance = 100, 100, 0
@@ -78,7 +76,7 @@ scenario("TomTom arrow option drives TomTom without native marker or loops", {
 	end
 	assert(ns and ns.db.tomtomArrow == false, "tomtomArrow defaults off")
 
-	local tomtom = FakeTomTom.New(nil, crazy)
+	local tomtom = FakeTomTom.New(nil, crazy, modern)
 	function tomtom.ShowHideCrazyArrow()
 		crazy:Show()
 		crazy:SetAlpha(0.7)
@@ -112,8 +110,45 @@ scenario("TomTom arrow option drives TomTom without native marker or loops", {
 	assert(second ~= first and not tomtom:IsValidWaypoint(first), "advancing replaces the old bend waypoint")
 	assert(math.abs(second[2] - 0.5) < 1e-6 and math.abs(second[3] - 0.4) < 1e-6, "goal coordinates match")
 
+	-- The native context menu's Remove waypoint action calls ClearCrazyArrowPoint(true).
+	assert(crazy.mouse, "TomTom can receive the right-click")
+	sim:input(function()
+		tomtom:ClearCrazyArrowPoint(true)
+		tomtom:ArrowUpdate()
+	end)
+	sim:advance(0.1)
+	assert(not tomtom:IsValidWaypoint(second), "the menu removes the selected waypoint")
+	assert(tomtom.Arrow() == nil, "the driver does not immediately put the removed target back")
+
+	local nextGoal = { map = 0, x = 600, y = 500, routeTitle = "Northshire" }
+	ns.JourneyGuide.To(nextGoal, { bend, nextGoal }, nextGoal)
+	local nextUid = tomtom.Arrow()
+	assert(nextUid and nextUid ~= second, "the next target can use TomTom again")
+
 	ns.JourneyGuide.Stop("cleared")
-	assert(not tomtom:IsValidWaypoint(second), "stopping removes our driven waypoint")
-	assert(tomtom:IsValidWaypoint(foreign), "foreign waypoint is untouched")
+	assert(not tomtom:IsValidWaypoint(nextUid), "stopping removes our driven waypoint")
+
+	assert(tomtom:IsValidWaypoint(foreign), "stopping never removes a foreign waypoint")
+
+	-- Follow mode leaves the actual TomTom arrow in charge when our own arrow is turned off.
+	ns.SetOption("tomtomArrow", false)
+	ns.SetOption("arrow", false)
+	tomtom:SetCrazyArrow(foreign, 15, foreign.title)
+	assert(crazy.mouse and sim.G.ShortestPathForever.API.CurrentStop("TomTom") == 1)
+	sim:input(function()
+		tomtom:ClearCrazyArrowPoint(true)
+		tomtom:ArrowUpdate()
+	end)
+	sim:advance(0.1)
+	assert(not tomtom:IsValidWaypoint(foreign), "TomTom removes a followed waypoint from its native menu")
+	assert(not sim.G.ShortestPathForever.API.CurrentStop("TomTom"), "the removed waypoint ends its journey")
 	sim:expectNoErrors(ADDON)
-end)
+end
+
+for _, modern in ipairs({ false, true }) do
+	scenario("TomTom arrow option with " .. (modern and "immediate" or "deferred") .. " arrow removal", {
+		addons = ForeverCore.addons(),
+	}, function(sim)
+		CheckTomTomArrow(sim, modern)
+	end)
+end

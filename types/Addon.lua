@@ -69,6 +69,8 @@
 ---@field StopOrder SPFStopOrder
 ---@field JourneyStopsEditor SPFJourneyStopsModule
 ---@field ShowJourneyStops fun()
+---@field KeepJourneyStops fun(owner: string, stops: SPFAPIStop[])
+---@field ForgetKeptJourney fun()
 ---@field EstimateContextRevision fun(): integer
 ---@field WorldPoint fun(uiMapID: integer, x: number, y: number): SPFPoint?
 ---@field FarmingCursor SPFFarmingCursorFactory
@@ -167,6 +169,7 @@
 ---@field number? integer -- the stop's place in a multi-stop itinerary (API.lua)
 ---@field unmarked? boolean -- draws no stop pin on the world map: the route's stopMarkers option was false (API.lua)
 ---@field unfaded? boolean -- later legs draw at full strength: the route's fadeLaterLegs option was false (API.lua)
+---@field tourLine? boolean -- draws as a tour of many close stops: the route's tourLine option was true (API.lua)
 ---@field hold? boolean -- remain visible at the destination until the caller submits an updated route
 ---@field radius? number -- yards around a held stop where travel cues pause; finite and nonnegative
 ---@field shapes? SPFAreaShape[] -- objective areas the stop stands for, in world coordinates
@@ -378,6 +381,7 @@
 ---@field minimapHint? boolean -- the minimap tooltip ends with the journey key's click hint; its own switch (#1241)
 ---@field mapPinRoutes? boolean -- placing the game's map pin starts a journey (#1391)
 ---@field focusedQuest? boolean -- a super-tracked quest or flight point starts a journey (JourneyInput.lua)
+---@field compassWithoutJourney? boolean -- keep the heading visible without guidance (Compass.lua)
 ---@field compassTime? boolean -- the whole journey's time left under the compass distance (Compass.lua)
 ---@field arrivalSound? boolean -- the map ping when a journey the player planned reaches its goal (Alert.lua)
 ---@field restedxp? boolean -- follow RestedXP guide targets
@@ -442,7 +446,8 @@
 ---@field debug? boolean
 ---@field anchors table<number, SPFAnchor> -- the newest sighting of each route, kept across sessions and characters
 ---@field nearbyRead? SPFNearbyQuestieRead the last QuestieDB read the Nearby list kept (UI/NearbyQuestie.lua)
----@field taxiTimes? table<string, number> -- measured seconds per directed flight path, "from:to"
+---@field flownTimes? table<string, number> -- measured seconds per directed flight path, "from:to"
+---@field taxiTimes? nil -- an older reading store, cleared at login
 ---@field trace? (number|string)[][]
 ---@field taxiLog? table<string, {seen: number, showsNodes: boolean, nodes: string[]}>
 ---@alias SPFMapReportKind "road"|"wall"
@@ -462,7 +467,8 @@
 ---@field taxiVersion number
 ---@field taxiScanned? boolean
 ---@field guideWaypoint? SPFGuideWaypoint
----@field journey? SPFKeptJourney -- the player's own journey, kept across a reload (Resume.lua)
+---@field journey? SPFKeptJourney|SPFKeptStops -- the player's own journey, kept across a reload (Resume.lua)
+---@field journeyStops? {stops: SPFAPIStop[], manual: boolean} -- the Journey stops draft
 ---@field bind? SPFBindPoint
 ---@class SPFGuideWaypoint
 ---@field uiMapID number
@@ -479,6 +485,7 @@
 ---@field milestones table<string, number>
 -- A journey's goal as Resume.lua keeps it.
 ---@class SPFKeptJourney
+---@field stops nil
 ---@field map number
 ---@field x number
 ---@field y number
@@ -486,6 +493,8 @@
 ---@field label? string
 ---@field questID? number
 ---@field handins? number[] -- the quests handed in at the kept stop, validated on the way in and out (Resume.lua)
+---@class SPFKeptStops
+---@field stops SPFAPIStop[]
 -- Where the character stood when it last bound at an inn, with GetBindLocation's name then.
 ---@class SPFBindPoint : SPFPoint
 ---@field name string
@@ -551,6 +560,7 @@ ShortestPathForeverPathData = nil
 ---@field alighting? SPFStop
 ---@field hops? SPFTaxiPath[]
 ---@field yards? number
+---@field penalty? number milliseconds charged to the route score
 ---@field teleport? SPFTeleportPlace
 ---@field partyPortal? SPFPartyPortal
 ---@field ready? number
@@ -589,12 +599,13 @@ ShortestPathForeverPathData = nil
 ---@field preferred? boolean a ride the planner chose over a slightly quicker long walk
 ---@field unknownFlight? boolean the route walks only because a flight point it would use is undiscovered
 ---@field rideNote? string why it rides: walking straight there crosses the goal's high-level zone (#1007)
----@field charged? number a direct walk's arrival with the goal zone's charge, which chose it over `arrive`
+---@field charged? number arrival score including walking hazard charges
 ---@field unknownFlightMaps? table<number, true> the continents whose undiscovered flight points would shorten the route
 ---@class SPFWalkCost
 ---@field from SPFPoint
 ---@field to SPFPoint
 ---@field cost number|false
+---@field choice? number weighted running yards used to compare routes
 ---@field estimated? boolean
 ---@class SPFPlanOptions : SPFPlaceOptions
 ---@field withoutHearth? boolean
@@ -718,6 +729,8 @@ ShortestPathForeverPathData = nil
 ---@field moved? SPFPoint -- the nearest ground a spent reverse batch's places reach, for a goal none of them reach
 ---@field valid? boolean
 ---@field costs? (number|false)[]
+---@field choices? number[] weighted running yards for settled batch targets
+---@field choice? number weighted running yards for a single cost probe
 ---@field co? thread
 ---@field callback? function
 ---@field progress? function

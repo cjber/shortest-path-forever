@@ -31,6 +31,12 @@ local drivenForeign
 ---@type TomTomWaypoint?
 local replacedArrowUid
 local currentMap, currentX, currentY, currentTitle
+-- A waypoint removed from TomTom's arrow menu stays off TomTom until guidance changes target.
+local targetRemoved = false
+---@type TomTomWaypoint?
+local menuRemovalUid
+---@type TomTom?
+local hookedMenu
 ---@type SPFWalkPoints?
 local activePoints
 ---@type SPFPlace?
@@ -60,15 +66,19 @@ local function TomTomCrazyArrowEnabled(tomtom)
 	return not (arrow and arrow.enable == false)
 end
 
--- Whether settings and TomTom allow driving TomTom's arrow (real TomTom loaded with its floating arrow enabled,
--- opt-in setting on, and our direction arrow setting not off).
+-- Whether settings and TomTom allow driving TomTom's arrow: real TomTom loaded with its floating arrow enabled and the
+-- opt-in setting on. Show direction arrow is about our own arrow and plays no part.
 ---@return boolean
 local function TomTomArrowEnabled()
-	if not (ns.db and ns.db.tomtomArrow == true and ns.db.arrow ~= false) then
+	if not (ns.db and ns.db.tomtomArrow == true) then
 		return false
 	end
 	-- The bridge pauses when TomTom selects an unowned waypoint and waits for all foreign waypoints to go away.
-	-- Let it point TomTom during RestedXP journeys, including when the player sets a manual TomTom waypoint.
+	-- Let it point TomTom during RestedXP journeys, including when the player sets a manual TomTom waypoint, and while
+	-- Follow TomTom's arrow is routing to the bridge's step.
+	if ns.TomTomFollowsBridge and ns.TomTomFollowsBridge() then
+		return false
+	end
 	if ns.JourneyOwner and ns.JourneyOwner() == "RestedXP" and C_AddOns.IsAddOnLoaded("RestedXP-TomTom") then
 		return false
 	end
@@ -140,11 +150,33 @@ function ns.OnTomTomWaypointRemoved(uid)
 		if uid == drivenForeign then
 			drivenForeign = nil
 		end
-		currentMap, currentX, currentY, currentTitle = nil, nil, nil, nil
+		targetRemoved = not removing and uid == menuRemovalUid
 		local wasDriven = driven
 		driven = false
 		if wasDriven and not removing then
 			NotifyDrivenChanged()
+		end
+	end
+end
+
+---@param tomtom TomTom
+local function HookArrowMenu(tomtom)
+	local clear = tomtom.ClearCrazyArrowPoint
+	if hookedMenu == tomtom or type(clear) ~= "function" then
+		return
+	end
+	hookedMenu = tomtom
+	-- Scope the menu's intent to its synchronous removal of the selected waypoint.
+	tomtom.ClearCrazyArrowPoint = function(self, remove) -- taint-ok: TomTom owns this addon table.
+		if not remove then
+			return clear(self, remove)
+		end
+		local previous = menuRemovalUid
+		menuRemovalUid = ns.TomTomArrowWaypoint()
+		local ok, failure = pcall(clear, self, remove)
+		menuRemovalUid = previous
+		if not ok then
+			error(failure, 0)
 		end
 	end
 end
@@ -173,6 +205,7 @@ local function ClearDriven()
 	currentUid = nil
 	drivenForeign = nil
 	driven = false
+	targetRemoved = false
 	currentMap, currentX, currentY, currentTitle = nil, nil, nil, nil
 	if not uid then
 		return
@@ -307,12 +340,16 @@ local function SyncDriven(notifyArrow)
 		end
 		return
 	end
+	HookArrowMenu(tomtom)
+	local sameTarget = currentMap == uiMap and currentX == x and currentY == y
+	if targetRemoved and sameTarget then
+		return
+	end
+	targetRemoved = false
 	if
 		driven
 		and wasSelected
-		and currentMap == uiMap
-		and currentX == x
-		and currentY == y
+		and sameTarget
 		and currentTitle == title
 		and (not currentUid or type(tomtom.IsValidWaypoint) ~= "function" or tomtom:IsValidWaypoint(currentUid))
 		and (not drivenForeign or type(tomtom.IsValidWaypoint) ~= "function" or tomtom:IsValidWaypoint(drivenForeign))

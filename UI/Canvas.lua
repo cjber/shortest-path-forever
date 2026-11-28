@@ -18,7 +18,7 @@ end
 --   map:GetMapID(), map:GetCanvas(), map:GetCanvasScale(), map:GetCanvasZoomPercent(), map:GetGlobalPinScale(),
 --   map:IsVisible() and map:GetPinFrameLevelsManager():GetValidFrameLevel(type, index)
 -- (each returns a field or works one out from fields; Blizzard_MapCanvas.lua, MapCanvas_PinFrameLevelsManager.lua),
--- plus the map's view rectangle, the canvas's size and the gamepad's SoftCursor rect. tests/ui_map.lua
+-- plus the scroll container's view rectangle, the canvas's size and the gamepad's SoftCursor rect. tests/ui_map.lua
 -- runs the addon against a map that fails on any write.
 --
 -- One view per map: a frame of the addon's set on the canvas (the client parents it, in C: the scroll frame clips it
@@ -31,8 +31,8 @@ end
 -- inside UIParentPanelManager's hide, before it clears the gamepad binding stack, and this addon's taint blocks
 -- SetPreferredGamepadInteractTarget (#158). The manager calls its callbacks isolated from the hide, as the gamepad's
 -- FrameControlsManager listens for the same two.
--- The pins live on a layer under that frame, so combat can hide them all at once. Every pool but the journey's own
--- draws on a second frame under the layer, so another addon's hold (ns.SuspendMapPins) hides those marks together.
+-- Interactive pins live on a layer that can hide when the map turns in combat. Most pools sit on a frame under
+-- that layer, so another addon's hold (ns.SuspendMapPins) hides them together. The journey line can redraw in combat.
 --
 -- Pins are plain frames that take the mouse with OnEnter and OnLeave only: the gamepad interface reads a frame with a
 -- click script (OnClick, OnMouseDown, OnMouseUp) as a button of the window it scans. A click is the press and release
@@ -64,6 +64,7 @@ local CURSOR_REACH = 12
 ---@field host Frame
 ---@field layer Frame
 ---@field marks Frame under the layer: the pins a hold hides, every pool's but the journey's
+---@field line Frame the journey line's parent, outside the layer: combat redraws it while the layer is frozen
 ---@field shown boolean
 ---@field mapID? number
 ---@field width number
@@ -71,7 +72,7 @@ local CURSOR_REACH = 12
 ---@field scale number
 ---@field zoom number
 ---@field frozen? { mapID?: number, stitched?: boolean } the map the pins were drawn for, while combat freezes them
----@field frozenShown? boolean whether the pins show by the marks switch, kept while frozen
+---@field marksShown boolean whether the addon's drawings show by the marks switch
 ---@field pinScale number
 ---@field stitched boolean
 ---@field companionLayers? string
@@ -141,15 +142,24 @@ end
 ---@param map SPFMapCanvas
 ---@return number?, number?, number?, number?
 function Canvas.ViewRect(map)
-	local rect = map:GetViewRect()
-	if not rect then
+	-- Read the laid-out frames directly. Blizzard's GetViewRect fills a cache on the scroll frame.
+	local scroll = map.ScrollContainer
+	local canvas = scroll:GetScrollChild()
+	local width, height = scroll:GetSize()
+	local canvasWidth, canvasHeight = canvas:GetSize()
+	local scale = canvas:GetScale()
+	if width <= 0 or height <= 0 or canvasWidth <= 0 or canvasHeight <= 0 or scale <= 0 then
 		return nil
 	end
-	local left, right, top, bottom = rect.left, rect.right, rect.top, rect.bottom
-	if not (left and right and top and bottom) or right <= left or bottom <= top then
-		return nil
+	local left = scroll:GetHorizontalScroll() / canvasWidth
+	local top = scroll:GetVerticalScroll() / canvasHeight
+	return left, left + width / scale / canvasWidth, top, top + height / scale / canvasHeight
+end
+
+local function Notify(view, what)
+	for _, listener in ipairs(view.listeners) do
+		ns.core.SafeCall("map canvas " .. what, listener, view, what)
 	end
-	return left, right, top, bottom
 end
 
 ---@param view SPFCanvasView
@@ -173,9 +183,7 @@ local function Fire(view, what, sized, scaled)
 			end
 		end
 	end
-	for _, listener in ipairs(view.listeners) do
-		ns.core.SafeCall("map canvas " .. what, listener, view, what)
-	end
+	Notify(view, what)
 end
 
 ---@param pin SPFCanvasPin?
@@ -375,6 +383,7 @@ function Canvas.Watch(map, listener)
 			map = map,
 			canvas = canvas,
 			shown = false,
+			marksShown = true,
 			stitched = false,
 			width = 0,
 			height = 0,
@@ -398,7 +407,10 @@ function Canvas.Watch(map, listener)
 		marks:SetAllPoints(layer)
 		marks:EnableMouse(false)
 		marks:SetShown(next(holds) == nil)
-		view.host, view.layer, view.marks = host, layer, marks
+		local line = FrameUnder("Frame", host)
+		line:SetAllPoints(host)
+		line:EnableMouse(false)
+		view.host, view.layer, view.marks, view.line = host, layer, marks, line
 		views[map] = view
 		WatchPanelHides()
 	end
@@ -420,7 +432,7 @@ end
 ---@param view SPFCanvasView
 ---@param frozen { mapID?: number, stitched?: boolean }
 function ShowFrozen(view, frozen)
-	view.layer:SetShown(view.frozenShown ~= false and view.mapID == frozen.mapID and view.stitched == frozen.stitched)
+	view.layer:SetShown(view.marksShown and view.mapID == frozen.mapID and view.stitched == frozen.stitched)
 end
 
 ---@param view SPFCanvasView
@@ -443,12 +455,13 @@ function Canvas.SetShown(map, shown)
 		if not shown then
 			LetGo(view)
 		end
-		view.frozenShown = shown
+		view.marksShown = shown
 		if view.frozen then
 			ShowFrozen(view, view.frozen)
 		else
 			view.layer:SetShown(shown)
 		end
+		view.line:SetShown(shown)
 	end
 end
 
@@ -474,10 +487,8 @@ local function MarkHold(held)
 end
 ns.SuspendMapPins, ns.ResumeMapPins = MarkHold(true), MarkHold(false)
 
--- Combat freezes the pins as last drawn (#1302): no layer can redraw them in lockdown, and a hover or click on one
--- reaches waypoint, super-track and highlight calls that wait for combat to end. Frozen, they take no hover or
--- click, and show only over the map they were drawn for: another map, or OpenMap's stitched view turned on or off,
--- would place them wrongly.
+-- Interactive pins stay as drawn in combat (#1302). Their tooltips and clicks can reach native tracking, and
+-- acquiring one sets the protected SetPassThroughButtons. Hide them when the map's projection no longer matches.
 ---@param map SPFMapCanvas
 ---@param frozen boolean
 function Canvas.SetFrozen(map, frozen)
@@ -487,13 +498,13 @@ function Canvas.SetFrozen(map, frozen)
 	end
 	if frozen then
 		LetGo(view)
-		if view.frozenShown == nil then
-			view.frozenShown = view.layer:IsShown()
-		end
 		view.frozen = { mapID = view.mapID, stitched = view.stitched }
-	else
+	elseif view.frozen then
 		view.frozen = nil
-		view.layer:SetShown(view.frozenShown ~= false)
+		view.layer:SetShown(view.marksShown)
+		if map:IsVisible() then
+			Notify(view, "thaw")
+		end
 	end
 end
 
@@ -653,7 +664,8 @@ end
 ---@field frameType string
 ---@field template? string
 ---@field marker? string
----@field parent Frame the view's layer for a journey pool, else its marks
+---@field parent Frame
+---@field passive? boolean the single journey line, outside the frozen layer
 ---@field active SPFCanvasPin[]
 ---@field free SPFCanvasPin[]
 local Pool = {}
@@ -694,22 +706,22 @@ local function PassThrough(pin)
 	securePassThrough(pin, unpack(through))
 end
 
+local function NewPin(pool)
+	local pin = FrameUnder(pool.frameType, pool.parent, pool.template) --[[@as SPFCanvasPin]]
+	Mixin(pin, pool.mixin)
+	pin.view, pin.pool, pin.marker = pool.view, pool, pool.marker
+	pin:OnLoad()
+	pin:EnableMouse(pin.takesMouse == true)
+	if pin.takesMouse then
+		pin:SetScript("OnEnter", OnEnter)
+		pin:SetScript("OnLeave", OnLeave)
+	end
+	return pin
+end
+
 ---@return SPFCanvasPin
 function Pool:Acquire(...)
-	local pin = table.remove(self.free)
-	if not pin then
-		pin = FrameUnder(self.frameType, self.parent, self.template) --[[@as SPFCanvasPin]]
-		Mixin(pin, self.mixin)
-		pin.view, pin.pool, pin.marker = self.view, self, self.marker
-		pin:OnLoad()
-		if pin.takesMouse then
-			pin:EnableMouse(true)
-			pin:SetScript("OnEnter", OnEnter)
-			pin:SetScript("OnLeave", OnLeave)
-		else
-			pin:EnableMouse(false)
-		end
-	end
+	local pin = table.remove(self.free) or NewPin(self)
 	self.active[#self.active + 1] = pin
 	pin:SetHighlighted(false)
 	pin:SetPressed(false)
@@ -777,11 +789,12 @@ end
 -- A pool of pins on `map`'s view, under `key`. The pins are frames of `frameType` (a Frame by default) from
 -- `template`, wearing `mixin`, which builds on Canvas.PinMixin. A pool with a `marker` kind lists its pins for the
 -- other Forever addons (ForeverMapMarkers, below). A `journey` pool draws the journey under way and stays through a
--- hold (ns.SuspendMapPins).
+-- hold (ns.SuspendMapPins). The passive journey line is made at load so repainting during combat uses its own
+-- existing frame without reparenting it.
 ---@param map SPFMapCanvas
 ---@param key string
 ---@param mixin table
----@param options? {frameType?: string, template?: string, marker?: string, journey?: boolean}
+---@param options? {frameType?: string, template?: string, marker?: string, journey?: boolean, passive?: boolean}
 ---@return SPFCanvasPool
 function Canvas.Pool(map, key, mixin, options)
 	local view = Canvas.Watch(map)
@@ -794,11 +807,17 @@ function Canvas.Pool(map, key, mixin, options)
 			frameType = options.frameType or "Frame",
 			template = options.template,
 			marker = options.marker,
-			parent = options.journey and view.layer or view.marks,
+			parent = options.passive and view.line or options.journey and view.layer or view.marks,
+			passive = options.passive,
 			active = {},
 			free = {},
 		}, Pool)
 		view.pools[key] = pool
+		if pool.passive then
+			local pin = NewPin(pool)
+			pin:Hide()
+			pool.free[1] = pin
+		end
 	end
 	return pool
 end

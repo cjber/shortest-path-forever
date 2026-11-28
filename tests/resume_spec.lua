@@ -114,6 +114,12 @@ assert(not resumes(function()
 	ns.charDB.journey.x = "far"
 end), "a damaged entry")
 do
+	keep("corrupt")
+	reload()
+	driver.fire("PLAYER_ENTERING_WORLD")
+	assert(ns.charDB.journey == nil and waits() == 0, "a non-table journey is dropped without a resume attempt")
+end
+do
 	keep({ map = 1, x = 2000, y = 0, label = "Kept" })
 	reload()
 	driver.fire("PLAYER_ENTERING_WORLD")
