@@ -176,6 +176,11 @@ class RasterizeLayersTest(unittest.TestCase):
         layers = self.layers(polys, {}, {})
         self.assertEqual([(z, v) for z, v, _ in layers[0]], [(10.0, 1)])
 
+    def test_off_centre_ground_wins_over_a_nearby_steep_face(self):
+        polys = {0: self.surface(0.0, 4.5, 11.0, steep=True), 1: self.surface(4.5, 8.0, 10.0)}
+        layers = self.layers(polys, {}, {})
+        self.assertEqual([(z, pid) for z, _, (pid, _) in layers[0]], [(10.0, 1)])
+
     def test_steep_ground_is_never_the_same_layer_as_the_ground_it_leads_to(self):
         # A face from 50 to 61.6 degrees is walked down and never across, so joining it to the flat ground beside it
         # inside one cell must not lose the level it leads up to.
@@ -421,7 +426,7 @@ class AssembleFloorsTest(unittest.TestCase):
 
 
 class ReachableTest(unittest.TestCase):
-    def components(self, spots, joins=(), drops=(), tiles=None, minimum=1):
+    def components(self, spots, joins=(), drops=(), tiles=None, minimum=1, lift_stops=()):
         # A street and, 40 yards under it, sealed ground with no way between them, as under Stormwind.
         def square(z):
             return [(-8800.0, 800.0, z), (-8790.0, 800.0, z), (-8790.0, 810.0, z), (-8800.0, 810.0, z)]
@@ -435,12 +440,32 @@ class ReachableTest(unittest.TestCase):
             patch.object(gen_nav, "MIN_COMPONENT", minimum),
             patch.object(gen_nav, "read_tile", lambda rc: (tiles[rc][0], [], [], tiles[rc][1])),
         ):
-            gen_nav.components(spots, joins)
+            gen_nav.components(spots, joins, lift_stops)
             return list(gen_nav.SIZE)
 
     def test_ground_no_fixed_place_stands_on_is_dropped(self):
         self.assertEqual(self.components([(-8795.0, 805.0, 101.0)]), [1, 0])
         self.assertEqual(self.components([(-8795.0, 815.0, 58.0)]), [0, 1])
+
+    def test_lift_reaches_small_dry_landings_at_its_own_stop_heights(self):
+        # The lift rests in a shaft, offset from both lips. Water in the shaft is closer than either lip.
+        def square(y, z):
+            return [(-8800.0, y, z), (-8790.0, y, z), (-8790.0, y + 4, z), (-8800.0, y + 4, z)]
+
+        top, bottom, off_floor = (-8795.0, 800.0, 100.0), (-8795.0, 800.0, 60.0), (-8795.0, 800.0, 68.0)
+        polys = [
+            (0, square(805.0, 101.0), False, False),
+            (1, square(805.0, 61.0), False, False),
+            (2, square(798.0, 60.0), True, False),
+            (3, square(798.0, 66.0), False, True),
+            (4, square(798.0, 64.0), False, False),
+            (5, square(810.0, 68.0), False, False),
+        ]
+        stops = [top, bottom, off_floor]
+        self.assertEqual(
+            self.components(stops, tiles={(48, 30): (polys, [])}, minimum=2, lift_stops=stops),
+            [1, 1, 0, 0, 0, 0],
+        )
 
     def test_a_hop_joins_the_ground_it_lands_on(self):
         # A teleport from the street down to the sealed ground keeps that ground, as one component with the street.
