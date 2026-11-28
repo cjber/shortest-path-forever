@@ -661,7 +661,8 @@ L["Right-click to choose map services."] = "Clic droit pour choisir les services
 L["Use TomTom's arrow"] = "Utiliser la flèche de TomTom" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"Avec TomTom installé, pointe la flèche de TomTom vers chaque étape au lieu de notre flèche et du marqueur du jeu." -- mt
-L["The compass can stay on screen without a journey."] = "La boussole peut rester à l'écran sans trajet." -- mt
+L["Routes use walking surfaces that were cut off from the map."] =
+	"Les itinéraires utilisent des surfaces praticables qui étaient coupées de la carte." -- mt
 L["Mailbox"] = "Boîte aux lettres" -- mt
 L["Skip this stop"] = "Passer cette étape de collecte" -- mt
 L["Destination queued until combat ends."] = "Destination en attente jusqu’à la fin du combat." -- mt
