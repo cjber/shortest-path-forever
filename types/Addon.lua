@@ -175,6 +175,7 @@
 ---@field shapes? SPFAreaShape[] -- objective areas the stop stands for, in world coordinates
 ---@field look? SPFAPIStopKind -- what the caller said stands there (API.lua)
 ---@field questID? number
+---@field preserveQuestFocus? boolean -- guidance for a journey started by super-tracking uses the addon's arrow
 ---@field npc? integer -- the service NPC this stop reaches: Shortest Path marks its nameplate while the stop is current (Nearby services)
 ---@field questIDs? number[] -- the quests whose client areas a held stop stands for (API.lua)
 ---@field handins? number[] -- the quests handed in at an API stop, hidden from the game's own map pins (API.lua)

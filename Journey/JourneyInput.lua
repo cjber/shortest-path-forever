@@ -122,6 +122,7 @@ function ns.EntranceStop(instance, point)
 		label = point.label or L["Enter %s"]:format(name),
 		questID = point.questID,
 		questIDs = point.questIDs,
+		preserveQuestFocus = point.preserveQuestFocus,
 		routeTitle = point.routeTitle,
 		details = point.details,
 		entrance = instance,
@@ -289,7 +290,7 @@ function ns.PlayerClear()
 	ns.ClearJourney()
 end
 
-local function PlanQuest(questID, clickedMap, isWaypoint)
+local function PlanQuest(questID, clickedMap, isWaypoint, preserveQuestFocus)
 	if JourneysOff() then
 		return false
 	end
@@ -335,6 +336,7 @@ local function PlanQuest(questID, clickedMap, isWaypoint)
 	point.label, point.questID = location.label, questID
 	-- The goal's live objectives: the arrow and any pin read them from the client's quest log.
 	point.questIDs = { questID }
+	point.preserveQuestFocus = preserveQuestFocus
 	ns.PlayerPicked()
 	ns.StartJourney(point)
 	return true
@@ -564,7 +566,7 @@ function ns.FocusedTrackingChanged(event, ownedWaypoint, waypointChanged, captur
 			return
 		end
 		if questID then
-			if not GoalIsQuest(questID) and PlanQuest(questID) then
+			if not GoalIsQuest(questID) and PlanQuest(questID, nil, nil, true) then
 				focusedQuestGoal = ns.JourneyGoal()
 			end
 		elseif previousGoal and ns.JourneyGoal() == previousGoal then

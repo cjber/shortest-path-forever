@@ -544,6 +544,10 @@ local function GuideWaypoint(point, fading)
 	if not guide or (ns.TomTomArrowActive and ns.TomTomArrowActive()) then
 		return false
 	end
+	-- Super-tracking the guide's waypoint would replace the quest focus that started the journey.
+	if guide.goal and guide.goal.preserveQuestFocus then
+		return false
+	end
 	-- Leave an external pin in place while the waypoint event's ownership is being resolved.
 	if not OwnsWaypoint() then
 		RefreshTracker()
@@ -807,7 +811,11 @@ function ns.JourneyPinTracked()
 	return guide ~= nil
 		and not guide.paused
 		and not guide.yielded
-		and (ns.db.guideStops or (guide.waypoint ~= nil and C_SuperTrack.IsSuperTrackingUserWaypoint()))
+		and (
+			ns.db.guideStops
+			or (guide.goal and guide.goal.preserveQuestFocus == true)
+			or (guide.waypoint ~= nil and C_SuperTrack.IsSuperTrackingUserWaypoint())
+		)
 end
 
 -- The current waypoint covers a stop only when it marks that stop's world point. A waypoint on an
