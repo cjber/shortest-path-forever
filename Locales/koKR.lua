@@ -667,8 +667,8 @@ L["Right-click to choose map services."] = "우클릭으로 지도 편의시설�
 L["Use TomTom's arrow"] = "TomTom 화살표 사용" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"TomTom이 설치되어 있으면 자체 화살표와 게임 표시 대신 TomTom 화살표로 각 단계를 가리킵니다." -- mt
-L["The compass can stay on screen without a journey."] =
-	"여정이 없어도 나침반을 화면에 계속 표시할 수 있습니다." -- mt
+L["Routes use walking surfaces that were cut off from the map."] =
+	"경로가 지도에서 끊겨 있던 보행 가능 지역을 이용합니다." -- mt
 L["Mailbox"] = "우체통" -- mt
 L["Skip this stop"] = "이 채집 지점 건너뛰기" -- mt
 L["Destination queued until combat ends."] = "전투가 끝날 때까지 목적지가 대기합니다." -- mt
