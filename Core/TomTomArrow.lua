@@ -31,8 +31,12 @@ local drivenForeign
 ---@type TomTomWaypoint?
 local replacedArrowUid
 local currentMap, currentX, currentY, currentTitle
--- A waypoint removed outside the driver stays off TomTom until guidance changes target.
+-- A waypoint removed from TomTom's arrow menu stays off TomTom until guidance changes target.
 local targetRemoved = false
+---@type TomTomWaypoint?
+local menuRemovalUid
+---@type TomTom?
+local hookedMenu
 ---@type SPFWalkPoints?
 local activePoints
 ---@type SPFPlace?
@@ -146,11 +150,33 @@ function ns.OnTomTomWaypointRemoved(uid)
 		if uid == drivenForeign then
 			drivenForeign = nil
 		end
-		targetRemoved = not removing
+		targetRemoved = not removing and uid == menuRemovalUid
 		local wasDriven = driven
 		driven = false
 		if wasDriven and not removing then
 			NotifyDrivenChanged()
+		end
+	end
+end
+
+---@param tomtom TomTom
+local function HookArrowMenu(tomtom)
+	local clear = tomtom.ClearCrazyArrowPoint
+	if hookedMenu == tomtom or type(clear) ~= "function" then
+		return
+	end
+	hookedMenu = tomtom
+	-- Scope the menu's intent to its synchronous removal of the selected waypoint.
+	tomtom.ClearCrazyArrowPoint = function(self, remove) -- taint-ok: TomTom owns this addon table.
+		if not remove then
+			return clear(self, remove)
+		end
+		local previous = menuRemovalUid
+		menuRemovalUid = ns.TomTomArrowWaypoint()
+		local ok, failure = pcall(clear, self, remove)
+		menuRemovalUid = previous
+		if not ok then
+			error(failure, 0)
 		end
 	end
 end
@@ -314,6 +340,7 @@ local function SyncDriven(notifyArrow)
 		end
 		return
 	end
+	HookArrowMenu(tomtom)
 	local sameTarget = currentMap == uiMap and currentX == x and currentY == y
 	if targetRemoved and sameTarget then
 		return
