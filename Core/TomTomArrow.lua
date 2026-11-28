@@ -31,6 +31,8 @@ local drivenForeign
 ---@type TomTomWaypoint?
 local replacedArrowUid
 local currentMap, currentX, currentY, currentTitle
+-- A waypoint removed outside the driver stays off TomTom until guidance changes target.
+local targetRemoved = false
 ---@type SPFWalkPoints?
 local activePoints
 ---@type SPFPlace?
@@ -144,7 +146,7 @@ function ns.OnTomTomWaypointRemoved(uid)
 		if uid == drivenForeign then
 			drivenForeign = nil
 		end
-		currentMap, currentX, currentY, currentTitle = nil, nil, nil, nil
+		targetRemoved = not removing
 		local wasDriven = driven
 		driven = false
 		if wasDriven and not removing then
@@ -177,6 +179,7 @@ local function ClearDriven()
 	currentUid = nil
 	drivenForeign = nil
 	driven = false
+	targetRemoved = false
 	currentMap, currentX, currentY, currentTitle = nil, nil, nil, nil
 	if not uid then
 		return
@@ -311,12 +314,15 @@ local function SyncDriven(notifyArrow)
 		end
 		return
 	end
+	local sameTarget = currentMap == uiMap and currentX == x and currentY == y
+	if targetRemoved and sameTarget then
+		return
+	end
+	targetRemoved = false
 	if
 		driven
 		and wasSelected
-		and currentMap == uiMap
-		and currentX == x
-		and currentY == y
+		and sameTarget
 		and currentTitle == title
 		and (not currentUid or type(tomtom.IsValidWaypoint) ~= "function" or tomtom:IsValidWaypoint(currentUid))
 		and (not drivenForeign or type(tomtom.IsValidWaypoint) ~= "function" or tomtom:IsValidWaypoint(drivenForeign))

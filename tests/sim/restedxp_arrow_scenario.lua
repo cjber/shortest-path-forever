@@ -15,6 +15,7 @@ af.texture:SetAllPoints()
 af.text = af:CreateFontString(nil, "OVERLAY")
 af.text:SetPoint("TOP", af, "BOTTOM", 0, -5)
 function RXP.UpdateMap() end
+function RXP.DrawArrow() end
 function RXP.UpdateGotoSteps()
 	if #RXP.activeWaypoints == 0 then
 		RXP.hideArrow = true
@@ -40,7 +41,7 @@ end)
 local ELWYNN = 1429
 local GOLDSHIRE = { zone = ELWYNN, x = 48, y = 60, title = "Goldshire", arrow = true, step = { active = true } }
 
-local function LoginWithRestedXP(sim)
+local function Elwynn(sim)
 	local player = sim.world.player
 	player.faction, player.race, player.raceFile = "Alliance", "Human", "Human"
 	player.map, player.x, player.y = 1429, 0.42, 0.65
@@ -67,6 +68,10 @@ local function LoginWithRestedXP(sim)
 	local encoding = dofile("tools/nav_encoding.lua")
 	sim.impl["C_EncodingUtil.DecodeBase64"] = encoding.DecodeBase64
 	sim.impl["C_EncodingUtil.DecompressString"] = encoding.DecompressString
+end
+
+local function LoginWithRestedXP(sim)
+	Elwynn(sim)
 	sim:login()
 	local ns
 	for _, entry in ipairs(sim.loader.addons) do
@@ -397,3 +402,96 @@ scenario("the routed arrow leads the next RestedXP step after a turn-in", {
 	assert(mine and mine.position.x == 0.3 and mine.position.y == 0.3, "the journey's end puts back the player's pin")
 	sim:expectNoErrors(ADDON)
 end)
+
+local FakeTomTom = dofile("tests/tomtom_fake.lua")
+
+local function Measure(label, action)
+	local interval = 10000
+	local instructions, started = 0, os.clock()
+	debug.sethook(function()
+		instructions = instructions + interval
+		assert(instructions < 100000000, "login instruction limit exceeded in " .. label)
+	end, "", interval)
+	local ok, err = xpcall(action, debug.traceback)
+	debug.sethook()
+	print(("%s: %.1f ms, ~%d Lua instructions"):format(label, (os.clock() - started) * 1000, instructions))
+	assert(ok, err)
+end
+
+local goal = { map = 0, x = -9350, y = -130, label = "Goldshire" }
+local stops = {
+	stops = {
+		{ map = ELWYNN, x = 0.48, y = 0.60, title = "Goldshire" },
+		{ map = ELWYNN, x = 0.48, y = 0.42, title = "Northshire" },
+	},
+}
+
+for _, case in ipairs({
+	{ name = "no kept journey" },
+	{ name = "kept goal", kept = goal },
+	{ name = "kept stops", kept = stops },
+	{ name = "kept goal and restored TomTom", kept = goal, tomtom = true, owner = "TomTom" },
+	{ name = "kept stops and RestedXP", kept = stops, restedxp = true, owner = "RestedXP" },
+	{
+		name = "kept stops, TomTom and RestedXP bridge",
+		kept = stops,
+		tomtom = true,
+		restedxp = true,
+		bridgeWaypoint = true,
+		owner = "TomTom",
+	},
+	{
+		name = "kept stops and a bridge publishing at world entry",
+		kept = stops,
+		tomtom = true,
+		restedxp = true,
+		liveBridge = true,
+		owner = "TomTom",
+	},
+}) do
+	scenario("login work with " .. case.name, {
+		addons = ForeverCore.addons(),
+		stubs = { Questie = {} },
+	}, function(sim)
+		Elwynn(sim)
+		if case.tomtom then
+			local uid = { ELWYNN, 0.48, 0.60, title = "Goldshire", source = case.bridgeWaypoint and "RXPGuides" or nil }
+			local tomtom = FakeTomTom.New(not case.liveBridge and { uid } or nil, nil, true)
+			sim.G.TomTom = tomtom
+			local frame = sim.G.CreateFrame("Frame")
+			frame:RegisterEvent("PLAYER_LOGIN")
+			frame:SetScript("OnEvent", function()
+				tomtom:Enable()
+			end)
+		end
+		if case.restedxp then
+			sim:runAs("RXPGuides", RXP_STANDIN)
+			sim.G.RXP.activeWaypoints = { sim.G.CopyTable(GOLDSHIRE) }
+			sim.G.RXP.UpdateGotoSteps()
+		end
+		if case.liveBridge then
+			FakeTomTom.Bridge(sim.G)
+		end
+		Measure(case.name .. " login", function()
+			sim:login({
+				savedVariables = {
+					ShortestPathForeverDB = { tomtomFollow = case.tomtom, tomtomArrow = case.tomtom },
+					ShortestPathForeverCharDB = { journey = case.kept and sim.G.CopyTable(case.kept) },
+				},
+			})
+		end)
+		Measure(case.name .. " next two seconds", function()
+			sim:advance(2)
+		end)
+		local ns
+		for _, entry in ipairs(sim.loader.addons) do
+			if entry.name == ADDON then
+				ns = entry.ns
+			end
+		end
+		assert(ns.HasJourney() == (case.kept ~= nil), "the expected journey starts")
+		if case.owner then
+			assert(ns.JourneyOwner() == case.owner, "the expected addon owns the journey")
+		end
+	end)
+end
