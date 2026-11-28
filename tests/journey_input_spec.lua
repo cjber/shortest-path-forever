@@ -99,12 +99,17 @@ local ns = {
 }
 local env = setmetatable({
 	CreateFrame = function()
+		local listensForRelease = false
 		return {
-			RegisterEvent = function() end,
+			RegisterEvent = function(_, event)
+				if event == "GLOBAL_MOUSE_UP" then
+					listensForRelease = true
+				end
+			end,
 			SetSize = function() end,
 			Hide = function() end,
 			SetScript = function(_, event, fn)
-				if event == "OnEvent" then
+				if event == "OnEvent" and not listensForRelease then
 					mouseEvent = fn
 				end
 			end,
@@ -115,6 +120,9 @@ local env = setmetatable({
 	end,
 	IsAltKeyDown = function()
 		return alt
+	end,
+	IsControlKeyDown = function()
+		return false
 	end,
 	WorldMapFrame = {
 		IsShown = function()
