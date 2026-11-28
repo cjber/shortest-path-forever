@@ -54,7 +54,6 @@ local KEEP = 50000
 ---@field roads? true -- Follow roads is on: walks prefer road cells (Path.lua)
 ---@field roadFactor? number -- cost of an off-road yard while choosing a walk, at least 1
 ---@field zones table<number, number> -- [uiMap] = factor, for the avoided zones and hostile capitals
----@field chargeHighZones? boolean the route comparison uses the walking search score
 ---@field cities table<number, boolean> -- every hostile capital, exempt ones included
 ---@field towns SPFHazardTown[] -- every hostile town, exempt ones included
 ---@class SPFHazardTown
@@ -456,7 +455,7 @@ function Hazards.Profile(from, goal, here, landing)
 		end
 	end
 	local zones, boxes, cities, ids = {}, {}, {}, {}
-	local goalCharge, goalFactor, chargeHighZones = nil, 1, nil
+	local goalCharge, goalFactor = nil, 1
 	for id, zone in pairs(ns.Zones) do
 		local factor
 		if zone.city then
@@ -468,9 +467,6 @@ function Hazards.Profile(from, goal, here, landing)
 		if factor then
 			if not exempt[id] then
 				zones[id] = factor
-				if not zone.city then
-					chargeHighZones = true
-				end
 				boxes[#boxes + 1] = zone
 				ids[#ids + 1] = id
 			elseif id == goalZone and not zone.city and not leaving[id] then
@@ -643,7 +639,6 @@ function Hazards.Profile(from, goal, here, landing)
 		roads = ns.db.followRoads and true or nil,
 		roadFactor = roadFactor,
 		zones = zones,
-		chargeHighZones = chargeHighZones,
 		cities = cities,
 		towns = towns,
 	}

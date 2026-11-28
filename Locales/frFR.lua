@@ -221,9 +221,6 @@ L["Show on map"] = "Afficher sur la carte" -- mt
 L["Show other faction's routes"] = "Afficher les routes de l'autre faction" -- mt
 L["Show portals"] = "Afficher les portails" -- mt
 L["Show routes on the world map"] = "Afficher les routes sur la carte du monde" -- mt
-L["Keep the compass visible without a journey"] = "Garder la boussole visible sans trajet" -- mt
-L["Shows your heading when there are no directions to follow. Requires Show the compass."] =
-	"Indique la direction dans laquelle vous regardez quand aucun itinéraire ne vous guide. Nécessite l’option « Afficher la boussole »." -- mt
 L["Show the compass"] = "Afficher la boussole" -- mt
 L["Show the flight to take"] = "Afficher le vol à prendre" -- mt
 L["Show Shortest Path's arrow and the game's navigation marker. TomTom's arrow has its own settings."] =

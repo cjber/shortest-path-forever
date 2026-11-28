@@ -216,9 +216,6 @@ L["Show on map"] = "Mostrar no mapa"
 L["Show other faction's routes"] = "Mostrar rotas da outra facção"
 L["Show portals"] = "Mostrar portais"
 L["Show routes on the world map"] = "Mostrar rotas no mapa-múndi"
-L["Keep the compass visible without a journey"] = "Manter a bússola visível sem uma jornada"
-L["Shows your heading when there are no directions to follow. Requires Show the compass."] =
-	"Mostra a direção para a qual você está olhando quando não há instruções a seguir. Requer a opção “Mostrar a bússola”."
 L["Show the compass"] = "Mostrar a bússola"
 L["Show the flight to take"] = "Mostrar o voo a pegar"
 L["Show Shortest Path's arrow and the game's navigation marker. TomTom's arrow has its own settings."] =

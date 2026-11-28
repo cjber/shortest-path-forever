@@ -77,7 +77,7 @@ local function WalkCost(options, a, b, index)
 		if options.feasibleOnly and walk.estimated then
 			return false, false
 		end
-		return walk.cost, walk.estimated or false, walk.apart, walk.choice
+		return walk.cost, walk.estimated or false, walk.apart
 	end
 	if options.feasibleOnly or (options.exactMaps and options.exactMaps[a.map]) then
 		return false, false
@@ -537,7 +537,7 @@ local function Solve(options, cache, check, weigh)
 		end
 	end
 	-- The walk straight from the start to the goal pays the charge on the goal's high-level zone (Hazards.Profile).
-	local direct, hasPenalty
+	local direct
 	for pair = 1, #topology.pairs, 2 do
 		check()
 		local from, to = topology.pairs[pair], topology.pairs[pair + 1]
@@ -546,23 +546,18 @@ local function Solve(options, cache, check, weigh)
 			for direction = 1, 2 do
 				local first, last = direction == 1 and from or to, direction == 1 and to or from
 				local origin, destination = nodes[first], nodes[last]
-				local yards, estimated, apart, choice
+				local yards, estimated, apart
 				if first ~= goal and last ~= start then
-					yards, estimated, apart, choice = WalkCost(options, origin, destination, walkIndex)
+					yards, estimated, apart = WalkCost(options, origin, destination, walkIndex)
 				end
 				if yards then
 					local factor = 1
 					if first == start and last == goal and options.hazards and options.hazards.goalZone then
 						factor = options.hazards.Direct(origin.map, origin.x, origin.y, destination.x, destination.y)
 					end
-					local penalty = (factor > 1 or choice and choice > yards)
-							and ((choice and math.max(choice - yards, 0) or 0) + yards * (factor - 1)) / speed * 1000
-						or nil
-					hasPenalty = hasPenalty or penalty ~= nil
 					local edge = {
 						mode = "walk",
-						duration = yards / speed * 1000,
-						penalty = penalty,
+						duration = yards * factor / speed * 1000,
 						yards = yards,
 						estimated = estimated,
 						-- Zero yards join two walks unless the walk's batch knows the ends are on different nodes: an
@@ -594,7 +589,6 @@ local function Solve(options, cache, check, weigh)
 			state = {},
 			time = {},
 			walking = {},
-			penalty = {},
 			key = {},
 			parent = {},
 			edge = {},
@@ -617,8 +611,6 @@ local function Solve(options, cache, check, weigh)
 		end
 		labels.node[1], labels.state[1], labels.time[1] = start, start, options.now
 		labels.walking[1] = 0
-		local penalties = hasPenalty and labels.penalty or nil
-		labels.penalty[1] = 0
 		local walkingLimit = ridden and (cutoff - options.now) / 2
 		labels.key[1], labels.parent[1] = options.now + (lower[start] or math.huge), nil
 		local labelCount = 1
@@ -727,11 +719,10 @@ local function Solve(options, cache, check, weigh)
 								target = edge.to + WALKED
 							end
 						end
-						local penalty = penalties and (penalties[current] + (edge.penalty or 0))
-						local key = (penalty and finish + penalty or finish) + lower[edge.to]
-						local peers = states[target]
-						-- A label dominates a peer only if it is no later and has charged no more.
-						local dominated = cutoff ~= nil and key >= cutoff
+						local peers = states[target] or {}
+						-- A label that cannot arrive before the cutoff leads nowhere, and dominates nothing that could: a peer
+						-- at the same node has the same remaining bound.
+						local dominated = cutoff ~= nil and finish + lower[edge.to] >= cutoff
 						local walking
 						if ridden and not dominated then
 							walking = labels.walking[current] + (edge.mode == "walk" and finish - earliest or 0)
@@ -744,14 +735,13 @@ local function Solve(options, cache, check, weigh)
 						-- catch an earlier boat, and the later label's wait for the next one counts as riding, so arriving first
 						-- does not keep the walking share below half. At the goal there is no suffix: first and least walking wins.
 						local sameTime = ridden and edge.to ~= goal
-						if not dominated and peers then
+						if not dominated then
 							-- The first offer only needs a valid incumbent. The exact proof retains the visited-set
 							-- alternatives that this preliminary search can discard.
 							for _, peer in ipairs(peers) do
 								if
 									not labels.discarded[peer]
 									and labels.time[peer] <= finish
-									and (not penalties or penalties[peer] <= penalty)
 									and (not ridden or labels.walking[peer] <= walking)
 									and (not sameTime or labels.time[peer] == finish)
 									and (options.feasibleOnly or Subset(labels, peer, current, edge.to))
@@ -769,15 +759,12 @@ local function Solve(options, cache, check, weigh)
 							if ridden then
 								labels.walking[id] = walking
 							end
-							labels.penalty[id] = penalty
-							peers = peers or {}
-							labels.key[id], labels.parent[id], labels.edge[id] = key, current, edge
+							labels.key[id], labels.parent[id], labels.edge[id] = finish + lower[edge.to], current, edge
 							labels.depart[id], labels.wait[id], labels.estimated[id] = depart, wait, estimated
 							for _, peer in ipairs(peers) do
 								if
 									not labels.discarded[peer]
 									and finish <= labels.time[peer]
-									and (not penalties or penalty <= penalties[peer])
 									and (not ridden or walking <= labels.walking[peer])
 									and (not sameTime or finish == labels.time[peer])
 									and (options.feasibleOnly or Subset(labels, id, peer))
@@ -817,7 +804,6 @@ local function Solve(options, cache, check, weigh)
 				hops = edge.path and { edge.path } or nil,
 				gossip = edge.gossip,
 				yards = edge.yards,
-				penalty = edge.penalty,
 				teleport = edge.teleport,
 				partyPortal = edge.partyPortal,
 				ready = edge.ready,
@@ -855,10 +841,17 @@ local function Solve(options, cache, check, weigh)
 				legs[#legs + 1] = leg
 			end
 		end
-		local arrive, penalty = labels.time[finishAt], penalties and penalties[finishAt]
+		local arrive, charged = labels.time[finishAt], nil
+		if #legs == 1 and labels.edge[finishAt] == direct then
+			-- The charge only weighs the choice: the walk itself takes its real time. A later search bounded by this plan
+			-- compares charged labels, so it is bounded by the charged arrival.
+			charged = arrive
+			arrive = legs[1].depart + direct.yards / speed * 1000
+			legs[1].arrive = arrive
+		end
 		return {
 			arrive = arrive,
-			charged = penalty and penalty > 0 and arrive + penalty or nil,
+			charged = charged,
 			legs = legs,
 			needsStart = needsStart,
 			needsGoal = needsGoal,
@@ -884,7 +877,7 @@ local function Solve(options, cache, check, weigh)
 		if not walk then
 			return nil
 		end
-		local faster = Search(withoutHearth, withoutTeleports, plan.charged or plan.arrive, false, true, true)
+		local faster = Search(withoutHearth, withoutTeleports, plan.arrive, false, true, true)
 		if not faster then
 			return nil
 		end

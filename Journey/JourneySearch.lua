@@ -156,14 +156,8 @@ local function MeasuredWalks(here)
 	end
 	if startAt and startAt.map == here.map then
 		for _, walk in ipairs(startCosts) do
-			walks[#walks + 1] = {
-				from = here,
-				to = walk.to,
-				cost = walk.cost,
-				choice = walk.choice,
-				estimated = walk.estimated,
-				apart = walk.apart,
-			}
+			walks[#walks + 1] =
+				{ from = here, to = walk.to, cost = walk.cost, estimated = walk.estimated, apart = walk.apart }
 		end
 	end
 	-- Drawing an offer must not supply a new cost to the proof that produced it.
@@ -174,7 +168,6 @@ local function MeasuredWalks(here)
 		and followed.hazards == (hazards and hazards.key)
 		and leg.mode == "walk"
 		and leg.measured
-		and (leg.penalty or 0) == 0
 		and Remaining(leg, here, leg.walkCost or leg.yards)
 	if rest then
 		walks[#walks + 1] = { from = here, to = leg.to, cost = rest }
@@ -200,19 +193,17 @@ local function Retime(planned)
 		local kept = followed.legs[index + progress.index - 1]
 		kept.depart, kept.arrive, kept.wait, kept.estimated = leg.depart, leg.arrive, leg.wait, leg.estimated
 		kept.aboard, kept.yards, kept.ready = leg.aboard, leg.yards, leg.ready
-		kept.penalty = leg.penalty
 	end
 end
 
 -- Compare against this route's own measured legs, at the same departure time as the challenger.
 -- Reusing an earlier arrival would make the first offered route unfairly hard to replace.
-local function EstimateKept(now, timingOnly)
+local function EstimateKept(now)
 	if not followed then
 		return nil
 	end
 	local here = Here()
 	local estimate = { now = now, arrive = now, legs = {} }
-	local penalty = 0
 	for index = progress.index, #followed.legs do
 		local leg = followed.legs[index]
 		if
@@ -226,7 +217,6 @@ local function EstimateKept(now, timingOnly)
 			return nil
 		end
 		local duration, wait = leg.arrive - leg.depart, leg.wait or 0
-		local charge = leg.penalty or 0
 		local yards = leg.yards or duration / 1000 * lastRunSpeed
 		if leg.walkError then
 			return nil
@@ -240,10 +230,6 @@ local function EstimateKept(now, timingOnly)
 			if index == progress.index and leg.measured then
 				yards = Remaining(leg, here, basis)
 				if not yards then
-					return nil
-				end
-				if charge > 0 and not timingOnly then
-					-- The remaining exposure needs a fresh search from here.
 					return nil
 				end
 			else
@@ -263,18 +249,15 @@ local function EstimateKept(now, timingOnly)
 		end
 		local depart = estimate.arrive + wait
 		estimate.arrive = depart + duration
-		penalty = penalty + charge
 		estimate.legs[#estimate.legs + 1] = {
 			depart = depart,
 			arrive = estimate.arrive,
 			wait = wait,
 			yards = yards,
-			penalty = charge,
 			estimated = leg.estimated,
 			aboard = leg.aboard,
 		}
 	end
-	estimate.charged = penalty > 0 and estimate.arrive + penalty or nil
 	return estimate
 end
 
@@ -282,7 +265,7 @@ end
 -- new geometry. False when a sailing the route waits for has moved to its next visit, or nothing can be estimated.
 ---@return boolean
 local function RetimeKept()
-	local estimate = followed and EstimateKept(ns.NowMs(), true)
+	local estimate = followed and EstimateKept(ns.NowMs())
 	if not estimate then
 		return false
 	end
@@ -391,7 +374,7 @@ FinishSearch = function()
 	local planned, forced = search.candidate, search.forced
 	local estimate = EstimateKept(planned and planned.now or ns.NowMs())
 	local same = Walks.SameJourney(planned, followed, progress.index, Here())
-	local gain = estimate and planned and (estimate.charged or estimate.arrive) - (planned.charged or planned.arrive)
+	local gain = estimate and planned and estimate.arrive - planned.arrive
 	-- A ride the planner preferred to a long walk, or to a walk through the goal's high-level zone, is later than that
 	-- walk by design, so its gain cannot argue for it against the walk already shown.
 	local overWalk = planned
@@ -409,7 +392,7 @@ FinishSearch = function()
 	local better = estimate
 		and planned
 		and gain
-		and (overWalk or uncast and gain > 0 or Worthwhile(gain, (estimate.charged or estimate.arrive) - planned.now))
+		and (overWalk or uncast and gain > 0 or Worthwhile(gain, estimate.arrive - planned.now))
 	local valid = true
 	for _, leg in ipairs(planned and planned.legs or {}) do
 		if leg.walkError then
@@ -499,8 +482,8 @@ local function Render(planned, forced)
 	end
 	local estimate = not search.initial and not forced and EstimateKept(planned and planned.now or ns.NowMs())
 	if estimate and planned and Walks.Pending() == 0 and not search.refine and not followed.provisional then
-		local gain = (estimate.charged or estimate.arrive) - (planned.charged or planned.arrive)
-		if not Worthwhile(gain, (estimate.charged or estimate.arrive) - planned.now) then
+		local gain = estimate.arrive - planned.arrive
+		if not Worthwhile(gain, estimate.arrive - planned.now) then
 			FinishSearch()
 			return
 		end
@@ -543,7 +526,7 @@ local function Plan(feasible, incumbent, job)
 	ns.Path.Checkpoint()
 	options.cache, options.walks, options.waterWalking, options.hazards = plannerCache, walks, waterMode, hazards
 	options.feasibleOnly = feasible
-	-- The incumbent bounds the search by its score, while the displayed arrival uses real travel time.
+	-- A walk through the goal's high-level zone shows its real arrival but was chosen on its charged one (#1007).
 	options.incumbent, options.incumbentPlan = incumbent and (incumbent.charged or incumbent.arrive), incumbent
 	options.ride = Context.Ride(options)
 	options.unknownFlightNotice = true
@@ -675,30 +658,18 @@ local function RefreshCosts(includeGoal, forced, replace)
 		local radius = batch.job and batch.job.radius or 0
 		for i, target in ipairs(batch.reason ~= "nodata" and batch.targets or {}) do
 			local cost = batch.probes and batch.probes[i]
-			local choice
 			if cost == nil then
 				cost = batch.costs[i]
-				choice = batch.job and batch.job.choices and batch.job.choices[i]
-			else
-				choice = batch.probeChoices and batch.probeChoices[i]
 			end
 			local estimated = cost == nil
 			if estimated then
 				local lower = ns.Path.LowerBound(batch.point.map, batch.point, target)
-				cost = math.max(lower, bakedBound(batch, target))
-				if batch.job and batch.job.choices then
-					-- A walk ending at the goal has no departure to catch. Its score is at
-					-- least the weighted radius, even if its real duration could be shorter.
-					choice = (batch.reverse or SamePlace(target, goal)) and radius or nil
-				else
-					cost = math.max(cost, radius)
-				end
+				cost = math.max(lower, radius, bakedBound(batch, target))
 			end
 			list[#list + 1] = {
 				from = batch.reverse and target or batch.point,
 				to = batch.reverse and batch.point or target,
 				cost = cost,
-				choice = choice,
 				estimated = estimated,
 				-- Once the batch has settled every target on its own node, an unmeasured one is a real walk away.
 				apart = estimated and batch.job and batch.job.snapped or nil,
@@ -821,7 +792,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 		if stale() then
 			return
 		end
-		local bound = feasible and (feasible.charged or feasible.arrive)
+		local bound = feasible and feasible.arrive
 		local function best()
 			return Plan(false, feasible, job)
 		end
@@ -829,7 +800,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 		local previewed = preview
 			and not startBatch.reason
 			and not goalBatch.reason
-			and not (bound and (preview.charged or preview.arrive) >= bound)
+			and not (bound and preview.arrive >= bound)
 		local planned = previewed and preview or best()
 		preview = nil
 		if stale() then
@@ -911,10 +882,6 @@ local function RefreshCosts(includeGoal, forced, replace)
 						if cost or reason == "unreachable" or reason == "offmesh" or reason == "outside" then
 							batch.probes = batch.probes or {}
 							batch.probes[probe.index] = cost or false
-							if finished.choice then
-								batch.probeChoices = batch.probeChoices or {}
-								batch.probeChoices[probe.index] = finished.choice
-							end
 						end
 						probeCPU = probeCPU + finished.cpu
 						left = left - 1
@@ -965,7 +932,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 				waterMode,
 				landed,
 				select(2, ns.UsableTeleports(ns.NowMs())),
-				planned and (planned.charged or planned.arrive) or math.huge,
+				planned and planned.arrive or math.huge,
 				lastRunSpeed
 			)
 		if not needStart and not needGoal and not landing then

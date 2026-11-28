@@ -223,9 +223,6 @@ L["Show on map"] = "지도에 표시"
 L["Show other faction's routes"] = "다른 진영의 노선 표시"
 L["Show portals"] = "차원문 표시"
 L["Show routes on the world map"] = "세계 지도에 노선 표시"
-L["Keep the compass visible without a journey"] = "여정 없이도 나침반 표시"
-L["Shows your heading when there are no directions to follow. Requires Show the compass."] =
-	"따라갈 길 안내가 없을 때 바라보는 방향을 표시합니다. '나침반 표시'를 켜야 합니다."
 L["Show the compass"] = "나침반 표시"
 L["Show the flight to take"] = "탈 비행 경로 표시"
 L["Show Shortest Path's arrow and the game's navigation marker. TomTom's arrow has its own settings."] =

@@ -54,9 +54,8 @@ function Savings.Apply(planned, search, options)
 			withoutTeleports = true
 		end
 		-- The admissible bound can prove the saving before the full alternative settles.
-		local cutoff = (planned.charged or planned.arrive) + minimum
-		local baseline = search(withoutHearth, withoutTeleports, cutoff)
-		if not (baseline and (baseline.charged or baseline.arrive) < cutoff) then
+		local baseline = search(withoutHearth, withoutTeleports, planned.arrive + minimum)
+		if not (baseline and baseline.arrive - planned.arrive < minimum) then
 			break
 		end
 		planned = baseline
