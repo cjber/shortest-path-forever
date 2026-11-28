@@ -872,43 +872,7 @@ assert(Row("tomtomFollow").tooltip:find("TomTom", 1, true), "the row names the a
 Row("tomtomFollow").setting.onChanged()
 assert(tomtomFollowRefreshed == 1, "the follower follows its setting")
 assert(Row("arrivalSound").setting.default == false, "the arrival sound is off by default")
--- /path report shows the report, its lines run through SafeCall; lines that fail still show the rest.
-local shownReport
-ns.core.SafeCall = function(_, fn, ...)
-	return pcall(fn, ...)
-end
-ns.core.Report = {
-	Text = function(lines)
-		return table.concat(lines, "\n")
-	end,
-	Show = function(text)
-		shownReport = text
-	end,
-}
-ns.ReportLines = function()
-	return { "Journey: none" }
-end
-ns.core.Report.Command = function(command)
-	if command == "report" then
-		local ok, lines = ns.core.SafeCall("report lines", ns.ReportLines)
-		ns.core.Report.Show(ns.core.Report.Text(ok and lines or { "Report lines failed: " .. tostring(lines) }))
-		return true
-	end
-	return false
-end
-env.SlashCmdList.SHORTESTPATHFOREVER("report")
-assert(shownReport == "Journey: none", "/path report shows the report")
-ns.ReportLines = function()
-	error("broke", 0)
-end
-env.SlashCmdList.SHORTESTPATHFOREVER("report")
-assert(shownReport == "Report lines failed: broke", "failing lines are said in their place")
 assert(Row("compassTime").setting.default == false, "the compass shows no time unless asked")
--- /path way takes TomTom's /way line, whether or not /way itself is free.
-env.SlashCmdList.SHORTESTPATHFOREVER("way Elwynn Forest 42.1 65.3 Goldshire")
-assert(ways[1] == "Elwynn Forest 42.1 65.3 Goldshire", "/path way hands on the rest of the line")
-env.SlashCmdList.SHORTESTPATHFOREVER("way")
-assert(ways[2] == "", "a bare /path way still answers, with its usage")
 assert(Row("whatsNew").setting.default == true)
 -- New participation defaults on, while the runtime preserves every saved false choice.
 assert(Row("stats").setting.default == true, "the travel journal is on by default")
@@ -996,7 +960,7 @@ assert(trackerState.locked == true and lock:GetValue(), "locking writes the shar
 lock:SetValue(false)
 assert(trackerState.locked == false and not lock:GetValue(), "unlocking writes them back")
 
--- tests/settings_layout_spec.lua reuses this harness for the heading order and the reduced clients.
+-- The layout and slash command specs reuse this harness.
 return {
 	env = env,
 	ns = ns,
@@ -1004,6 +968,7 @@ return {
 	buttons = buttons,
 	settings = settings,
 	registered = registered,
+	ways = ways,
 	getPolicyChanged = function()
 		return policyChanged
 	end,
