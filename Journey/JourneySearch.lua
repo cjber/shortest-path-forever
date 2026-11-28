@@ -375,8 +375,8 @@ FinishSearch = function()
 	local estimate = EstimateKept(planned and planned.now or ns.NowMs())
 	local same = Walks.SameJourney(planned, followed, progress.index, Here())
 	local gain = estimate and planned and estimate.arrive - planned.arrive
-	-- A ride the planner preferred to a long walk, or to a walk through the goal's high-level zone, is later than that
-	-- walk by design, so its gain cannot argue for it against the walk already shown.
+	-- A ride preferred to a walk can arrive later by design, so its gain cannot argue for it against the walk
+	-- already shown.
 	local overWalk = planned
 		and (planned.preferred or planned.rideNote)
 		and followed
@@ -526,6 +526,7 @@ local function Plan(feasible, incumbent, job)
 	ns.Path.Checkpoint()
 	options.cache, options.walks, options.waterWalking, options.hazards = plannerCache, walks, waterMode, hazards
 	options.feasibleOnly = feasible
+	options.flightAllowance = hazards and hazards.flightAllowance
 	-- A walk through the goal's high-level zone shows its real arrival but was chosen on its charged one (#1007).
 	options.incumbent, options.incumbentPlan = incumbent and (incumbent.charged or incumbent.arrive), incumbent
 	options.ride = Context.Ride(options)

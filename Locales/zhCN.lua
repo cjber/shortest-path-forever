@@ -651,3 +651,7 @@ L["Destination queued until combat ends."] = "目的地已排队，战斗结束�
 L["Keep the compass visible without a journey"] = "没有旅程时仍显示指南针"
 L["Shows your heading when there are no directions to follow. Requires Show the compass."] =
 	"没有路线指引时显示你的朝向。需要开启“显示指南针”。"
+L["Flight detour allowance"] = "飞行绕路时间" -- mt
+L["How much extra time you are willing to spend to take a flight instead of walking."] =
+	"选择搭乘飞行路线而非步行时，你愿意多花的时间。" -- mt
+L["%d min"] = "%d分钟" -- mt

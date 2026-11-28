@@ -100,6 +100,7 @@
 ---@field hearthMinimumSavings number
 ---@field teleportMinimumSavings number
 ---@field roadDetour number
+---@field flightAllowance number
 ---@field destinationPinSize number
 ---@field arrowScale number
 ---@field minimapRouteScale number
@@ -613,6 +614,7 @@ ShortestPathForeverPathData = nil
 ---@field withoutOpening? SPFLeg plan as if this step, from where it leaves, were not there
 ---@field incumbent? number
 ---@field incumbentPlan? SPFPlan
+---@field flightAllowance? number extra minutes a journey may spend to fly instead of walking
 ---@field lowerBound? boolean the soonest any route could arrive, before the hearth, teleport and ride preferences
 ---@field endpointBounds? boolean use terrain lower bounds for unresolved start and goal walks
 ---@field hearthMinimumSavings? number

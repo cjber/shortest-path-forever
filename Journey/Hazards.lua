@@ -12,6 +12,7 @@ local L = ns.L
 -- cost. The zones and towns the journey starts and ends in are never avoided, though a hostile town there is still
 -- named, and the walk straight to a goal inside a high-level zone pays for its yards in it (#1007).
 local ROAD_DETOUR_MAX = 200
+local FLIGHT_ALLOWANCE_MAX = 10
 local LEVEL_GAP, LEVEL_CAP = 4, 10
 local ZONE_CAP, TOWN_COST = 6, 6
 
@@ -53,6 +54,7 @@ local KEEP = 50000
 ---@field Segment fun(map: number, ax: number, ay: number, bx: number, by: number, shares: number[]?): number
 ---@field roads? true -- Follow roads is on: walks prefer road cells (Path.lua)
 ---@field roadFactor? number -- cost of an off-road yard while choosing a walk, at least 1
+---@field flightAllowance? number -- extra minutes a journey may spend to fly instead of walking
 ---@field zones table<number, number> -- [uiMap] = factor, for the avoided zones and hostile capitals
 ---@field cities table<number, boolean> -- every hostile capital, exempt ones included
 ---@field towns SPFHazardTown[] -- every hostile town, exempt ones included
@@ -69,7 +71,7 @@ local KEEP = 50000
 ---@field y1 number
 
 ---@class SPFHazardsModule
-local Hazards = { ROAD_DETOUR_MAX = ROAD_DETOUR_MAX }
+local Hazards = { ROAD_DETOUR_MAX = ROAD_DETOUR_MAX, FLIGHT_ALLOWANCE_MAX = FLIGHT_ALLOWANCE_MAX }
 ns.Hazards = Hazards
 
 -- The zone map under a world point, kept per CELL square: a search asks for thousands of points.
@@ -616,6 +618,11 @@ function Hazards.Profile(from, goal, here, landing)
 		detour = 50
 	end
 	local roadFactor = ns.db.followRoads and (1 + math.max(0, math.min(ROAD_DETOUR_MAX, detour)) / 100) or nil
+	local allowance = ns.db.flightAllowance
+	if type(allowance) ~= "number" or allowance ~= allowance then
+		allowance = 0
+	end
+	allowance = math.max(0, math.min(FLIGHT_ALLOWANCE_MAX, allowance))
 	-- The factor on the walk straight from the start to the goal: 1 unless the goal's high-level zone is charged.
 	local function Direct(map, ax, ay, bx, by)
 		if not goalCharge then
@@ -626,7 +633,12 @@ function Hazards.Profile(from, goal, here, landing)
 	end
 	return {
 		-- Profiles with the same costs share cached searches across levels.
-		key = (faction or "") .. ":" .. table.concat(keys, ",") .. (roadFactor and ":roads:" .. roadFactor or ""),
+		key = (faction or "")
+			.. ":"
+			.. table.concat(keys, ",")
+			.. (roadFactor and ":roads:" .. roadFactor or "")
+			.. (allowance > 0 and ":flight:" .. allowance or ""),
+		flightAllowance = allowance,
 		Point = Point,
 		Charged = Charged,
 		Chord = Chord,

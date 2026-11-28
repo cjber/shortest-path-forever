@@ -593,6 +593,29 @@ ns.Init(function()
 			-- luacheck: pop
 		)
 	)
+	local flightAllowance = Settings.RegisterAddOnSetting(
+		page,
+		"ShortestPathForever_flightAllowance",
+		"flightAllowance",
+		ns.db,
+		Settings.VarType.Number,
+		L["Flight detour allowance"],
+		ns.Defaults.flightAllowance
+	)
+	flightAllowance:SetValueChangedCallback(ns.TravelPolicyChanged)
+	settings.flightAllowance = flightAllowance
+	local flightOptions = Secure(Settings.CreateSliderOptions)(0, ns.Hazards.FLIGHT_ALLOWANCE_MAX, 1)
+	Label(flightOptions, function(value)
+		return L["%d min"]:format(value)
+	end)
+	Settings.RegisterInitializer(
+		page,
+		Secure(Settings.CreateSliderInitializer)(
+			flightAllowance,
+			flightOptions,
+			L["How much extra time you are willing to spend to take a flight instead of walking."]
+		)
+	)
 	Checkbox(
 		"useWaterWalking",
 		L["Use Water Walking and Levitate"],

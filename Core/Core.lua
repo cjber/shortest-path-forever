@@ -179,6 +179,7 @@ local DEFAULTS = {
 	avoidHighZones = true,
 	followRoads = true,
 	roadDetour = 50,
+	flightAllowance = 0,
 	whatsNew = true,
 }
 ns.Defaults = DEFAULTS

@@ -62,3 +62,42 @@ function Savings.Apply(planned, search, options)
 	end
 	return planned, withoutHearth, withoutTeleports
 end
+
+-- Spend the allowance once on the whole itinerary. The bounded search keeps the real time for connections and ETA.
+---@param walk SPFPlan?
+---@param allowance number extra minutes
+---@param search fun(cutoff: number): SPFPlan?
+---@return SPFPlan?
+function Savings.PreferFlight(walk, allowance, search)
+	if not walk or #walk.legs ~= 1 or walk.legs[1].mode ~= "walk" then
+		return nil
+	end
+	local flight = search((walk.charged or walk.arrive) + allowance * 60000)
+	if flight then
+		flight.preferred = true
+		-- The competing walk still needs to settle before committing to the preference.
+		flight.needsStart = flight.needsStart or walk.needsStart
+		flight.needsGoal = flight.needsGoal or walk.needsGoal
+		for _, pending in ipairs(walk.pendingWalks) do
+			flight.pendingWalks[#flight.pendingWalks + 1] = pending
+		end
+	end
+	return flight
+end
+
+-- Explain when charging for yards in the goal zone makes a ride win over the direct walk.
+---@param plan SPFPlan
+---@param walkTime number? direct walking time with the long-walk margin, in milliseconds
+---@param now number
+---@param hazards SPFHazards?
+function Savings.RideNote(plan, walkTime, now, hazards)
+	if not walkTime or walkTime >= plan.arrive - now or #plan.legs <= 1 then
+		return nil
+	end
+	for _, leg in ipairs(plan.legs) do
+		if leg.mode == "teleport" then
+			return nil
+		end
+	end
+	return ns.Hazards.RideNote(hazards)
+end

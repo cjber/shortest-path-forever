@@ -675,3 +675,7 @@ L["Destination queued until combat ends."] = "전투가 끝날 때까지 목적�
 L["Keep the compass visible without a journey"] = "여정 없이도 나침반 표시"
 L["Shows your heading when there are no directions to follow. Requires Show the compass."] =
 	"따라갈 길 안내가 없을 때 바라보는 방향을 표시합니다. '나침반 표시'를 켜야 합니다."
+L["Flight detour allowance"] = "비행 우회 허용 시간" -- mt
+L["How much extra time you are willing to spend to take a flight instead of walking."] =
+	"걸어가는 대신 비행편을 이용하기 위해 추가로 쓸 수 있는 시간입니다." -- mt
+L["%d min"] = "%d분" -- mt
