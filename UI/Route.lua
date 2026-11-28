@@ -516,7 +516,7 @@ function Layer:RefreshStops()
 	end
 	local first, marks = stopIndex or 1, {}
 	self.mirroredWaypoint = ns.CompanionMaps.OpenWaypointMarksStop(stops and stops[first] or goal)
-	for index = first, stops and #stops or 1 do
+	for _, index in ipairs(stops and ns.StopsToMark() or { 1 }) do
 		local point = stops and stops[index] or goal
 		local x, y = MapPosition(point, mapID)
 		if not (point.stop or point).unmarked and OnMap(x, y) and (index ~= first or not self.mirroredWaypoint) then

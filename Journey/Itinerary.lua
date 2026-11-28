@@ -18,9 +18,18 @@ end
 ---@field walks {path: SPFDrawPath, leg: SPFLeg}[] walking legs still to search, nearest first
 
 -- Hops are keyed by both stops' coordinates and heights, so an unchanged hop survives a current-leg replan or a
--- caller sending the same stops again. Only the current route's hops are kept, at most one per stop (64).
+-- caller sending the same stops again. Only the current route's hops are kept, at most one per stop.
 ---@type table<string, SPFHop>
 local hops = {}
+-- The same hops from the current stop on, nearest first; a loop's come round to the one into the current stop.
+---@type SPFHop[]
+local ahead = {}
+-- Every hop before planAt is planned, and every one before walkAt has no walk left to search. The first `near` hops
+-- are worked out whole before any further one.
+local planAt, walkAt, near = 1, 1, 0
+-- A loop may be a whole zone's round: only the leg under way and its next NEAR hops are bright on the map, and at
+-- most WALKED of the stops behind dim as walked.
+local NEAR, WALKED = 9, 25
 ---@type SPFRoutePolicy
 local policy = "normal"
 local scheduled, wait, dirty
@@ -82,21 +91,27 @@ local function PlanHop(hop, pathJob)
 	end
 end
 
--- The next piece of work, and whether it is a plan. Every hop is planned before any walk is searched, so the walks
--- run back to back, and one hop's last walk and the next hop's first, which meet at a stop, share decoded grids.
+-- The next piece of work, and whether it is a plan. Every near hop is planned before any walk is searched, so the
+-- walks run back to back, and one hop's last walk and the next hop's first, which meet at a stop, share decoded grids.
+-- A list is near as a whole; a loop's next hops are, so they do not wait for the rest of the zone.
 ---@return SPFHop?, boolean?
 local function Next()
-	local points, index = ns.JourneyStops()
-	if not (points and index) then
+	if not ns.JourneyStops() then
 		return nil
 	end
-	local walk
-	for stop = index, #points - 1 do
-		local hop = hops[Key(points[stop], points[stop + 1])]
-		if hop and hop.paths == nil then
-			return hop, true
-		end
-		walk = walk or hop and hop.walks[1] and hop
+	while ahead[planAt] and ahead[planAt].paths ~= nil do
+		planAt = planAt + 1
+	end
+	if ahead[planAt] and planAt <= near then
+		return ahead[planAt], true
+	end
+	while ahead[walkAt] and ahead[walkAt].paths ~= nil and not ahead[walkAt].walks[1] do
+		walkAt = walkAt + 1
+	end
+	local walk = ahead[walkAt]
+	walk = walk and walk.walks[1] and walk or nil
+	if ahead[planAt] and not (walk and walkAt <= near) then
+		return ahead[planAt], true
 	end
 	return walk, false
 end
@@ -195,14 +210,22 @@ function ns.ItineraryChanged(invalidate)
 	local current = ns.JourneyRoutePolicy and ns.JourneyRoutePolicy() or "normal"
 	invalidate = invalidate or current ~= policy
 	policy = current
-	local points, index = ns.JourneyStops()
+	local points, index, walked = ns.JourneyStops()
 	local kept = {}
+	ahead, planAt, walkAt = {}, 1, 1
 	if points and index then
-		for stop = index, #points - 1 do
-			local key = Key(points[stop], points[stop + 1])
-			kept[key] = not invalidate and hops[key] or { from = points[stop], to = points[stop + 1], walks = {} }
+		local count = #points
+		for offset = 0, (walked and count or count - index) - 1 do
+			local stop = (index + offset - 1) % count + 1
+			local from, to = points[stop], points[stop % count + 1]
+			local key = Key(from, to)
+			local hop = kept[key] or not invalidate and hops[key] or { walks = {} }
+			-- A resubmitted route brings new stops for the same places, numbered as they now stand.
+			hop.from, hop.to = from, to
+			kept[key], ahead[offset + 1] = hop, hop
 		end
 	end
+	near = walked and NEAR or #ahead
 	local owner = searching
 	if job and not (owner and kept[Key(owner.from, owner.to)] == owner) then
 		ns.Path.Cancel(job)
@@ -220,37 +243,69 @@ end
 
 -- The drawn itinerary after the current stop, through every stop or the next `hopLimit` of them. A planned hop draws
 -- its legs; consecutive unplanned hops are one straight placeholder, which the map shows as end marks where it changes
--- continent.
+-- continent. A loop is drawn whole whatever the limit, each path past the near hops marked as far or walked.
 ---@param hopLimit integer?
 ---@return SPFDrawPath[]
 function ns.JourneyPreview(hopLimit)
 	local drawn = {}
-	local points, index = ns.JourneyStops()
+	local points, index, walked = ns.JourneyStops()
 	if not (points and index) then
 		return drawn
 	end
-	local chain = { points[index] }
-	local last = hopLimit and math.min(#points, index + hopLimit) or #points
-	for stop = index, last - 1 do
-		local hop, to = hops[Key(points[stop], points[stop + 1])], points[stop + 1]
-		if hop and hop.paths then
-			if #chain > 1 then
-				-- The placeholder leads to the last stop it reaches (UI/Route.lua highlights a stop's own leg).
-				drawn[#drawn + 1] = { mode = "walk", points = chain, preview = true, stop = points[stop].number }
-			end
-			for _, path in ipairs(hop.paths) do
-				path.stop = to.number
-				drawn[#drawn + 1] = path
-			end
-			chain = { to }
-		else
-			chain[#chain + 1] = to
+	local last = #ahead
+	if not walked then
+		last = math.min(last, hopLimit or last)
+	elseif walked > 0 then
+		-- On the way round, the leg under way stands for the hop into the current stop.
+		last = last - 1
+	end
+	-- How many of the last hops drawn join stops already walked; the near hops and the one past them never do.
+	local behind = walked and math.min(walked - 1, WALKED, #points - NEAR - 2) or 0
+	local chain, tier = { points[index] }, nil
+	local function Join()
+		if #chain > 1 then
+			-- The placeholder leads to the last stop it reaches (UI/Route.lua highlights a stop's own leg).
+			local stop = chain[#chain].number
+			drawn[#drawn + 1] = { mode = "walk", points = chain, preview = true, stop = stop, tier = tier }
 		end
 	end
-	if #chain > 1 then
-		drawn[#drawn + 1] = { mode = "walk", points = chain, preview = true, stop = points[last].number }
+	for position = 1, last do
+		local hop = ahead[position]
+		local own = nil
+		if walked and position > NEAR then
+			own = position >= #points - behind and "walked" or "far"
+		end
+		if own ~= tier then
+			Join()
+			chain, tier = { hop.from }, own
+		end
+		if hop.paths then
+			Join()
+			for _, path in ipairs(hop.paths) do
+				path.stop, path.tier = hop.to.number, tier
+				drawn[#drawn + 1] = path
+			end
+			chain = { hop.to }
+		else
+			chain[#chain + 1] = hop.to
+		end
 	end
+	Join()
 	return drawn
+end
+
+-- The stops to mark on the map, the current one first: every stop from it on, or only a loop's near ones.
+---@return integer[]
+function ns.StopsToMark()
+	local points, index, walked = ns.JourneyStops()
+	local marked = {}
+	if points and index then
+		local count = #points
+		for offset = 0, (walked and math.min(count, NEAR + 1) or count - index + 1) - 1 do
+			marked[offset + 1] = (index + offset - 1) % count + 1
+		end
+	end
+	return marked
 end
 
 -- Two stops at the same place, height included: the same destination, not a new journey.

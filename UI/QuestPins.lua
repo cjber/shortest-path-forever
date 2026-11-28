@@ -71,10 +71,10 @@ local function Marked()
 			marked[questID] = true
 		end
 	end
-	local points, index = ns.JourneyStops()
+	local points = ns.JourneyStops()
 	if points then
-		for i = index or 1, #points do
-			Add(points[i])
+		for _, index in ipairs(ns.StopsToMark()) do
+			Add(points[index])
 		end
 	else
 		Add(goal)
