@@ -39,6 +39,8 @@ for _, options in ipairs({
 	{ stopMarkers = 0 },
 	{ fadeLaterLegs = "no" },
 	{ tourLine = 1 },
+	{ loop = true },
+	{ tourLine = true, loop = 1 },
 }) do
 	local ok, reason = API.NavigateRoute("o", { stop(1000) }, options)
 	equal(ok, nil, "invalid options answer nil")
@@ -182,6 +184,44 @@ d.update(1)
 equal(#heard, 0, "unsubscribed")
 equal(#others, 0, "another owner still hears nothing")
 unsubscribeOther()
+
+-- A loop: after the last stop comes the first, and the journey does not end by arriving.
+do
+	d.move(point(0))
+	local looped = { tourLine = true, loop = true, policy = "walking" }
+	local function stops(count)
+		local list = {}
+		for index = 1, count do
+			list[index] = stop(1000 + 40 * index)
+		end
+		return list
+	end
+	equal(API.NavigateRoute("o", stops(1), looped), false, "one stop is no loop")
+	equal(API.NavigateRoute("o", stops(2049), looped), false, "a loop has a limit")
+	equal(API.NavigateRoute("o", stops(65)), false, "a list keeps its own limit")
+	check(API.NavigateRoute("o", stops(65), looped), "a loop runs past a list's limit")
+	check(API.NavigateRoute("o", { stop(1000), stop(2000), stop(3000) }, looped), "a loop")
+	d.path.settle()
+	local _, index, walkedStops = ns.JourneyStops()
+	equal(index, 1, "a loop starts at its first stop")
+	equal(walkedStops, 0, "nothing walked yet")
+	for lap, at in ipairs({ 1000, 2000, 3000, 1000 }) do
+		d.move(point(at))
+		d.update(1)
+		d.update(1)
+		d.path.settle()
+		equal(API.CurrentStop("o"), lap % 3 + 1, "on round the loop after stop " .. lap)
+		equal(select(3, ns.JourneyStops()), lap, "walked counts each stop passed")
+	end
+	equal(API.Ended("o"), nil, "a loop does not end by arriving")
+	check(API.NavigateRoute("o", { stop(3000), stop(1000), stop(2000) }, looped), "the same loop from another stop")
+	equal(API.CurrentStop("o"), 1, "carries on from the stop submitted first")
+	equal(select(3, ns.JourneyStops()), 0, "and starts counting again")
+	check(API.NavigateRoute("o", { stop(1000), stop(2000) }), "a list after a loop")
+	equal(select(3, ns.JourneyStops()), nil, "a list reports nothing walked")
+	check(API.Cancel("o"), "cancel")
+	d.path.settle()
+end
 
 -- Planning to an instance door and entering it both notify observers about the submitted stop.
 do

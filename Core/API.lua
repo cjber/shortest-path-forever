@@ -4,7 +4,6 @@ local ns = select(2, ...)
 if ns.broken then
 	return
 end
-local L = ns.L
 local APIKit = assert(ForeverCore.APIKit)
 
 -- This topology belongs exclusively to estimates: Planner.Plan mutates its cache between calls.
@@ -27,9 +26,6 @@ local CACHE_LIMIT, CACHE_MS = 256, 5000
 -- Teleports are cast from where you stand, now: only an estimate that starts within this many yards of you counts
 -- them. Anywhere else is a later leg of the caller's route, when their cooldowns are unknown.
 local HERE = 15
--- Yards from a stop to the spawn it stands for: QuestieDB keeps a spawn's spot to a hundredth of a percent of its zone
--- map, a yard or less, and the server's spawn sits within 2 yd of Questie's for five spawns in six.
-local SPAWN_REACH = 8
 local CONTEXT_KEYS = {
 	"walkSpeed",
 	"faction",
@@ -51,15 +47,16 @@ local CONTEXT_KEYS = {
 
 -- Core/APIInput.lua checks what callers send and answers while there is nothing to read; the walk estimates share it.
 local Input = assert(ns.APIInput, "Core/APIInput.lua loads first")
-local Number, Point, Place, ID = Input.Number, Input.Point, Input.Place, Input.ID
-local DetailLines, Shapes, Quests = Input.DetailLines, Input.Shapes, Input.Quests
+local Number, Point, Place, Quests = Input.Number, Input.Point, Input.Place, Input.Quests
 local Stops = assert(ns.APIStops, "Core/APIStops.lua loads first")
 local Loaded, Ready, Loading, None, Owner = Input.Loaded, Input.Ready, Input.Loading, Input.None, Input.Owner
 
 -- Only this module owns the caller's itinerary. Journey handles one destination at a time.
----@type {owner: string, points: SPFPoint[], index: integer, policy: SPFRoutePolicy}?
+-- A loop's walked counts the stops it has moved on from, which the map dims behind the player (Itinerary.lua).
+---@type SPFAPIRoute?
 local route
-local MAX_STOPS = 64
+-- A loop is a whole zone's gathering round, sent once; any other route is a list a player reads.
+local MAX_STOPS, MAX_LOOP_STOPS = 64, 2048
 -- Why each owner's last journey ended, and when (GetTime); an owner's new journey forgets it.
 ---@type table<string, {reason: SPFAPIEnded, at: number}>
 local ended = {}
@@ -155,6 +152,12 @@ function ns.JourneyReplanned()
 	Notify("replan")
 end
 
+-- The stop after the current one; a loop's last leads back to its first.
+---@param running SPFAPIRoute
+local function After(running)
+	return running.points[running.loop and running.index % #running.points + 1 or running.index + 1]
+end
+
 ---@param point SPFPoint?
 ---@param reason? "arrived"|"cleared"|"skipped" -- why a nil point ended the journey
 function ns.JourneyChanged(point, reason)
@@ -170,8 +173,8 @@ function ns.JourneyChanged(point, reason)
 		return
 	end
 	point = point and (point.stop or point)
-	if point and point == route.points[route.index + 1] then
-		route.index = route.index + 1
+	if point and point == After(route) then
+		route.index, route.walked = route.index % #route.points + 1, route.walked + 1
 	elseif not point or point ~= route.points[route.index] then
 		ended[route.owner] = { reason = point and "replaced" or reason or "cleared", at = GetTime() }
 		route = nil
@@ -223,19 +226,19 @@ end
 function ns.NextJourneyStop(point)
 	-- A door stands in for the stop inside its instance (JourneyInput.lua).
 	point = point.stop or point
-	return route and route.points[route.index] == point and route.points[route.index + 1] or nil
+	return route and route.points[route.index] == point and After(route) or nil
 end
 
 -- Internal read-only map view; the public API never exposes these private world points.
----@return SPFPoint[]? points, integer? index
+---@return SPFPoint[]? points, integer? index, integer? walked walked is a loop's alone
 function ns.JourneyStops()
 	if route and #route.points > 1 then
-		return route.points, route.index
+		return route.points, route.index, route.loop and route.walked or nil
 	end
 end
 
 ---@class SPFPublicAPI
-local API = { version = 2, minor = 13 }
+local API = { version = 2, minor = 14 }
 
 local function Differs(a, b)
 	for key, value in pairs(a) do
@@ -494,115 +497,19 @@ API.SuspendMapPins = ns.SuspendMapPins
 API.ResumeMapPins = ns.ResumeMapPins
 API.SetArrowShown = ns.SetArrowShown
 
--- A stop naming the NPC it reaches (Nearby services) takes the height of that NPC's QuestieDB spawn when it stands over
--- or under another surface, keeping the walk on its floor. Nearby measures its walks to the same point.
----@param point SPFPoint
----@return SPFPoint
-function ns.OnSpawnFloor(point)
-	if point.z == nil then
-		point.z = ns.SpawnHeight(point.map, point.x, point.y, SPAWN_REACH)
-	end
-	return point
-end
-
-local function NavigateRoute(owner, stops, policy, markers, fade, tour)
+---@param options SPFRouteSwitches
+local function NavigateRoute(owner, stops, options)
+	local policy, loop = options.policy, options.loop or nil
 	if not Owner(owner) or not Loaded() or not ns.db.journey or type(stops) ~= "table" then
 		return false
 	end
 	local count = #stops
-	if count < 1 or count > MAX_STOPS or not ns.JourneyPosition() then
+	if count < (loop and 2 or 1) or count > (loop and MAX_LOOP_STOPS or MAX_STOPS) or not ns.JourneyPosition() then
 		return false
 	end
-	for key in pairs(stops) do
-		if not Number(key) or key % 1 ~= 0 or key < 1 or key > count then
-			return false
-		end
-	end
-	local points = {}
-	for index = 1, count do
-		local stop = stops[index]
-		if
-			type(stop) ~= "table"
-			or (stop.title ~= nil and not (canaccessvalue(stop.title) and type(stop.title) == "string"))
-			or (stop.tooltip ~= nil and not (canaccessvalue(stop.tooltip) and type(stop.tooltip) == "string"))
-			or (stop.hold ~= nil and not (canaccessvalue(stop.hold) and type(stop.hold) == "boolean"))
-			or (stop.radius ~= nil and (not Number(stop.radius) or stop.radius < 0))
-			or (stop.z ~= nil and not Number(stop.z))
-			or (stop.questID ~= nil and not ID(stop.questID))
-			or (stop.questIDs ~= nil and (type(stop.questIDs) ~= "table" or not Quests(stop.questIDs)))
-			or (stop.handins ~= nil and (type(stop.handins) ~= "table" or not Quests(stop.handins)))
-			or (stop.npc ~= nil and not ID(stop.npc))
-			or (stop.shapes ~= nil and (type(stop.shapes) ~= "table" or not Shapes(stop.shapes)))
-		then
-			return false
-		end
-		local point = Point(stop.map, stop.x, stop.y)
-		if not point then
-			return false
-		end
-		point.label = stop.title
-		-- The place as submitted: what a stop observer hears even where the world cannot be projected back to it.
-		point.submitted = { map = stop.map, x = stop.x, y = stop.y, z = stop.z }
-		point.details = DetailLines(stop.tooltip)
-		-- A caller's world height lets the stop pin compare its surface with the terrain under that spot.
-		if stop.z ~= nil then
-			point.z = stop.z
-		elseif stop.npc ~= nil then
-			-- A stop naming no NPC (a TomTom or guide waypoint) may be any spot, so it keeps the cheapest surface.
-			ns.OnSpawnFloor(point)
-		end
-		-- A caller such as Adventure Guide may need the route to remain visible while the
-		-- player completes an interaction at this location. It resubmits the route after
-		-- that state changes; ordinary API stops retain automatic arrival.
-		point.hold = stop.hold == true
-		point.radius = stop.radius
-		point.questID = stop.questID
-		-- The NPC whose service this stop reaches: Shortest Path marks that NPC's nameplate while the stop is
-		-- current. Another addon's route passes no npc, so its own highlight is the only one.
-		point.npc = stop.npc
-		-- The quests whose client blobs the stop stands for, copied; StopInside prefers the client's own answer for them.
-		if stop.questID or stop.questIDs then
-			point.questIDs = { stop.questID }
-			for _, questID in ipairs(stop.questIDs or {}) do
-				if questID ~= stop.questID then
-					point.questIDs[#point.questIDs + 1] = questID
-				end
-			end
-		end
-		-- The quests handed in at the stop, copied: they hide the game's own pins there (UI/QuestPins.lua) and never
-		-- decide arrival or the stop's area, which are the quests above alone.
-		if stop.handins then
-			point.handins = {}
-			for _, questID in ipairs(stop.handins) do
-				point.handins[#point.handins + 1] = questID
-			end
-		end
-		-- The areas are copied to world points too: the caller cannot redirect a journey they no longer own.
-		if stop.shapes then
-			point.shapes = {}
-			for _, shape in ipairs(stop.shapes) do
-				local at = Point(shape.map, shape.x, shape.y) --[[@as SPFAreaShape]]
-				at.radius = shape.radius
-				point.shapes[#point.shapes + 1] = at
-			end
-		end
-		-- An unknown kind is dropped, not refused: a caller written for a later vocabulary still gets its route.
-		point.look = ns.StopKind(stop.kind)
-		point.number = index
-		-- A caller drawing its own places asks for the line alone: no stop pin on the world map (UI/Route.lua).
-		point.unmarked = not markers or nil
-		point.unfaded = not fade or nil
-		point.tourLine = tour or nil
-		if count > 1 then
-			local location = not point.label and ns.Locate(point)
-			-- What to do there, apart from the count the tooltip gives its own line (UI/StopPin.lua).
-			point.stopLabel = point.label or location and location.zone or UNKNOWN
-			-- Keep the locale format beside the built title, so the tracker can colour the place inside it.
-			point.routeTitleFormat = L["Stop %d of %d: %s"]
-			point.routeCount = count
-			point.routeTitle = string.format(point.routeTitleFormat, index, count, point.stopLabel)
-		end
-		points[index] = point
+	local points = Stops.Points(stops, options)
+	if not points then
+		return false
 	end
 	-- Another owner asking for the place the journey already goes to hands the journey over: a guide or TomTom
 	-- re-pointing at the destination under its own name used to stop the guide, take the native waypoint away and
@@ -629,7 +536,7 @@ local function NavigateRoute(owner, stops, policy, markers, fade, tour)
 			end
 			ended[owner] = nil
 			-- Keep the tracked stop's identity so journey events still match it after the handover.
-			route = { owner = owner, points = { goal }, index = 1, policy = policy }
+			route = { owner = owner, points = { goal }, index = 1, policy = policy, walked = 0 }
 			Settle()
 			if redraw and ns.RefreshRouteLines then
 				ns.RefreshRouteLines()
@@ -645,6 +552,7 @@ local function NavigateRoute(owner, stops, policy, markers, fade, tour)
 		route
 		and route.owner == owner
 		and route.policy == policy
+		and route.loop == loop
 		and ns.HasJourney
 		and ns.HasJourney()
 		and not (ns.Corpse and ns.Corpse.Active())
@@ -654,7 +562,7 @@ local function NavigateRoute(owner, stops, policy, markers, fade, tour)
 		return true
 	end
 	ended[owner] = nil
-	route = { owner = owner, points = points, index = 1, policy = policy }
+	route = { owner = owner, points = points, index = 1, policy = policy, loop = loop, walked = 0 }
 	ns.ItineraryChanged()
 	return ns.StartJourney(points[1], policy)
 end
@@ -664,16 +572,16 @@ end
 ---@param options? SPFAPIRouteOptions
 ---@return boolean|nil, ForeverCoreAPIInvalid?
 function API.NavigateRoute(owner, stops, options)
-	local policy, markers, fade, tour = Input.RouteOptions(options)
-	if not policy then
+	local switches = Input.RouteOptions(options)
+	if not switches then
 		return APIKit.Invalid()
 	end
-	return not InCombatLockdown() and NavigateRoute(owner, stops, policy, markers, fade, tour)
+	return not InCombatLockdown() and NavigateRoute(owner, stops, switches)
 end
 
 function API.Navigate(owner, map, x, y, title, kind)
 	local stop = { map = map, x = x, y = y, title = title, kind = kind }
-	return not InCombatLockdown() and NavigateRoute(owner, { stop }, "normal", true, true)
+	return not InCombatLockdown() and NavigateRoute(owner, { stop }, assert(Input.RouteOptions()))
 end
 
 -- The player's own pick of a place mid-fight (UI/Nearby.lua), planned when the fight ends. The public calls are
@@ -681,7 +589,7 @@ end
 ---@param stop SPFAPIStop
 ---@return boolean
 function ns.PickInCombat(stop)
-	local accepted = NavigateRoute("Shortest Path Forever", { stop }, "normal", true, true)
+	local accepted = NavigateRoute("Shortest Path Forever", { stop }, assert(Input.RouteOptions()))
 	if accepted then
 		ns.PlayerPicked()
 	end

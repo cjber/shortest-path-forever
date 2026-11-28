@@ -44,7 +44,7 @@ end
 
 -- The API version and every function the hand-off checks before calling it.
 equal(API.version, 2, "version 2 removes peer and leaderboard APIs")
-equal(API.minor, 13, "minor 13 adds the player origin")
+equal(API.minor, 14, "minor 14 adds loop routes")
 for _, name in ipairs({
 	"NavigateRoute",
 	"ObserveStops",
