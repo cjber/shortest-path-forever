@@ -290,6 +290,44 @@ class SteepStepTest(unittest.TestCase):
         _, _, unrestricted, _ = self.tile(polys, adj, {(0, 1): wide, (1, 0): wide}, layers)
         self.assertEqual(unrestricted, [])
 
+    def test_a_diagonal_step_does_not_take_a_walk_round_through_the_cells_beside_it(self):
+        # Two surfaces facing each other across a corner are joined only by polys deep in a third cell: that walk is
+        # the two orthogonal steps' own, and taken as the diagonal's it priced a detour as one cell step (#1108).
+        c, cs = gen_nav.CELLS, gen_nav.CS
+        i, j = 10 * c + 10, 11 * c + 11
+
+        def square(x0, x1, y0, y1):
+            pts = [(x0, y0, 0.0), (x1, y0, 0.0), (x1, y1, 0.0), (x0, y1, 0.0)]
+            centre = tuple(sum(p[a] for p in pts) / len(pts) for a in range(3))
+            return {"pts": [p[:2] for p in pts], "plane": plane(pts, centre), "c": centre, "steep": False,
+                    "water": False, "size": 1}  # fmt: skip
+
+        lo, mid, hi = 10 * cs, 11 * cs, 12 * cs
+        polys = {
+            0: square(lo, mid, lo, mid),
+            1: square(mid, hi, mid, hi),
+            2: square(lo, mid, mid, mid + cs / 2),
+            3: square(lo, mid, mid + cs / 2, hi),
+        }
+        a, b = (lo + cs / 2, lo + cs / 2), (mid + cs / 2, mid + cs / 2)
+        layers = {i: [(0.0, 1, (0, a))], j: [(0.0, 1, (1, b))]}
+        deep = ((lo, mid + cs / 2), (lo + 0.6 * cs, mid + cs / 2))  # well clear of both cells
+        edges = {
+            (0, 2): ((lo, mid), (mid, mid)),
+            (2, 3): deep,
+            (3, 1): ((mid, mid + cs / 2), (mid, hi)),
+        }
+        portal = {**edges, **{(w, u): e[::-1] for (u, w), e in edges.items()}}
+        adj = {0: {2}, 2: {0, 3}, 3: {2, 1}, 1: {3}}
+        _, _, links, own = self.tile(polys, adj, portal, layers)
+        self.assertEqual((own[i], own[j]), (0, 0), "no diagonal bit for a walk through the cell beside")
+        self.assertEqual(links, [])
+        # the same walk through a portal at the corner itself is the diagonal step
+        edges[2, 3] = ((mid - cs / 8, mid + cs / 2), (mid, mid + cs / 2))
+        portal = {**edges, **{(w, u): e[::-1] for (u, w), e in edges.items()}}
+        _, _, links, own = self.tile(polys, adj, portal, layers)
+        self.assertEqual(own[i], 1 << gen_nav.DIRS[1, 1])
+
     def test_floor_steps_keep_the_exact_landing_layer(self):
         # Two destinations have the same height, but only layer 1 meets the source face.
         c = gen_nav.CELLS

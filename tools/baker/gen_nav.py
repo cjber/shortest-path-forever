@@ -50,7 +50,6 @@ from baker.geometry import (
     point_in_convex,
     poly_distance,
     poly_distance2,
-    seg_in_box,
 )  # noqa: E402
 from baker.inputs import arguments, generator_digest, source_label  # noqa: E402
 from baker.measure import record, tile_hashes  # noqa: E402
@@ -411,8 +410,8 @@ def components(spots, joins=(), lift_stops=()):
                 if d < stand[n][0]:
                     stand[n] = (d, loc[i])
                 # The animation's stop is at the car origin. The lip can be in the next walking cell, but a player
-                # must be able to step across. Reject dry ground beyond a cell or the player's step height.
-                if not lip_candidate or d > CS or d >= approaches[n][0]:
+                # must be able to step across. Reject dry ground beyond a cell horizontally or the player's step height.
+                if not lip_candidate or d >= approaches[n][0] or poly_distance2(x, y, [p[:2] for p in pts]) > CS:
                     continue
                 px, py = nearest_point2(x, y, [p[:2] for p in pts])
                 center = tuple(sum(p[axis] for p in pts) / len(pts) for axis in range(3))
@@ -859,20 +858,30 @@ def rasterize_tile(rc):
         steep = polys[pa]["steep"] or polys[pb]["steep"]
         if pa == pb and (not steep or height(polys[pb], *b) <= height(polys[pa], *a) + 0.01):
             return True
-        (xi, yi), (xj, yj) = divmod(i, GH), divmod(j, GH)
-        box = (
-            X0 + min(xi, xj) * CS - MARGIN,
-            X0 + (max(xi, xj) + 1) * CS + MARGIN,
-            Y0 + min(yi, yj) * CS - MARGIN,
-            Y0 + (max(yi, yj) + 1) * CS + MARGIN,
-        )
+        # The step belongs to its two cells (+ MARGIN), not to the bounding box of the pair: a diagonal's box holds two
+        # more cells, and a walk round through them is the two orthogonal steps those cells own, not this one, which
+        # would take the whole detour for one cell's price (#1108).
+        squares = [
+            (X0 + gx * CS - MARGIN, X0 + (gx + 1) * CS + MARGIN, Y0 + gy * CS - MARGIN, Y0 + (gy + 1) * CS + MARGIN)
+            for gx, gy in (divmod(i, GH), divmod(j, GH))
+        ]
+
+        def inside(p, q):
+            """The part of portal p-q inside either cell: the two parts touch (the cells and margins overlap), so the
+            ends of the whole are the two farthest of the clipped ends. None when it reaches neither."""
+            clipped = [c for c in (clip_segment(p, q, box=cell) for cell in squares) if c is not None]
+            if len(clipped) < 2:
+                return clipped[0] if clipped else None
+            ends = [e for c in clipped for e in c]
+            return max(((e, f) for e in ends for f in ends), key=lambda ef: math.dist(*ef))
+
         # Steep anchors go through the search below, which holds them to the downhill rule: a shortcut that joined
         # one poly or two neighbours outright let a flat cell climb onto the steep face beside it, and the step was
         # taken as written, up the mountain outside Ironforge's gate (#1011).
         if pb in adj.get(pa, ()) and not steep:
             # An edge shared anywhere is not a path between these two cells: a street and a keep floor that meet
-            # only at a doorway far outside the box must not link every pair of cells facing each other (#890).
-            return seg_in_box(*portal[(pa, pb)], box=box)
+            # only at a doorway far outside the cells must not link every pair of cells facing each other (#890).
+            return inside(*portal[(pa, pb)]) is not None
         hb = height(polys[pb], *b)
         best = {pa: height(polys[pa], *a) if polys[pa]["steep"] else math.inf}
         stack = [pa]
@@ -882,7 +891,7 @@ def rasterize_tile(rc):
             for v in adj.get(u, ()):
                 # Only this part of the portal belongs to the step. Remote ends must not supply a higher
                 # entry ceiling or a lower exit from steep ground outside the two cells.
-                ends = clip_segment(*portal[(u, v)], box=box)
+                ends = inside(*portal[(u, v)])
                 if ends is None:
                     continue
                 if polys[u]["steep"] and min(height(polys[u], *e) for e in ends) > ceiling + 0.01:
