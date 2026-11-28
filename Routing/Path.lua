@@ -1497,6 +1497,9 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 							costs[i] = 0
 						elseif #starts == 1 and #target.goals == 1 and goal.node == goal.own then
 							costs[i] = start.realOffset + goal.ownRealOffset
+							if choices then
+								choices[i] = start.offset + goal.ownOffset
+							end
 						end
 						if job and costs[i] ~= nil then
 							job.revision = job.revision + 1

@@ -671,6 +671,7 @@ ShortestPathForeverPathData = nil
 ---@field to number
 ---@field mode SPFMode
 ---@field duration number
+---@field penalty? number added to the route score without delaying arrival
 ---@field portal? number
 ---@field route? number
 ---@field stop? SPFStop
@@ -687,6 +688,7 @@ ShortestPathForeverPathData = nil
 ---@field node number[]
 ---@field state number[]
 ---@field time number[]
+---@field penalty? number[] accumulated route-score charge
 ---@field key number[]
 ---@field parent number[]
 ---@field edge SPFEdge[]

@@ -687,8 +687,9 @@ local function RefreshCosts(includeGoal, forced, replace)
 				local lower = ns.Path.LowerBound(batch.point.map, batch.point, target)
 				cost = math.max(lower, bakedBound(batch, target))
 				if batch.job and batch.job.choices then
-					-- A weighted frontier bounds the final walk's score, not the time to catch a departure.
-					choice = batch.reverse and radius or nil
+					-- A walk ending at the goal has no departure to catch. Its score is at
+					-- least the weighted radius, even if its real duration could be shorter.
+					choice = (batch.reverse or SamePlace(target, goal)) and radius or nil
 				else
 					cost = math.max(cost, radius)
 				end
@@ -910,8 +911,10 @@ local function RefreshCosts(includeGoal, forced, replace)
 						if cost or reason == "unreachable" or reason == "offmesh" or reason == "outside" then
 							batch.probes = batch.probes or {}
 							batch.probes[probe.index] = cost or false
-							batch.probeChoices = batch.probeChoices or {}
-							batch.probeChoices[probe.index] = finished.choice
+							if finished.choice then
+								batch.probeChoices = batch.probeChoices or {}
+								batch.probeChoices[probe.index] = finished.choice
+							end
 						end
 						probeCPU = probeCPU + finished.cpu
 						left = left - 1
