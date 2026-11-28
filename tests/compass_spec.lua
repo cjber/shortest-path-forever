@@ -781,6 +781,40 @@ close(strip.Center.color[1], 1)
 close(strip.Center.color[4], 1)
 print("compass: arrival tint and return to the arrow: ok")
 
+-- The optional heading survives the end of guidance and needs no world position.
+ns.db.compassWithoutJourney, ns.db.compassTime = true, true
+ns.RefreshCompass()
+assert(not strip.Bend.hidden and not strip.Time.hidden, "guided cues still show with the option on")
+ns.db.journey = false
+guided = false
+x, y, map, facing = nil, nil, nil, 0
+ns.RefreshCompass()
+assert(not strip.hidden and strip.alpha == 1, "heading stays visible without a journey or coordinates")
+for _, marker in ipairs(strip.markers) do
+	assert(marker.hidden, "no route markers survive the end of guidance")
+end
+assert(strip.Distance.hidden and strip.Time.hidden, "no route readouts in heading mode")
+settle()
+close(strip.ticks[1].atX, 0)
+facing = math.pi / 2
+step()
+assert(strip.scripts.OnUpdate, "the visible ticker picks up a mouse turn")
+settle()
+close(strip.ticks[7].atX, 0)
+local headingTicker = strip.ticker
+ns.db.compass = false
+ns.RefreshCompass()
+assert(strip.hidden and headingTicker.cancelled and not strip.scripts.OnUpdate, "the main switch stops heading updates")
+ns.db.compass = true
+ns.RefreshCompass()
+assert(not strip.hidden, "the heading returns with the main switch")
+ns.db.compassWithoutJourney = false
+ns.RefreshCompass()
+assert(strip.hidden and not strip.ticker, "turning off the option restores guided-only visibility")
+ns.db.journey, ns.db.compassTime, guided = true, false, true
+x, y, map, facing = 0, 0, 1, 0
+ns.RefreshCompass()
+
 -- With the pointer on the compass while it is being placed, the arrow keys nudge it a step (Shift: ten) and are kept
 -- from the game, down and up; every other key reaches the game. Off the compass, or in combat, the keyboard is the
 -- game's, and it comes back to the compass when combat ends with the pointer still on it.

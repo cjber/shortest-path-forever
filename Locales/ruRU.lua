@@ -703,3 +703,6 @@ L["Turning off Show direction arrow leaves TomTom's arrow alone."] =
 L["Mailbox"] = "Почтовый ящик" -- mt
 L["Skip this stop"] = "Пропустить эту остановку" -- mt
 L["Destination queued until combat ends."] = "Пункт назначения ожидает окончания боя." -- mt
+L["Keep the compass visible without a journey"] = "Показывать компас и без путешествия"
+L["Shows your heading when there are no directions to follow. Requires Show the compass."] =
+	"Показывает, куда вы смотрите, когда нет указаний маршрута. Требуется настройка «Показывать компас»."

@@ -787,6 +787,12 @@ ns.Init(function()
 		ns.RefreshCompass
 	)
 	Checkbox(
+		"compassWithoutJourney",
+		L["Keep the compass visible without a journey"],
+		L["Shows your heading when there are no directions to follow. Requires Show the compass."],
+		ns.RefreshCompass
+	)
+	Checkbox(
 		"compassTime",
 		L["Show the time left under the compass"],
 		L["The journey's time left, as the tracker shows it, beside the distance to your next turn."],
