@@ -1,3 +1,4 @@
+local compassRefreshes = 0
 -- Settings rows must reach their layout only through Settings.RegisterInitializer, which inserts them from
 -- Blizzard's secure attribute delegate. Settings.CreateCheckbox inserts from the caller instead, which taints
 -- the settings search, and a restricted button in its results (Social's Discord Sign In) is then blocked and
@@ -280,6 +281,7 @@ local ns = {
 		-- Dugi is opt-in: its viewer has no published API.
 		dugi = false,
 		zygor = false,
+		compassWithoutJourney = false,
 		compassTime = false,
 		arrivalSound = false,
 		focusedQuest = false,
@@ -329,6 +331,9 @@ local ns = {
 	},
 	RefreshTaxiRoute = function()
 		taxiRefreshed = taxiRefreshed + 1
+	end,
+	RefreshCompass = function()
+		compassRefreshes = compassRefreshes + 1
 	end,
 	CompassMoving = function()
 		return compassMoving
@@ -492,6 +497,7 @@ local groups = {
 		"arrowLabel",
 		"arrowObjectives",
 		"compass",
+		"compassWithoutJourney",
 		"compassTime",
 		"compassMove",
 		"compassScale",
@@ -504,7 +510,7 @@ local groups = {
 local order = { "Guidance", "Map marks", "Party mage portals", "Alerts", "Interface" }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 86, #rows)
+assert(#rows == 87, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -914,6 +920,12 @@ assert(trackerSlider.options.format(150) == "150%", "the tracker slider shows a 
 assert(trackerSlider.setting:GetValue() == 100, "the tracker slider reads the shared host")
 trackerSlider.setting:SetValue(150)
 assert(trackerScale == 1.5, "the tracker slider drives the shared host scale")
+local compassWithoutJourney = Row("compassWithoutJourney")
+assert(compassWithoutJourney.kind == "checkbox" and compassWithoutJourney.setting.default == false)
+assert(compassWithoutJourney.setting.variable == "ShortestPathForever_compassWithoutJourney")
+local beforeCompassRefresh = compassRefreshes
+compassWithoutJourney.setting:SetValue(true)
+assert(compassRefreshes == beforeCompassRefresh + 1, "the heading option refreshes the compass at once")
 local compassSlider = Row("compassScale")
 assert(compassSlider.kind == "slider" and compassSlider.setting.default == 100, "compass scale defaults to 100%")
 assert(compassSlider.options.format(150) == "150%", "the compass slider shows a percent")

@@ -170,6 +170,7 @@ local DEFAULTS = {
 	metres = false,
 	-- Off by default: the compass is screen furniture a player turns on from Settings > Guidance.
 	compass = false,
+	compassWithoutJourney = false,
 	compassTime = false,
 	compassScale = 100,
 	arrowScale = 100,
@@ -648,6 +649,9 @@ ns.Init(function()
 			moving = false
 		elseif event == "PLAYER_ENTERING_WORLD" then
 			moving = IsPlayerMoving()
+			if ns.db.compass and ns.db.compassWithoutJourney then
+				ns.RefreshCompass()
+			end
 			-- A loading screen or a portal: the floor followed before it is not yours after (Routing/Floor.lua).
 			if ns.Floor then
 				ns.Floor.Forget()

@@ -381,6 +381,7 @@
 ---@field minimapHint? boolean -- the minimap tooltip ends with the journey key's click hint; its own switch (#1241)
 ---@field mapPinRoutes? boolean -- placing the game's map pin starts a journey (#1391)
 ---@field focusedQuest? boolean -- a super-tracked quest or flight point starts a journey (JourneyInput.lua)
+---@field compassWithoutJourney? boolean -- keep the heading visible without guidance (Compass.lua)
 ---@field compassTime? boolean -- the whole journey's time left under the compass distance (Compass.lua)
 ---@field arrivalSound? boolean -- the map ping when a journey the player planned reaches its goal (Alert.lua)
 ---@field restedxp? boolean -- follow RestedXP guide targets
@@ -559,6 +560,7 @@ ShortestPathForeverPathData = nil
 ---@field alighting? SPFStop
 ---@field hops? SPFTaxiPath[]
 ---@field yards? number
+---@field penalty? number milliseconds charged to the route score
 ---@field teleport? SPFTeleportPlace
 ---@field partyPortal? SPFPartyPortal
 ---@field ready? number
@@ -597,12 +599,13 @@ ShortestPathForeverPathData = nil
 ---@field preferred? boolean a ride the planner chose over a slightly quicker long walk
 ---@field unknownFlight? boolean the route walks only because a flight point it would use is undiscovered
 ---@field rideNote? string why it rides: walking straight there crosses the goal's high-level zone (#1007)
----@field charged? number a direct walk's arrival with the goal zone's charge, which chose it over `arrive`
+---@field charged? number arrival score including walking hazard charges
 ---@field unknownFlightMaps? table<number, true> the continents whose undiscovered flight points would shorten the route
 ---@class SPFWalkCost
 ---@field from SPFPoint
 ---@field to SPFPoint
 ---@field cost number|false
+---@field choice? number weighted running yards used to compare routes
 ---@field estimated? boolean
 ---@class SPFPlanOptions : SPFPlaceOptions
 ---@field withoutHearth? boolean
@@ -726,6 +729,8 @@ ShortestPathForeverPathData = nil
 ---@field moved? SPFPoint -- the nearest ground a spent reverse batch's places reach, for a goal none of them reach
 ---@field valid? boolean
 ---@field costs? (number|false)[]
+---@field choices? number[] weighted running yards for settled batch targets
+---@field choice? number weighted running yards for a single cost probe
 ---@field co? thread
 ---@field callback? function
 ---@field progress? function
