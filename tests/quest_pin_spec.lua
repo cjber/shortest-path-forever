@@ -250,5 +250,23 @@ pins = nativeActive.QuestPinTemplate
 assert(not pins[1].hidden and not pins[2].hidden and not pins[3].hidden, "an unmarked route hides no quest pin")
 assert(ShortestPathForever.API.Cancel("Test"))
 
+local destination = assert(ns.WorldPoint(1414, 0.53, 0.5))
+destination.questID = 101
+ns.StartJourney(destination)
+settle()
+local goalTemplate = "ShortestPathForeverGoalPinTemplate"
+local lineTemplate = "ShortestPathForeverRoutePinTemplate"
+assert(ns.Defaults.keepOriginalMapIcons == false, "keeping original icons is opt-in")
+assert(nativeActive.QuestPinTemplate[1].hidden and #active[goalTemplate] == 1, "the default shows the Shortest Path pin")
+ns.SetOption("keepOriginalMapIcons", true)
+assert(not nativeActive.QuestPinTemplate[1].hidden and #active[goalTemplate] == 1, "both the original and goal pins show")
+assert(active[goalTemplate][1].levelType == "PIN_FRAME_LEVEL_QUEST_BLOB", "the goal pin sits behind the quest icon")
+assert(#(active[lineTemplate] or {}) > 0, "the route to the quest icon is still drawn")
+ns.SetOption("keepOriginalMapIcons", false)
+assert(nativeActive.QuestPinTemplate[1].hidden and #active[goalTemplate] == 1, "the switch restores the Shortest Path pin")
+assert(active[goalTemplate][1].levelType == "PIN_FRAME_LEVEL_ENCOUNTER", "the normal pin level comes back")
+assert(ns.JourneyGoal() == destination, "the switch leaves the current journey running")
+ns.ClearJourney()
+
 print("quest pin spec: marked pins hidden, unmarked shown, restored on clear and after provider refreshes")
 ]==]))()

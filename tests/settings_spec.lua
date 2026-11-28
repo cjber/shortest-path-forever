@@ -199,7 +199,7 @@ local tomtomFollowRefreshed, ways = 0, {}
 local routeColour = nil
 local routeLinesRefreshed = 0
 local journeyPreviewRefreshed = 0
-local destinationPinSizeRefreshed = 0
+local journeyMapIconsRefreshed = 0
 local questPinsRefreshed = 0
 -- Core/Core.lua's defaults: every row on.
 local ns = {
@@ -297,6 +297,7 @@ local ns = {
 		compass = false,
 		onlyMyProfessions = false,
 		destinationPinSize = 100,
+		keepOriginalMapIcons = false,
 	}, {
 		__index = function()
 			return true
@@ -374,9 +375,10 @@ local ns = {
 	RefreshJourneyPreview = function()
 		journeyPreviewRefreshed = journeyPreviewRefreshed + 1
 	end,
-	RefreshDestinationPinSize = function()
-		destinationPinSizeRefreshed = destinationPinSizeRefreshed + 1
+	RefreshJourneyMapIcons = function()
+		journeyMapIconsRefreshed = journeyMapIconsRefreshed + 1
 	end,
+	RedrawGuideMarker = function() end,
 	RouteColors = {
 		{ key = "gold", label = "Gold" },
 		{ key = "white", label = "White" },
@@ -424,6 +426,7 @@ local groups = {
 		"mapFlightMasters",
 		"minimapPins",
 		"hideQuestPins",
+		"keepOriginalMapIcons",
 		"mapPinScale",
 		"flightPinScale",
 		"minimapPinScale",
@@ -510,7 +513,7 @@ local groups = {
 local order = { "Guidance", "Map marks", "Party mage portals", "Alerts", "Interface" }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 87, #rows)
+assert(#rows == 88, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -584,6 +587,10 @@ assert(
 local questPinRefreshes = questPinsRefreshed
 questPins.setting.onChanged()
 assert(questPinsRefreshed == questPinRefreshes + 1, "the switch reconciles the game's quest pins at once")
+local originalMapIcons = Row("keepOriginalMapIcons")
+assert(originalMapIcons.kind == "checkbox" and originalMapIcons.setting.default == false)
+originalMapIcons.setting.onChanged()
+assert(journeyMapIconsRefreshed == 1, "changing the icon setting redraws the map immediately")
 -- The Nearby services tab can be taken out of the shared quest log column when another addon needs that space, and
 -- the services stay reachable through /spfnear and the tracking menu. On by default, so nothing changes unasked.
 local nearbyTab = Row("nearbyTab")
@@ -791,7 +798,7 @@ assert(
 assert(destinationSize.options.format(75) == "75%", "the slider labels its value as a percent")
 assert(destinationSize.tooltip:find("world map", 1, true), "the tooltip says which map the pin is on")
 destinationSize.setting.onChanged(nil, 75)
-assert(destinationPinSizeRefreshed == 1, "the slider redraws the goal pin")
+assert(journeyMapIconsRefreshed == 2, "the slider redraws the goal pin")
 assert(Row("corpse").setting.default == true)
 -- Arrival distance: a slider from 5 to 50 yards, at the fixed 15 the journey has always used, labelled as the rest.
 local arrivalRow = Row("arrivalDistance")

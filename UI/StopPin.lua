@@ -57,6 +57,7 @@ ns.GoalPinMixin = GoalPin
 -- POIs, gossip pins, this addon's services) and below the client's vignettes, quest givers and quest marks, so a "?"
 -- beside a flight point stays in sight over it (#1079).
 local STOP_LEVEL, GOAL_LEVEL = "PIN_FRAME_LEVEL_WAYPOINT_LOCATION", "PIN_FRAME_LEVEL_ENCOUNTER"
+local BEHIND_ICON_LEVEL = "PIN_FRAME_LEVEL_QUEST_BLOB"
 
 function GoalPin:OnLoad()
 	self:UseFrameLevelType(STOP_LEVEL)
@@ -93,9 +94,10 @@ end
 ---@param details? string[]
 ---@param ground? (string|false)[] how each stop stands against the terrain
 ---@param quests? integer[] the quests the stops this pin marks name, in order
-function GoalPin:OnAcquired(x, y, numbers, count, labels, later, look, details, ground, quests)
+---@param behindIcon? boolean original icons stay in front of the destination pin
+function GoalPin:OnAcquired(x, y, numbers, count, labels, later, look, details, ground, quests, behindIcon)
 	self:SetPosition(x, y)
-	self:UseFrameLevelType(numbers and STOP_LEVEL or GOAL_LEVEL)
+	self:UseFrameLevelType(behindIcon and BEHIND_ICON_LEVEL or numbers and STOP_LEVEL or GOAL_LEVEL)
 	-- The disc's shadow stays opaque, so a faded button still hides the POI beneath it.
 	self:SetStopAlpha(later and ns.LaterAlpha or 1)
 	self.stopLabels = labels and labels[1] and labels or nil

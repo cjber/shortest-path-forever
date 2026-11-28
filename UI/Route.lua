@@ -515,11 +515,16 @@ function Layer:RefreshStops()
 		return
 	end
 	local first, marks = stopIndex or 1, {}
+	local behindIcon = ns.db.keepOriginalMapIcons == true
 	self.mirroredWaypoint = ns.CompanionMaps.OpenWaypointMarksStop(stops and stops[first] or goal)
 	for index = first, stops and #stops or 1 do
 		local point = stops and stops[index] or goal
 		local x, y = MapPosition(point, mapID)
-		if not (point.stop or point).unmarked and OnMap(x, y) and (index ~= first or not self.mirroredWaypoint) then
+		if
+			not (point.stop or point).unmarked
+			and OnMap(x, y)
+			and (behindIcon or index ~= first or not self.mirroredWaypoint)
+		then
 			marks[#marks + 1] = {
 				x = x,
 				y = y,
@@ -543,6 +548,7 @@ function Layer:RefreshStops()
 			first,
 			stops and #stops or 0,
 			ns.DestinationPinScale(),
+			behindIcon and "behind" or "normal",
 		}
 	for _, group in ipairs(groups) do
 		for _, mark in ipairs(group) do
@@ -601,8 +607,11 @@ function Layer:RefreshStops()
 		else
 			x, y, numbered = lead.x, lead.y, stops and numbers
 		end
-		local pin = goalPins:Acquire(x, y, numbered, stops and #stops, labels, later, look, details, ground, quests)
-		self.stopMarks[#self.stopMarks + 1] = { x = x, y = y, radius = pin:GetWidth() / 2 }
+		local pin =
+			goalPins:Acquire(x, y, numbered, stops and #stops, labels, later, look, details, ground, quests, behindIcon)
+		if not behindIcon then
+			self.stopMarks[#self.stopMarks + 1] = { x = x, y = y, radius = pin:GetWidth() / 2 }
+		end
 	end
 	for pin in linePins:EnumerateActive() do
 		---@cast pin SPFRoutePin
@@ -858,8 +867,8 @@ local function RefreshShownMap()
 		provider:RefreshAllData()
 	end
 end
--- Rebuild the pins at the new size without replanning.
-ns.RefreshDestinationPinSize = RefreshShownMap
+-- Settings can change the visible pins without replanning.
+ns.RefreshJourneyMapIcons = RefreshShownMap
 
 ---@param destination SPFPoint?
 ---@param route SPFPlan?
@@ -933,6 +942,9 @@ ns.Init(function()
 	ns.OpenMapAddon.WatchPinOwner(RefreshShownMap)
 	MapCanvas.Watch(WorldMapFrame, function(_, what)
 		if what == "show" or what == "map" or what == "thaw" then
+			if ns.db.keepOriginalMapIcons then
+				ns.RedrawGuideMarker()
+			end
 			provider:RefreshAllData()
 		elseif what == "scale" then
 			provider:OnCanvasScaleChanged()

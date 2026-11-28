@@ -393,7 +393,7 @@ ns.Init(function()
 	)
 	destinationPinSize:SetValueChangedCallback(function(_, value)
 		if type(value) == "number" then
-			ns.RefreshDestinationPinSize()
+			ns.RefreshJourneyMapIcons()
 		end
 	end)
 	settings.destinationPinSize = destinationPinSize

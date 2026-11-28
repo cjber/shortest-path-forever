@@ -89,6 +89,7 @@ local DEFAULTS = {
 	laterLegs = true,
 	-- On, the game's own quest markers give way to a journey's stop pins (UI/QuestPins.lua); off, every marker stays.
 	hideQuestPins = true,
+	keepOriginalMapIcons = false,
 	otherFaction = false,
 	tracker = true,
 	alerts = true,
