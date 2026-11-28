@@ -81,7 +81,7 @@
 ---@field WalkPath fun(owner: string, from: SPFAPIPlace, to: SPFAPIPlace, callback: fun(path: SPFAPIWalkPath?, reason: SPFAPIWalkReason?), opts?: SPFAPIWalkOptions): cancel: fun()?, reason: SPFAPIWalkRefusal?
 ---@field NavVersion fun(): string the walking data this build ships, for dropping cached walk costs
 ---@field DestinationPinScale fun(): number the world map journey goal pin's share of its stock size (UI/StopPin.lua)
----@field RefreshDestinationPinSize fun() redraws the world map goal pins at the player's size (UI/Route.lua)
+---@field RefreshJourneyMapIcons fun() redraws the world map goal pins using the player's settings (UI/Route.lua)
 ---@field HearthstoneEnabled fun(): boolean whether journeys may use the Hearthstone (Journey/Journey.lua)
 ---@field SetHearthstoneEnabled fun(enabled: boolean) flips the saved Hearthstone switch and replans (Journey/Journey.lua)
 ---@field ToggleHearthstone fun() flips the saved Hearthstone switch (Journey/Journey.lua)
@@ -423,6 +423,7 @@
 ---@field minimapRouteScale? number walking breadcrumb size as a percent
 ---@field laterLegs? boolean the world map draws the faded legs after the current stop (Route.lua)
 ---@field hideQuestPins? boolean the game's own quest markers give way to a journey's stops (QuestPins.lua)
+---@field keepOriginalMapIcons? boolean route pins draw behind original world map icons
 ---@field journeyTracker? boolean
 ---@field arrow? boolean
 ---@field castPrompt? boolean the cast prompt for a teleport step; off hides only the prompt (Arrow.lua)

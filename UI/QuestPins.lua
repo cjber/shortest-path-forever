@@ -53,7 +53,16 @@ end
 local function Marked()
 	local marked = {}
 	local goal = ns.JourneyGoal()
-	if not (goal and ns.db and ns.db.journey and ns.db.hideQuestPins ~= false and not goal.corpse) then
+	if
+		not (
+			goal
+			and ns.db
+			and ns.db.journey
+			and ns.db.hideQuestPins ~= false
+			and not ns.db.keepOriginalMapIcons
+			and not goal.corpse
+		)
+	then
 		return marked
 	end
 	---@param point SPFPoint?
@@ -96,8 +105,10 @@ function ns.RefreshQuestPins()
 		seen[pin] = true
 		local questID = ns.QuestPinID(pin, map)
 		if questID and marked[questID] then
-			hidden[pin] = true
-			pin:Hide()
+			if pin:IsShown() then
+				hidden[pin] = true
+				pin:Hide()
+			end
 		elseif hidden[pin] then
 			hidden[pin] = nil
 			pin:Show()

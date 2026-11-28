@@ -60,6 +60,15 @@ function MapMarks.Register(rows)
 		L["Off, the game's own quest markers stay beside your journey's pins, showing the other places a quest can be done."],
 		ns.RefreshQuestPins
 	)
+	rows.Checkbox(
+		"keepOriginalMapIcons",
+		L["Keep original map icons when routing"],
+		L["Put the journey's destination pin behind the original world map icon."],
+		function()
+			ns.RefreshJourneyMapIcons()
+			ns.RedrawGuideMarker()
+		end
+	)
 
 	rows.Scale(
 		"mapPinScale",

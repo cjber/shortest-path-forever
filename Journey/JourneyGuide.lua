@@ -571,6 +571,15 @@ local function GuideWaypoint(point, fading)
 		end
 		point, fading = goal, false
 	end
+	-- OpenMap mirrors native waypoints above its icons. The route arrow can keep guiding while our lower pin marks
+	-- the destination. Only clear a waypoint that this guide owns.
+	local goal = guide.goal
+	if ns.db.keepOriginalMapIcons == true and goal and SamePoint(point, goal) and ns.OpenMapAddon.Stitched() then
+		if guide.waypoint then
+			ClearGuideWaypoint()
+		end
+		return false
+	end
 	local navigation = WaypointUINavigation()
 	local changed = not SamePoint(point, guide.waypointTarget) or uiMap ~= guide.uiMap or fading ~= guide.fading
 	if changed or (guide.waypoint and navigation and navigation ~= guide.waypointNavigation) then

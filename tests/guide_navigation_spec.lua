@@ -61,6 +61,25 @@ ns.db.guideStops = true
 assert(placeBend(bend) == false, "with step-end marks the arrow leads again")
 assert(driver.waypoint().position.y == stepWaypoint.position.y, "the waypoint returns to the step end")
 
+-- OpenMap's mirror would cover the original icon even though the world map goal pin has been lowered.
+env.OpenMapAPI = {
+	major = 1,
+	version = 2,
+	IsStitched = function()
+		return true
+	end,
+}
+ns.ClearJourney()
+driver.move({ map = 1, x = 0, y = 0, z = 0 })
+ns.StartJourney({ map = 1, x = 1200, y = 0 })
+driver.path.settle()
+assert(placeBend(bend) == false and driver.waypoint(), "the original icon option is off by default")
+ns.db.keepOriginalMapIcons = true
+assert(placeBend(bend) == false and not driver.waypoint(), "the arrow keeps guiding without a mirrored waypoint")
+ns.db.keepOriginalMapIcons = false
+assert(placeBend(bend) == false and driver.waypoint(), "turning the option off restores the waypoint")
+env.OpenMapAPI = nil
+
 -- The guide restores the player's waypoint and tracking when the journey stops.
 ns.ClearJourney()
 local saved = env.UiMapPoint.CreateFromCoordinates(1, 0.2, 0.3, 42)
