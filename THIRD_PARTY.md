@@ -299,6 +299,7 @@ Credit for the reports and requests behind the addon.
 | user\_h1s2g8ruvulbm6909075 | ForeverCore ships inside Shortest Path | CurseForge thread 8754508 |
 | Crazy\_Yew\_Trees | Routes keep out of zones far above your level | CurseForge thread 8716692; #897, #1007 |
 | schmelbertina | Routes keep out of zones far above your level | CurseForge thread 8719289; #897, #1007 |
+| [bhuddleston42](https://github.com/bhuddleston42) | Held guide stops keep their arrival pin when starting inside the area | GitHub pull request |
 
 ## Inspired by
 

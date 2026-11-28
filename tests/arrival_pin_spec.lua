@@ -156,6 +156,13 @@ assert(
 assert(frame.ArrivalLines.maxLines == 3 and frame.ArrivalLines.wrap == true, "wrapped and capped at a few lines")
 assert(frame.Arrow.hidden and frame.Distance.hidden and frame.Progress.hidden, "the arrow and its distance stand down")
 
+-- Starting inside the stop pauses before the guide has drawn its first direction.
+ns.ClearJourney()
+assert(ns.StartJourney(stop))
+driver.path.settle()
+driver.update(0.1)
+assert(ns.ArrivalStop() == stop, "starting inside the held stop keeps its arrival pin")
+
 -- Leaving the area: the journey takes the arrow back.
 driver.move({ map = 1, x = 1000, y = 0, z = 0 })
 driver.update(0.1)
