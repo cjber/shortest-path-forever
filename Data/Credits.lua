@@ -247,6 +247,7 @@ ns.Credits = {
 		{ name = "user_h1s2g8ruvulbm6909075", what = "ForeverCore ships inside Shortest Path" },
 		{ name = "Crazy_Yew_Trees", what = "Routes keep out of zones far above your level" },
 		{ name = "schmelbertina", what = "Routes keep out of zones far above your level" },
+		{ name = "bhuddleston42", what = "Held guide stops keep their arrival pin when starting inside the area" },
 	},
 	inspired = {
 		{ name = "Polestar by Fitz", what = "Ideas for many features" },
