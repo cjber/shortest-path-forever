@@ -663,6 +663,217 @@ function JourneyToPin(mapID, info, flight, x, y)
 	return true
 end
 
+local function ShiftRouteModifier()
+	return IsShiftKeyDown() and not IsControlKeyDown() and not IsAltKeyDown()
+end
+
+-- The installed Dungeon Journal and NeedRoll draw ordinary buttons, outside Blizzard's pin registry.
+---@param frame Frame
+---@return string?
+local function CompanionPinHandler(frame)
+	local target = rawget(frame, "target")
+	if rawget(frame, "_fdjKey") and type(target) == "table" and target.markerType == "dungeon" then
+		return rawget(frame, "_fdjCanTarget") and "PostClick" or "OnClick"
+	end
+	local data = rawget(frame, "data")
+	if type(data) == "table" and type(data.place) == "table" and (data.pickups or data.book or data.portal) then
+		return "OnClick"
+	end
+	-- OpenMap replaces the entrance pin when it draws a stitched view, including with Dungeon Journal installed.
+	local instances = rawget(frame, "instances")
+	if type(rawget(frame, "u")) == "number" and type(rawget(frame, "v")) == "number" then
+		if type(instances) == "table" and type(instances[1]) == "table" and type(instances[1][2]) == "string" then
+			return "method"
+		end
+		if
+			rawget(frame, "questMark")
+			and type(data) == "table"
+			and type(data.id) == "number"
+			and type(data.map) == "number"
+		then
+			return "method"
+		end
+	end
+end
+
+-- The addon's marker already identifies the zone. A second lookup from the world point can return the continent
+-- or another zone, particularly at a border, and is only needed if the marker does not supply its own zone.
+local function CompanionMapPoint(mapID, x, y, useZoneBounds)
+	if type(mapID) ~= "number" or type(x) ~= "number" or type(y) ~= "number" then
+		return nil
+	end
+	if not (x >= 0 and x <= 1 and y >= 0 and y <= 1) then
+		return nil
+	end
+	local zone = useZoneBounds and ns.Zones[mapID]
+	local point = ns.WorldPoint(mapID, x, y)
+	if not point and zone then
+		-- The zone map runs west to east and north to south. In world yards those are decreasing Y and X.
+		point =
+			{ map = zone.map, x = zone.maxX - y * (zone.maxX - zone.minX), y = zone.maxY - x * (zone.maxY - zone.minY) }
+	end
+	local info = point and C_Map.GetMapInfo(mapID)
+	if point and (zone or (info and info.mapType > Enum.UIMapType.Continent) or OnZone(ns.InstanceEntrance(point))) then
+		return point
+	end
+end
+
+-- Only near a known spawn: a wider radius can give an unlisted spawn a nearby spawn's floor. The centre of a
+-- zoomed-out group of spawns may have no height, in which case the planner picks the cheapest surface.
+local MAP_ICON_SPAWN_REACH = 8
+
+---@param frame Frame
+---@return SPFPoint?, string?
+local function OpenMapPinDestination(frame)
+	local instances = rawget(frame, "instances")
+	local dungeon = type(instances) == "table" and instances[1]
+	local data = not dungeon and rawget(frame, "data")
+	local map, x, y = rawget(frame, "cont"), rawget(frame, "x"), rawget(frame, "y")
+	if dungeon and type(map) == "number" and type(x) == "number" and type(y) == "number" then
+		-- OpenMap's outdoor entrances already carry the planner's world coordinates.
+		return { map = map, x = x, y = y }, dungeon[2]
+	end
+	local api = ns.OpenMapAddon.API()
+	if not (api and api.MapAt and api.MapFromWorld) then
+		return nil
+	end
+	local u, v = rawget(frame, "u"), rawget(frame, "v")
+	local mapID = data and data.map or api.MapAt(u, v)
+	if not mapID then
+		return nil
+	end
+	local mapX, mapY = api.MapFromWorld(mapID, u, v)
+	local point = CompanionMapPoint(mapID, mapX, mapY, type(data) == "table")
+	if point and data then
+		point.questID = data.id
+		return point, C_QuestLog.GetTitleForQuestID(data.id)
+	end
+	return point, dungeon and dungeon[2] or nil
+end
+
+---@param frame Frame
+---@param handler string
+---@return SPFPoint?, string?
+local function CompanionPinDestination(frame, handler)
+	if handler == "method" then
+		return OpenMapPinDestination(frame)
+	end
+	local target = rawget(frame, "target")
+	if rawget(frame, "_fdjKey") and type(target) == "table" and target.markerType == "dungeon" then
+		return CompanionMapPoint(target.mapID, target.x, target.y), target.label
+	end
+	local data = rawget(frame, "data")
+	local first = data.pickups and data.pickups[1]
+	local quest = first and first.toTake and first.toTake.quest
+	local name = data.portal and data.name or data.book and data.book.name
+	if quest then
+		local id = first.questID
+		if not id or id == quest.id then
+			name = quest.name
+		else
+			name = C_QuestLog.GetTitleForQuestID(id) or (id == quest.chainStart and quest.chainStartName)
+		end
+	end
+	local place = data.place
+	local point = CompanionMapPoint(place.mapID, place.x, place.y, true)
+	if point and first and point.z == nil then
+		point.z = ns.SpawnHeight(point.map, point.x, point.y, MAP_ICON_SPAWN_REACH)
+	end
+	return point, name or nil
+end
+
+-- A hardware press picks the marker; its own release path still decides whether the gesture was a click
+-- or a map drag. Change only the callback for that click, since a mouse overlay can lose to the marker.
+local function InstallCompanionPinClick()
+	local map = WorldMapFrame
+	local restoreClick
+
+	local function ArmClick(frame, handler)
+		local isMethod = handler == "method"
+		local original = isMethod and rawget(frame, "OnClick") or not isMethod and frame:GetScript(handler)
+		if type(original) ~= "function" then
+			return false
+		end
+
+		local replacement
+		local function Restore()
+			if isMethod then
+				if rawget(frame, "OnClick") == replacement then
+					frame.OnClick = original
+				end
+			elseif frame:GetScript(handler) == replacement then
+				frame:SetScript(handler, original)
+			end
+			if restoreClick == Restore then
+				restoreClick = nil
+			end
+		end
+
+		replacement = function(self, button, ...)
+			if not isMethod and button ~= "LeftButton" then
+				return original(self, button, ...)
+			end
+			Restore()
+			if
+				ShiftRouteModifier()
+				and map:IsShown()
+				and ns.db.journey
+				and not ChatBoxOpen()
+				and CompanionPinHandler(self) == handler
+			then
+				local point, name = CompanionPinDestination(self, handler)
+				if point then
+					point.label = name
+					ns.PlayerPicked()
+					ns.StartJourney(point)
+				else
+					ns.Notice(L["no journey can be planned to that spot."])
+				end
+				return
+			end
+			return original(self, button, ...)
+		end
+		if isMethod then
+			-- OpenMap calls this method after clearing its native button-down state.
+			frame.OnClick = replacement
+		else
+			frame:SetScript(handler, replacement)
+		end
+		restoreClick = Restore
+		return true
+	end
+
+	local events = CreateFrame("Frame")
+	events:RegisterEvent("GLOBAL_MOUSE_DOWN")
+	events:RegisterEvent("GLOBAL_MOUSE_UP")
+	events:SetScript("OnEvent", function(_, event, button)
+		if button ~= "LeftButton" then
+			return
+		end
+		if event == "GLOBAL_MOUSE_UP" then
+			if restoreClick then
+				-- The frame's release callback can run after the global mouse-up.
+				C_Timer.After(0, restoreClick)
+			end
+			return
+		end
+		if restoreClick then
+			restoreClick()
+		end
+		if not (ShiftRouteModifier() and map:IsShown() and ns.db.journey and not ChatBoxOpen()) then
+			return
+		end
+		for _, frame in ipairs(GetMouseFoci()) do
+			if frame ~= map and not frame:IsForbidden() and not frame:IsProtected() then
+				local handler = CompanionPinHandler(frame)
+				if handler and ArmClick(frame, handler) then
+					return
+				end
+			end
+		end
+	end)
+end
+
 -- The quest a pin marks, when it is the map's own quest pin on `map` (QuestDataProvider's QuestPinTemplate); nil for
 -- any other pin. UI/QuestPins.lua uses the same lookup to hide the game's pin under one of our stops.
 ---@param pin SPFMapPin
@@ -676,31 +887,36 @@ function ns.QuestPinID(pin, map)
 end
 
 local function OnPinClick(map, action, button)
-	if
-		action ~= MapCanvasMixin.MouseAction.Click
-		or button ~= "LeftButton"
-		or not ns.JourneyKeyDown()
-		or ChatBoxOpen()
-		or JourneysOff()
-	then
+	if action ~= MapCanvasMixin.MouseAction.Click or button ~= "LeftButton" then
+		return false
+	end
+	local useJourneyKey = ns.JourneyKeyDown()
+	local routeDungeon = ShiftRouteModifier()
+	if (not useJourneyKey and not routeDungeon) or ChatBoxOpen() or JourneysOff() then
 		return false
 	end
 	-- MapCanvas calls these handlers before POIButton.OnClick. Canvas click handlers do not run over pins.
-	for _, focus in ipairs(GetMouseFoci()) do
-		local pin = focus
+	for _, pin in ipairs(GetMouseFoci()) do
 		---@cast pin SPFQuestPin
-		local questID = ns.QuestPinID(pin, map)
+		local questID = useJourneyKey and ns.QuestPinID(pin, map)
 		if questID then
 			PlanQuest(questID, map:GetMapID(), pin:GetStyle() == POIButtonUtil.Style.Waypoint)
 			return true
 		end
 		---@cast pin SPFFlightPin
-		if pin.pinTemplate and pin.pinTemplate ~= "QuestPinTemplate" and pin.GetMap and pin:GetMap() == map then
+		local template = pin.pinTemplate
+		if
+			template
+			and template ~= "QuestPinTemplate"
+			and (useJourneyKey or template == "DungeonEntrancePinTemplate")
+			and pin.GetMap
+			and pin:GetMap() == map
+		then
 			local x, y
 			if pin.GetGlobalPosition then
 				x, y = pin:GetGlobalPosition()
 			end
-			if JourneyToPin(map:GetMapID(), pin.poiInfo, pin.pinTemplate == "FlightPointPinTemplate", x, y) then
+			if JourneyToPin(map:GetMapID(), pin.poiInfo, template == "FlightPointPinTemplate", x, y) then
 				return true
 			end
 		end
@@ -822,13 +1038,6 @@ local function Binding(name, onClick)
 	button:SetScript("OnClick", onClick)
 end
 
--- Yards from a Questie icon to the spawn it marks. Questie keeps a spawn's spot to a hundredth of a percent of its zone
--- map, a yard or less. Data/Heights.lua lists only spawns with another floor near them, so a wider reach would hand an
--- unlisted spawn a listed neighbour's floor: at 25 yd 0.7% of single-floor spawns ended on the wrong one, at 8 yd two
--- in 61,641. A zoomed-out icon standing for a group of spawns, at the group's centre, may find none and keeps the
--- cheapest surface.
-local QUESTIE_ICON_REACH = 8
-
 -- The spot of the Questie map icon under the cursor: its zone map and the spawn's place on it. Questie draws each
 -- world map icon as a QuestieFrame button holding them (Questie/Questie Modules/Map/QuestieMap.lua, DrawWorldIcon:
 -- x and y in percent, UiMapID, miniMapIcon false). Read only, never written.
@@ -889,7 +1098,7 @@ ns.Init(function()
 		end
 		local point = ns.WorldPoint(iconMap, iconX, iconY)
 		if point and point.z == nil then
-			point.z = ns.SpawnHeight(point.map, point.x, point.y, QUESTIE_ICON_REACH)
+			point.z = ns.SpawnHeight(point.map, point.x, point.y, MAP_ICON_SPAWN_REACH)
 		end
 		if point and OnZone(ns.InstanceEntrance(point)) then
 			ns.PlayerPicked()
@@ -943,6 +1152,7 @@ ns.Init(function()
 	end
 	WorldMapFrame:AddCanvasClickHandler(OnCanvasClick, CANVAS_CLICK_PRIORITY)
 	WorldMapFrame:AddGlobalPinMouseActionHandler(OnPinClick)
+	InstallCompanionPinClick()
 	ns.Canvas.OnClick(OnOwnPinClick)
 	-- The stock handler still pings the spot, which marks where the journey goes for your group too.
 	Minimap:HookScript("OnMouseUp", OnMinimapClick)
