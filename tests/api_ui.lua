@@ -251,17 +251,36 @@ assert(plain.Icon.hidden and not plain.Texture.hidden and plain.Texture.texture 
 assert(plain.Button.hidden and plain.Disc.hidden and plain.Number.text == "")
 -- The stop is off the minimap here, so its mark waits on the rim as the goal pin: a ring would circle nothing.
 local miniRoute = ShortestPathForeverMinimapRoute
-assert(miniRoute.goalEdge and miniRoute.Goal.texture == ns.PIN_FILE and miniRoute.Goal.atlas == nil)
+assert(not miniRoute.goalRinged and miniRoute.Goal.texture == ns.PIN_FILE and miniRoute.Goal.atlas == nil)
 -- Standing beside it, the minimap rings the game's own icon there again.
 do
  local _, at = C_Map.GetWorldPosFromMapPos(1414, CreateVector2D(0.51, 0.5))
  posX, posY = at:GetXY()
  posX = posX - 20
  miniRoute.scripts.OnUpdate(miniRoute, 0.2)
- assert(not miniRoute.goalEdge and miniRoute.Goal.atlas == "adventureguide-ring")
+ assert(miniRoute.Goal.atlas == "adventureguide-ring")
  posX, posY = 0, 0
 end
 assert(api.Cancel("Test"))
+-- A tour of close stops rings each stop on the minimap, known mark or not, so what stands there shows.
+do
+ local _, at = C_Map.GetWorldPosFromMapPos(1414, CreateVector2D(0.51, 0.5))
+ posX, posY = at:GetXY()
+ posX = posX - 20
+ assert(api.NavigateRoute("Test", { stops[1], stops[2] }))
+ settle()
+ assert(miniRoute.Goal.texture == ns.PIN_FILE, "an ordinary stop wears our pin")
+ assert(api.NavigateRoute("Test", { stops[1], stops[2] }, { tourLine = true }))
+ settle()
+ assert(miniRoute.Goal.atlas == "adventureguide-ring", "the next tour stop is circled")
+ ns.RefreshJourneyPin()
+ assert(miniRoute.Goal.atlas == "adventureguide-ring", "and stays circled")
+ assert(api.NavigateRoute("Test", { stops[1], stops[2] }))
+ settle()
+ assert(miniRoute.Goal.texture == ns.PIN_FILE, "and wears the pin again without the option")
+ posX, posY = 0, 0
+ assert(api.Cancel("Test"))
+end
 assert(api.Navigate("Test", 1414, 0.51, 0.5, "Trainer", "trainer"))
 settle()
 -- The trainer's Class atlas fits the 22 by 22 look box at the stub atlas's 36 by 44 shape; a lone
@@ -405,6 +424,30 @@ end
 laterPin:OnMouseLeave()
 assert(laterPin.Texture.alpha == ns.LaterAlpha and laterPin.Button.alpha == ns.LaterAlpha)
 assert(laterLine.lines[laterLine.used].alpha == ns.LaterAlpha, "and the leg fades again")
+api.Cancel("Test")
+
+assert(api.SetArrowShown("Test", false) and api.SetArrowShown("Test", true), "the arrow switch is published")
+
+-- fadeLaterLegs = false draws a loop's whole way at full strength, and follows each resubmit of the route (#1388).
+local loop = { stops[1], { map = 1414, x = 0.53, y = 0.49, title = "Second" } }
+local longer = { loop[1], { map = 1414, x = 0.55, y = 0.5, title = "Moved" } }
+local function lastAlpha()
+ local drawn = active[lineTemplate][1]
+ assert(drawn.used > 0, "the route line is drawn")
+ return drawn.lines[drawn.used].alpha
+end
+for _, case in ipairs({
+ { loop, false, "a new route" },
+ { loop, true, "the same stops sent again" },
+ { loop, false, "the same stops asking for full strength" },
+ { longer, true, "a resubmit moving one stop" },
+ { longer, false, "a resubmit moving no stop" },
+}) do
+ assert(api.NavigateRoute("Test", case[1], { fadeLaterLegs = case[2] }))
+ settle()
+ assert(lastAlpha() == (case[2] and ns.LaterAlpha or 1), case[3])
+end
+assert(active[goalTemplate][2].Texture.alpha == ns.LaterAlpha, "stop pins keep their own look")
 api.Cancel("Test")
 
 -- Above 25 the numbered art runs out: stop 30 keeps the map's button and its font number, dimmer as a later stop.

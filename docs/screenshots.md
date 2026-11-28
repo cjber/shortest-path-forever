@@ -101,8 +101,8 @@ remains 8,000 ms. The animation uses fixed time steps, never the wall clock.
 - The two town services scenes are Stormwind City's services from QuestieDB 1.0.13's Forever bake
   (`X-BUILD-COMMIT 0f7d8adc`), Npc spawns in area 1519 as map percent: the bank, inn, auction house, flight
   master, weapons merchant, baker and trade supplier around the Trade District, and the stable master, hunter
-  trainer and engineering trainer in the Dwarven District. Clustering is `UI/Map.lua`'s transitive
-  `OverlapGroups` against the client's 1002 by 668 map canvas: same-service pins merge first, different services only
+  trainer and engineering trainer in the Dwarven District. Clustering is ForeverCore's transitive
+  `MapCanvas.OverlapGroups` against the client's 1002 by 668 map canvas: same-service pins merge first, different services only
   at the plain pin size, and full zoom splits every NPC, spreading the closest ones around their shared centre. A
   same-service group wears `UI/NearbyGroups.lua`'s tracking icon, and a mixed group the addon's market stall. The
   fixture is an Alliance character (Horde-only NPCs are hidden, neutrals kept) and Stormwind is a zone map, so the

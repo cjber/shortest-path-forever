@@ -239,10 +239,24 @@ local function SetUpdating(running)
 	end
 end
 
+local function Guidance()
+	if ns.db.compass and ns.db.journey and ns.IsJourneyGuided() then
+		local bend, nextBend, stop, goal = ns.GuideTargets()
+		local arrived = ns.ArrivalStop and ns.ArrivalStop()
+		if bend or arrived then
+			return bend, nextBend, stop, goal, arrived
+		end
+	end
+end
+
+local function HeadingEnabled()
+	return ns.db.compass and ns.db.compassWithoutJourney
+end
+
 local function Update(elapsed)
-	local bend, nextBend, stop, goal = ns.GuideTargets()
-	local arrived = ns.ArrivalStop and ns.ArrivalStop() or nil
-	if not (ns.db.compass and ns.db.journey and ns.IsJourneyGuided() and (bend or arrived)) then
+	local bend, nextBend, stop, goal, arrived = Guidance()
+	local guided = bend or arrived
+	if not (guided or HeadingEnabled()) then
 		HideTime()
 		frame.behind = false
 		frame:SetShown(moving)
@@ -250,9 +264,13 @@ local function Update(elapsed)
 		SetUpdating(false)
 		return
 	end
-	local x, y, _, map = ns.JourneyPosition()
+	local x, y, map
+	if guided then
+		local _
+		x, y, _, map = ns.JourneyPosition()
+	end
 	local facing = GetPlayerFacing()
-	if not (x and y and map and canaccessvalue(facing) and facing) then
+	if not (canaccessvalue(facing) and facing) or (guided and not (x and y and map)) then
 		frame.behind = false
 		frame:SetAlpha(0)
 		frame.facing = nil
@@ -474,9 +492,8 @@ local function Create()
 end
 
 function ns.RefreshCompass()
-	local arrived = ns.ArrivalStop and ns.ArrivalStop()
-	local guided = ns.db.compass and ns.db.journey and ns.IsJourneyGuided() and (ns.GuideTargets() or arrived)
-	if moving or guided then
+	local bend, _, _, _, arrived = Guidance()
+	if moving or bend or arrived or HeadingEnabled() then
 		if not frame then
 			Create()
 		end

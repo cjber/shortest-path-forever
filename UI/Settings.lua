@@ -313,7 +313,7 @@ ns.Init(function()
 		L["Off clears your journey, and map clicks, quests, guides and waypoints no longer start one."],
 		function()
 			if not ns.db.journey then
-				ns.ClearJourney()
+				ns.PlayerClear()
 			end
 			-- The guide follower only ticks while journeys are on; turning them back on starts it again.
 			ns.RefreshGuidelime()
@@ -362,6 +362,13 @@ ns.Init(function()
 		L["Route to the focused quest"],
 		-- luacheck: push ignore 631
 		L["Starts a journey when you super-track a quest or a flight point, so a controller needs no map click. A guide addon's own journey is left alone."]
+		-- luacheck: pop
+	)
+	Checkbox(
+		"mapPinRoutes",
+		L["Route to your map pin"],
+		-- luacheck: push ignore 631
+		L["Starts a journey when you place the game's map pin. The journey key still works when this is off."]
 		-- luacheck: pop
 	)
 	Section(L["Destination"])
@@ -467,7 +474,7 @@ ns.Init(function()
 		L["Follow TomTom's arrow"],
 		L["With TomTom installed, a journey here follows the waypoint its arrow points to."],
 		function()
-			ns.RefreshTomTomFollow()
+			ns.RefreshTomTomFollow(true)
 		end
 	)
 	Checkbox(
@@ -696,7 +703,7 @@ ns.Init(function()
 	Checkbox(
 		"arrow",
 		L["Show direction arrow"],
-		L["Show the next direction and the game's navigation marker. When off, only the route on the map and minimap stays."],
+		L["Show Shortest Path's arrow and the game's navigation marker. TomTom's arrow has its own settings."],
 		function()
 			ns.JourneyGuide.ArrowChanged()
 			ns.WakeTravel()
@@ -777,6 +784,12 @@ ns.Init(function()
 		"compass",
 		L["Show the compass"],
 		L["While Guide is on: your next turns, the next stop and your destination across the top of the screen."],
+		ns.RefreshCompass
+	)
+	Checkbox(
+		"compassWithoutJourney",
+		L["Keep the compass visible without a journey"],
+		L["Shows your heading when there are no directions to follow. Requires Show the compass."],
 		ns.RefreshCompass
 	)
 	Checkbox(

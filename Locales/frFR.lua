@@ -164,10 +164,13 @@ L["Choose which arrows to show when following a standalone RestedXP guide."] =
 	"Choisissez les flèches à afficher lorsque vous suivez un guide RestedXP autonome." -- mt
 L["RestedXP arrow"] = "Flèche RestedXP" -- mt
 L["RestedXP's arrow"] = "Flèche de RestedXP" -- mt
+L["Route to your map pin"] = "Voyager vers votre repère de carte" -- mt
 L["Shortest Path's arrow"] = "Flèche de Shortest Path" -- mt
 L["Shortest Path pins and route lines on the world map."] =
 	"Repères et tracés de Shortest Path sur la carte du monde." -- mt
 L["Show Shortest Path marks"] = "Afficher les repères de Shortest Path" -- mt
+L["Starts a journey when you place the game's map pin. The journey key still works when this is off."] =
+	"Lance un trajet quand vous placez le repère de carte du jeu. La touche de trajet fonctionne aussi lorsque cette option est désactivée." -- mt
 L["The travel action will update after combat."] = "L’action de voyage sera mise à jour après le combat." -- mt
 L["Rides to spend less time walking through %s (level %s)"] =
 	"Prend un transport pour moins marcher dans %s (niveau %s)" -- mt
@@ -220,8 +223,8 @@ L["Show portals"] = "Afficher les portails" -- mt
 L["Show routes on the world map"] = "Afficher les routes sur la carte du monde" -- mt
 L["Show the compass"] = "Afficher la boussole" -- mt
 L["Show the flight to take"] = "Afficher le vol à prendre" -- mt
-L["Show the next direction and the game's navigation marker. When off, only the route on the map and minimap stays."] =
-	"Afficher la prochaine direction et le marqueur de navigation du jeu. Désactivé, seul l'itinéraire reste sur la carte et la minicarte." -- mt
+L["Show Shortest Path's arrow and the game's navigation marker. TomTom's arrow has its own settings."] =
+	"Afficher la flèche de Shortest Path et le marqueur de navigation du jeu. La flèche de TomTom a ses propres réglages." -- mt
 L["Show the time left under the compass"] = "Temps restant sous la boussole" -- mt
 L["Show the way to your corpse"] = "Afficher le chemin vers votre cadavre" -- mt
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =
@@ -539,7 +542,7 @@ L["Journey stops"] = "Étapes du trajet" -- mt
 L["Ordering stops by estimated travel time..."] = "Classement des étapes selon le temps de trajet estimé..." -- mt
 L["Orders the stops by estimated travel time. You can change the order."] =
 	"Ordonne les étapes selon le temps de trajet estimé. Vous pouvez modifier l’ordre." -- mt
-L["Place a map waypoint, then add it to this journey."] = "Placez un point sur la carte, puis ajoutez-le à ce trajet." -- mt
+L["Place pins on the map to add stops."] = "Placez des points sur la carte pour ajouter des étapes." -- mt
 L["Remove"] = "Retirer" -- mt
 L["Stop %d of %d."] = "Étape %d sur %d." -- mt
 L["Stop your current journey before starting this journey."] =
@@ -658,6 +661,10 @@ L["Right-click to choose map services."] = "Clic droit pour choisir les services
 L["Use TomTom's arrow"] = "Utiliser la flèche de TomTom" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"Avec TomTom installé, pointe la flèche de TomTom vers chaque étape au lieu de notre flèche et du marqueur du jeu." -- mt
-L["A guide step on another continent keeps the old route on screen while the new one plans."] =
-	"Une étape de guide sur un autre continent garde l’ancien itinéraire affiché pendant le calcul du nouveau." -- mt
+L["The compass can stay on screen without a journey."] = "La boussole peut rester à l'écran sans trajet." -- mt
 L["Mailbox"] = "Boîte aux lettres" -- mt
+L["Skip this stop"] = "Passer cette étape de collecte" -- mt
+L["Destination queued until combat ends."] = "Destination en attente jusqu’à la fin du combat." -- mt
+L["Keep the compass visible without a journey"] = "Garder la boussole visible sans trajet" -- mt
+L["Shows your heading when there are no directions to follow. Requires Show the compass."] =
+	"Indique la direction dans laquelle vous regardez quand aucun itinéraire ne vous guide. Nécessite l’option « Afficher la boussole »." -- mt

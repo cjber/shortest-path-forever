@@ -310,7 +310,7 @@ function Guide.ClearHoveredWaypointJourney()
 	for _, provider in ipairs(waypointProviders) do
 		local pin = provider.pin
 		if pin and pin:IsShown() and pin:IsMouseOver() and IsJourneyWaypoint() then
-			ns.ClearJourney()
+			ns.PlayerClear()
 			return true
 		end
 	end
@@ -332,17 +332,14 @@ local function RefreshWaypointPins()
 	end)
 end
 
--- What Guide wrote (incl. the player's restored pin) and the client has not reported yet; auto-routing skips it.
----@class SPFGuideSettled
----@field waypoint table?
----@field waypointPending boolean?
+-- Tracking Guide restored and the client has not reported yet; auto-routing skips it.
+---@class SPFGuideSettledTracking
 ---@field quest number?
 ---@field tracked boolean?
 ---@field kind Enum.SuperTrackingType?
----@field trackingPending boolean?
 
----@type SPFGuideSettled?
-local settled
+---@type SPFGuideSettledTracking?
+local settledTracking
 local stopping
 
 ---@param waypoint table?
@@ -354,21 +351,13 @@ local function CopyWaypoint(waypoint)
 	end
 end
 
--- Record what Guide left behind after its final writes, for the deferred events those writes raise.
----@param waypoint boolean whether it wrote the user waypoint
----@param tracking boolean whether it wrote the super-tracked state
-local function Settled(waypoint, tracking)
-	settled = {
-		waypoint = waypoint and CopyWaypoint(C_Map.GetUserWaypoint()) or nil,
-		waypointPending = waypoint or nil,
+-- Record the final super-tracking state for the deferred tracking event.
+local function SettleTracking()
+	settledTracking = {
 		quest = C_SuperTrack.GetSuperTrackedQuestID(),
 		tracked = C_SuperTrack.IsSuperTrackingUserWaypoint(),
 		kind = C_SuperTrack.GetHighestPrioritySuperTrackingType(),
-		trackingPending = tracking or nil,
 	}
-	if not (settled.waypointPending or settled.trackingPending) then
-		settled = nil
-	end
 end
 
 local function ClearOrphanWaypoint()
@@ -392,7 +381,7 @@ local function ClearOrphanWaypoint()
 		end
 		C_SuperTrack.SetSuperTrackedUserWaypoint(restored and saved.borrowedTracked == true or false)
 		stopping = nil
-		Settled(true, true)
+		SettleTracking()
 		RefreshWaypointPins()
 	end
 end
@@ -419,38 +408,23 @@ local function SameTracking(state)
 		and state.expectedTrackingType == kind
 end
 
-local function SettledChanged(event)
-	if not settled then
-		return false
-	end
-	if event == "USER_WAYPOINT_UPDATED" and settled.waypointPending then
-		local wasOurs = SameWaypoint(C_Map.GetUserWaypoint(), settled.waypoint)
-		settled.waypointPending = nil
-		if not settled.trackingPending then
-			settled = nil
-		end
-		return wasOurs
-	end
-	if event == "SUPER_TRACKING_CHANGED" and settled.trackingPending then
-		local wasOurs = C_SuperTrack.GetSuperTrackedQuestID() == settled.quest
-			and C_SuperTrack.IsSuperTrackingUserWaypoint() == settled.tracked
-			and C_SuperTrack.GetHighestPrioritySuperTrackingType() == settled.kind
-		settled.trackingPending = nil
-		if not settled.waypointPending then
-			settled = nil
-		end
-		return wasOurs
-	end
-	return false
-end
-
--- Whether the client's report is Guide's own write rather than the player's choice. Called after
--- Guide.TrackingChanged, so a guide the player just took over has already yielded or stopped.
+-- Waypoint writes are reported inside the write. Super-tracking is reported after the tracking has settled.
 ---@param event string
 ---@return boolean
 function Guide.OwnsReported(event)
-	if stopping or (guide and guide.writing) or SettledChanged(event) then
+	if stopping or (guide and guide.writing) then
 		return true
+	end
+	if event == "SUPER_TRACKING_CHANGED" and settledTracking then
+		local reported = settledTracking
+		settledTracking = nil
+		if
+			C_SuperTrack.GetSuperTrackedQuestID() == reported.quest
+			and C_SuperTrack.IsSuperTrackingUserWaypoint() == reported.tracked
+			and C_SuperTrack.GetHighestPrioritySuperTrackingType() == reported.kind
+		then
+			return true
+		end
 	end
 	if not guide then
 		return false
@@ -459,7 +433,13 @@ function Guide.OwnsReported(event)
 		return true
 	end
 	if event == "USER_WAYPOINT_UPDATED" then
-		return SameWaypoint(C_Map.GetUserWaypoint(), guide.expectedWaypoint)
+		if SameWaypoint(C_Map.GetUserWaypoint(), guide.expectedWaypoint) then
+			return true
+		end
+		-- The slot was replaced. Until ownership is resolved, even an empty slot or a return to this point is external.
+		guide.expectedWaypoint, guide.waypoint = false, nil
+		ns.charDB.guideWaypoint = nil
+		return false
 	end
 	return SameTracking(guide)
 end
@@ -480,6 +460,7 @@ local function StopGuide(reason)
 	if
 		not previous
 		or not previous.hasDriven
+		or previous.leaveWaypoint
 		or not SameWaypoint(C_Map.GetUserWaypoint(), previous.expectedWaypoint)
 	then
 		RefreshWaypointPins()
@@ -499,21 +480,19 @@ local function StopGuide(reason)
 	if not restored and previous.waypoint then
 		C_Map.ClearUserWaypoint()
 	end
-	local wroteWaypoint = previous.previousWaypoint ~= nil or previous.waypoint ~= nil
-	local wroteTracking = false
+	settledTracking = nil
 	if ownsTracking then
 		local tracked = restored and previous.previousTrackedWaypoint or false
 		C_SuperTrack.SetSuperTrackedUserWaypoint(tracked)
 		if not tracked then
 			C_SuperTrack.SetSuperTrackedQuestID(previous.previousQuest or 0)
 		end
-		wroteTracking = true
+		SettleTracking()
 	elseif not restored and C_SuperTrack.IsSuperTrackingUserWaypoint() then
 		C_SuperTrack.SetSuperTrackedUserWaypoint(false)
-		wroteTracking = true
+		SettleTracking()
 	end
 	stopping = nil
-	Settled(wroteWaypoint, wroteTracking)
 	RefreshWaypointPins()
 	RefreshNativeMarker()
 	if ns.RefreshJourneyPin then
@@ -523,26 +502,8 @@ end
 
 local function OwnsWaypoint()
 	-- Before SPF publishes a waypoint, Waypoint UI may already have a tracked pin to hand over.
-	if not guide.hasDriven and WaypointUIHolding() then
-		return true
-	end
-	if not SameWaypoint(C_Map.GetUserWaypoint(), guide.expectedWaypoint) then
-		-- The journey's own guide addon pinning its step is no choice of the player's (#1311). Keep guiding, with that
-		-- pin as the one on the map now; pause, cast and the pin from before the journey stay as they were. Our pin is
-		-- gone, so the caller must not clear one: the next write puts ours back.
-		if ns.OwnerWroteWaypoint and ns.OwnerWroteWaypoint() then
-			guide.expectedWaypoint = C_Map.GetUserWaypoint()
-			guide.waypoint, guide.waypointTarget, guide.uiMap, guide.fading, guide.waypointNavigation =
-				nil, nil, nil, nil, nil
-			ns.charDB.guideWaypoint = nil
-			RememberTracking(guide)
-			return false
-		end
-		-- A manual replacement or removal ends guidance; never reclaim the player's waypoint.
-		StopGuide()
-		return false
-	end
-	return true
+	return (not guide.hasDriven and WaypointUIHolding())
+		or SameWaypoint(C_Map.GetUserWaypoint(), guide.expectedWaypoint)
 end
 
 local function ClearGuideWaypoint()
@@ -583,7 +544,7 @@ local function GuideWaypoint(point, fading)
 	if not guide or (ns.TomTomArrowActive and ns.TomTomArrowActive()) then
 		return false
 	end
-	-- The bend callback can run before deferred notifications of a player's waypoint or tracking change.
+	-- Leave an external pin in place while the waypoint event's ownership is being resolved.
 	if not OwnsWaypoint() then
 		RefreshTracker()
 		return false
@@ -862,7 +823,7 @@ end
 
 function Guide.Start()
 	ClearOrphanWaypoint()
-	settled = nil
+	settledTracking = nil
 	local previous = C_Map.HasUserWaypoint() and C_Map.GetUserWaypoint()
 	local saved = previous
 		and UiMapPoint.CreateFromCoordinates(previous.uiMapID, previous.position.x, previous.position.y, previous.z)
@@ -885,13 +846,35 @@ function Guide.QuestGone(questID)
 	end
 end
 
-function Guide.TrackingChanged(event)
+---@param event string
+---@param waypointOwner? "guide"|"RestedXP"|"stops"
+function Guide.TrackingChanged(event, waypointOwner)
 	RefreshWaypointPins()
-	if not guide or guide.writing then
+	if not guide or guide.writing or (not guide.hasDriven and WaypointUIHolding()) then
 		return
 	end
-	if not guide.hasDriven and WaypointUIHolding() then
-		-- Waypoint UI's own write or tracking change: keep steering and never treat it as the player taking over.
+	local waypoint = C_Map.GetUserWaypoint()
+	if SameWaypoint(waypoint, guide.expectedWaypoint) then
+		if event == "SUPER_TRACKING_CHANGED" and not SameTracking(guide) then
+			YieldGuide()
+		end
+		return
+	end
+	-- Removing the pin a guide stepped aside for gives it nothing new to yield to.
+	if waypointOwner == "RestedXP" or waypointOwner == "stops" or (guide.leaveWaypoint and not waypoint) then
+		-- The native slot changed hands while the guide keeps leading the same route.
+		guide.expectedWaypoint = waypoint
+		guide.waypointTarget, guide.uiMap, guide.fading, guide.waypointNavigation = nil, nil, nil, nil
+		RememberTracking(guide)
+		if waypointOwner == "stops" then
+			guide.leaveWaypoint = true
+			YieldGuide()
+		end
+		-- Standing still redraws nothing, so an emptied slot asks the arrow to mark it again.
+		if not waypoint and ns.RedrawGuideMarker then
+			ns.RedrawGuideMarker()
+		end
+		RefreshTracker()
 		return
 	end
 	local clearPlayerJourney = event == "USER_WAYPOINT_UPDATED"
@@ -899,16 +882,13 @@ function Guide.TrackingChanged(event)
 		and not guide.yielded
 		and guide.goal
 		and (guide.goal.questID ~= nil or #(guide.goal.questIDs or {}) > 0)
-		and C_Map.GetUserWaypoint() == nil
+		and waypoint == nil
 		and (not ns.JourneyOwner or ns.JourneyOwner() == nil)
-	if not OwnsWaypoint() then
-		if clearPlayerJourney and ns.ClearJourney then
-			ns.ClearJourney()
-		else
-			RefreshTracker()
-		end
-	elseif event == "SUPER_TRACKING_CHANGED" and not SameTracking(guide) then
-		YieldGuide()
+	StopGuide()
+	if clearPlayerJourney and ns.ClearJourney then
+		ns.ClearJourney()
+	else
+		RefreshTracker()
 	end
 end
 

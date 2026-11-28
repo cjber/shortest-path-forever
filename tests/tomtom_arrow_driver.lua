@@ -7,6 +7,9 @@ local Fake = assert(loadfile("tests/tomtom_fake.lua"))()
 ---@field arrow? boolean
 ---@field installed? boolean
 ---@field withArrow? boolean
+---@field restedXPBridge? boolean
+---@field deferLogin? boolean
+---@field savedWaypoints? table[]
 
 ---@param opts SPFTomTomArrowTestOptions
 ---@param restoredGuide? boolean
@@ -46,18 +49,9 @@ return function(opts, restoredGuide)
 		d.load("UI/CastButton.lua")
 		d.load("UI/Arrow.lua")
 	end
-	-- Capture the arrow frame lazily when UI/Arrow.lua creates it.
-	local arrowCreate = e.CreateFrame
-	local watcherFrame
-	e.CreateFrame = function(...)
-		local f = arrowCreate(...)
-		watcherFrame = f
-		return f
-	end
 	d.load("Core/APIInput.lua")
 	d.load("Core/APIStops.lua")
 	d.load("Core/API.lua")
-	d.load("Journey/Itinerary.lua")
 
 	local crazy = { alpha = 0.7, mouse = true, hidden = true }
 	function crazy:SetAlpha(v)
@@ -75,12 +69,27 @@ return function(opts, restoredGuide)
 	e.TomTomCrazyArrow = crazy
 
 	local timers = {}
+	local function Schedule(delay, fn)
+		timers[#timers + 1] = { at = e.GetTime() + delay, fn = fn }
+	end
 	e.C_Timer = {
-		After = function(_, fn)
-			timers[#timers + 1] = fn
-		end,
-		NewTicker = function()
-			return { Cancel = function() end }
+		After = Schedule,
+		NewTicker = function(period, fn, count)
+			local ticker = {}
+			function ticker:Cancel()
+				self.cancelled = true
+			end
+			local function Tick()
+				if not ticker.cancelled then
+					fn(ticker)
+					count = count and count - 1
+					if count ~= 0 and not ticker.cancelled then
+						Schedule(period, Tick)
+					end
+				end
+			end
+			Schedule(period, Tick)
+			return ticker
 		end,
 	}
 	e.InCombatLockdown = function()
@@ -115,7 +124,8 @@ return function(opts, restoredGuide)
 			return hasTomTom and name == "TomTom"
 		end,
 		IsAddOnLoaded = function(name)
-			return hasTomTom and name == "TomTom" and e.TomTom ~= nil
+			return (hasTomTom and name == "TomTom" and e.TomTom ~= nil)
+				or (name == "RestedXP-TomTom" and opts.restedXPBridge == true)
 		end,
 		GetAddOnEnableState = function(name)
 			return hasTomTom and name == "TomTom" and 2 or 0
@@ -125,39 +135,35 @@ return function(opts, restoredGuide)
 	n.db.tomtomFollow = opts.tomtomFollow == true
 	n.db.tomtomArrow = opts.tomtomArrow == true
 	n.db.arrow = opts.arrow ~= false
-
-	d.load("Core/TomTom.lua")
-	local tomtomWatcher = watcherFrame
-	d.load("Core/TomTomArrow.lua")
-
-	-- Track any frame UI/Arrow.lua creates after load.
-	local createdByArrow = e.CreateFrame
-	e.CreateFrame = function(...)
-		local f = createdByArrow(...)
-		arrowFrame = arrowFrame or f
-		return f
-	end
+	d.load("Journey/Itinerary.lua")
 
 	local fake
 	if hasTomTom then
-		fake = Fake.New(nil, crazy)
+		fake = Fake.New(opts.savedWaypoints, crazy, opts.restedXPBridge)
 		function fake:ShowHideCrazyArrow()
 			crazy:Show()
 			crazy:SetAlpha(self.arrowAlpha or 0.7)
 			crazy:EnableMouse(self.arrowMouse ~= false)
 		end
-		e.TomTom = fake
-		tomtomWatcher:OnEvent("ADDON_LOADED", "TomTom")
-		fake:Enable()
+		if opts.restedXPBridge then
+			e.TomTom = fake
+		end
 	end
+	d.load("Core/TomTom.lua")
+	d.load("Core/TomTomArrow.lua")
 	local function RunTimers()
 		local due = timers
 		timers = {}
-		for _, fn in ipairs(due) do
-			fn()
+		for _, timer in ipairs(due) do
+			if timer.at <= e.GetTime() then
+				timer.fn()
+			else
+				timers[#timers + 1] = timer
+			end
 		end
 	end
-	if restoredGuide then
+	local position = n.JourneyPosition
+	if restoredGuide or opts.restedXPBridge then
 		local function Region()
 			return {
 				IsShown = function()
@@ -168,30 +174,60 @@ return function(opts, restoredGuide)
 			}
 		end
 		local element = { zone = 1, x = 60, y = 50, title = "RXP Step 1", arrow = true, step = { active = true } }
+		local arrow = e.CreateFrame("Frame")
+		arrow.element = restoredGuide and element or nil
+		arrow.texture, arrow.text = Region(), Region()
+		e.RXPG_ARROW = arrow
 		e.RXP = {
-			arrowFrame = { element = element, texture = Region(), text = Region() },
+			arrowFrame = arrow,
 			settings = { profile = { showEnabled = true } },
 			currentGuide = {},
-			activeWaypoints = { element },
+			activeWaypoints = restoredGuide and { element } or {},
 			UpdateMap = function() end,
 			UpdateGotoSteps = function() end,
+			DrawArrow = function() end,
 		}
+		local login = e.CreateFrame("Frame")
+		login:RegisterEvent("PLAYER_ENTERING_WORLD")
+		login:SetScript("OnEvent", function(_, event)
+			if event == "PLAYER_ENTERING_WORLD" then
+				e.RXP.UpdateMap()
+			end
+		end)
 		n.db.restedxp = true
-		local position = n.JourneyPosition
 		n.JourneyPosition = function() end
-		local create = e.CreateFrame
-		e.CreateFrame = function(...)
-			watcherFrame = arrowCreate(...)
-			return watcherFrame
-		end
 		d.load("Core/RestedXP.lua")
-		e.CreateFrame = create
-		n.JourneyPosition = position
-		d.move({ map = 1, x = 0, y = 0 })
-		watcherFrame:OnEvent("PLAYER_ENTERING_WORLD")
 	end
-	tomtomWatcher:OnEvent("PLAYER_ENTERING_WORLD")
-	RunTimers()
+	local bridge = opts.restedXPBridge and Fake.Bridge(e) or nil
+
+	-- Track any frame UI/Arrow.lua creates during guidance.
+	local createdByArrow = e.CreateFrame
+	e.CreateFrame = function(...)
+		local f = createdByArrow(...)
+		arrowFrame = arrowFrame or f
+		return f
+	end
+
+	local function Login()
+		if fake then
+			if not e.TomTom then
+				e.TomTom = fake
+				d.fire("ADDON_LOADED", "TomTom")
+			end
+			fake:Enable()
+		end
+		d.fire("PLAYER_LOGIN")
+	end
+	local function World()
+		d.move({ map = 1, x = 0, y = 0 })
+		d.fire("PLAYER_ENTERING_WORLD")
+		n.JourneyPosition = position
+	end
+	if not opts.deferLogin then
+		Login()
+		World()
+		RunTimers()
+	end
 	return {
 		driver = d,
 		ns = n,
@@ -200,6 +236,9 @@ return function(opts, restoredGuide)
 		tomtom = fake,
 		crazy = crazy,
 		runTimers = RunTimers,
+		login = Login,
+		world = World,
+		bridge = bridge,
 		arrowFrame = function()
 			return arrowFrame
 		end,

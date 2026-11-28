@@ -156,7 +156,7 @@ function ns.JourneyReplanned()
 end
 
 ---@param point SPFPoint?
----@param reason? "arrived"|"cleared" -- why a nil point ended the journey
+---@param reason? "arrived"|"cleared"|"skipped" -- why a nil point ended the journey
 function ns.JourneyChanged(point, reason)
 	if ns.ProgressJourneyChanged then
 		ns.ProgressJourneyChanged(point, reason)
@@ -235,7 +235,7 @@ function ns.JourneyStops()
 end
 
 ---@class SPFPublicAPI
-local API = { version = 2, minor = 9 }
+local API = { version = 2, minor = 13 }
 
 local function Differs(a, b)
 	for key, value in pairs(a) do
@@ -390,9 +390,7 @@ local function Answer(from, to, key, job, walk, bound, place, ceiling)
 	return nil, "unreachable"
 end
 
--- The reason tells a caller whether asking again later can help: "combat" after combat, "loading" when the addon is
--- still building its data, "invalid" never for bad input, "unreachable" when known flight paths or boat timings change.
----@return { at: number, seconds: number|false, legs?: SPFLeg[] }?, ("combat"|"invalid"|"unreachable"|"loading")?
+---@return { at: number, seconds: number|false, legs?: SPFLeg[] }?, SPFAPINoRoute?
 local function Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound, place, ceiling)
 	if not Ready() then
 		if InCombatLockdown() then
@@ -400,15 +398,20 @@ local function Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound, 
 		end
 		return Loading()
 	end
-	local from, to = Point(fromMap, fromX, fromY), Point(toMap, toX, toY)
-	if not from or not to then
+	local to = Point(toMap, toX, toY)
+	if not to then
+		return APIKit.Invalid()
+	end
+	local from, origin, refusal = Input.Origin(fromMap, fromX, fromY)
+	if refusal then
+		return nil, refusal
+	end
+	if not from then
 		return APIKit.Invalid()
 	end
 	local key = string.format(
-		"%d:%.4f:%.4f:%d:%.17g:%.17g:%s:%s:%s",
-		fromMap,
-		fromX,
-		fromY,
+		"%s:%d:%.17g:%.17g:%s:%s:%s",
+		origin,
 		toMap,
 		toX,
 		toY,
@@ -440,7 +443,7 @@ end
 ---@param bound? boolean
 ---@param place? SPFNearbyPlace refine Nearby's transit endpoint walks on the NPC's floor
 ---@param ceiling? number with place, the seconds to beat: above them the answer is only a lower bound
----@return number?, ("combat"|"invalid"|"unreachable"|"loading")?, SPFLeg[]?
+---@return number?, SPFAPINoRoute?, SPFLeg[]?
 function ns.EstimateIn(job, fromMap, fromX, fromY, toMap, toX, toY, walk, bound, place, ceiling)
 	local entry, reason = Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound, place, ceiling)
 	if not entry then
@@ -489,6 +492,7 @@ API.WalkPath = ns.WalkPath
 API.NavVersion = ns.NavVersion
 API.SuspendMapPins = ns.SuspendMapPins
 API.ResumeMapPins = ns.ResumeMapPins
+API.SetArrowShown = ns.SetArrowShown
 
 -- A stop naming the NPC it reaches (Nearby services) takes the height of that NPC's QuestieDB spawn when it stands over
 -- or under another surface, keeping the walk on its floor. Nearby measures its walks to the same point.
@@ -501,8 +505,8 @@ function ns.OnSpawnFloor(point)
 	return point
 end
 
-local function NavigateRoute(owner, stops, policy, markers)
-	if not Owner(owner) or not Ready() or not ns.db.journey or type(stops) ~= "table" then
+local function NavigateRoute(owner, stops, policy, markers, fade, tour)
+	if not Owner(owner) or not Loaded() or not ns.db.journey or type(stops) ~= "table" then
 		return false
 	end
 	local count = #stops
@@ -587,6 +591,8 @@ local function NavigateRoute(owner, stops, policy, markers)
 		point.number = index
 		-- A caller drawing its own places asks for the line alone: no stop pin on the world map (UI/Route.lua).
 		point.unmarked = not markers or nil
+		point.unfaded = not fade or nil
+		point.tourLine = tour or nil
 		if count > 1 then
 			local location = not point.label and ns.Locate(point)
 			-- What to do there, apart from the count the tooltip gives its own line (UI/StopPin.lua).
@@ -616,8 +622,8 @@ local function NavigateRoute(owner, stops, policy, markers)
 		goal = goal and (goal.stop or goal)
 		local stop = points[1]
 		if goal and goal.map == stop.map and goal.x == stop.x and goal.y == stop.y then
-			local redraw = goal.unmarked ~= stop.unmarked
-			goal.unmarked = stop.unmarked
+			local redraw = goal.unmarked ~= stop.unmarked or goal.tourLine ~= stop.tourLine
+			goal.unmarked, goal.tourLine = stop.unmarked, stop.tourLine
 			if route then
 				ended[route.owner] = { reason = "replaced", at = GetTime() }
 			end
@@ -653,42 +659,33 @@ local function NavigateRoute(owner, stops, policy, markers)
 	return ns.StartJourney(points[1], policy)
 end
 
--- A route's options: its travel policy, "normal" or "walking", and whether its stops draw pins on the world map.
--- Anything else is the caller's mistake, answered as one.
----@param options any
----@return SPFRoutePolicy?, boolean?
-local function RouteOptions(options)
-	if not canaccessvalue(options) or (options ~= nil and type(options) ~= "table") then
-		return nil
-	end
-	local chosen = { policy = "normal", stopMarkers = true }
-	for key, value in pairs(options or {}) do
-		if not (canaccessvalue(key) and chosen[key] ~= nil and canaccessvalue(value)) then
-			return nil
-		end
-		chosen[key] = value
-	end
-	local policy = chosen.policy --[[@as SPFRoutePolicy]]
-	local markers = chosen.stopMarkers
-	if (policy == "normal" or policy == "walking") and type(markers) == "boolean" then
-		return policy, markers
-	end
-end
-
 ---@param owner string
 ---@param stops SPFAPIStop[]
 ---@param options? SPFAPIRouteOptions
 ---@return boolean|nil, ForeverCoreAPIInvalid?
 function API.NavigateRoute(owner, stops, options)
-	local policy, markers = RouteOptions(options)
+	local policy, markers, fade, tour = Input.RouteOptions(options)
 	if not policy then
 		return APIKit.Invalid()
 	end
-	return NavigateRoute(owner, stops, policy, markers)
+	return not InCombatLockdown() and NavigateRoute(owner, stops, policy, markers, fade, tour)
 end
 
 function API.Navigate(owner, map, x, y, title, kind)
-	return NavigateRoute(owner, { { map = map, x = x, y = y, title = title, kind = kind } }, "normal", true)
+	local stop = { map = map, x = x, y = y, title = title, kind = kind }
+	return not InCombatLockdown() and NavigateRoute(owner, { stop }, "normal", true, true)
+end
+
+-- The player's own pick of a place mid-fight (UI/Nearby.lua), planned when the fight ends. The public calls are
+-- refused then (docs/api.md).
+---@param stop SPFAPIStop
+---@return boolean
+function ns.PickInCombat(stop)
+	local accepted = NavigateRoute("Shortest Path Forever", { stop }, "normal", true, true)
+	if accepted then
+		ns.PlayerPicked()
+	end
+	return accepted
 end
 
 function API.CurrentStop(owner)

@@ -23,7 +23,7 @@ from screenshots_maps import icon, map_base
 from wowmock import TooltipLine, scene, tooltip  # ty: ignore[import-not-found]
 
 ROOT = Path(__file__).resolve().parent.parent
-# The client's map canvas, which UI/Map.lua's OverlapGroups measures against.
+# The client's map canvas, which ForeverCore's MapCanvas.OverlapGroups measures against.
 TOWN_CANVAS = (1002, 668)
 # The Nearby services list's groups, in its order: vendors first, then the trainers, then the services. Each entry is
 # the section that ranks it and the map atlas its pins wear (UI/NearbyGroups.lua).
@@ -102,7 +102,7 @@ OVERLAP = 0.8
 
 
 def town_overlap(points, size, zoom):
-    """UI/Map.lua's OverlapGroups at a zoom, in the client's own canvas units."""
+    """ForeverCore's MapCanvas.OverlapGroups at a zoom, in the client's own canvas units."""
     reach_x = size * OVERLAP / (0.5 + 1.5 * zoom) / TOWN_CANVAS[0]
     reach_y = size * OVERLAP / (0.5 + 1.5 * zoom) / TOWN_CANVAS[1]
     roots = list(range(len(points)))

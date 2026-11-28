@@ -87,6 +87,24 @@ ns.db.arrow = false
 ns.PointGuideArrow({ { map = 1, x = 200, y = 0 } })
 assert(frame == nil, "initial disabled guidance must not create an arrow")
 ns.db.arrow = true
+-- A companion that kept the arrow off moves to a hold mid-leg: the marker poll starts with our frame hidden (#1308).
+driver.load("Core/APIInput.lua")
+local held = 0
+env.C_Timer = {
+	NewTicker = function()
+		return { Cancel = function() end }
+	end,
+}
+ns.db.arrow = false
+ns.PointGuideArrow({ { map = 1, x = 0, y = 0 }, { map = 1, x = 200, y = 0 } }, function()
+	held = held + 1
+end)
+ns.db.arrow = true
+assert(ns.SetArrowShown("Queston", false))
+assert(held > 0 and frame.hidden, "a hold taken before any arrow was drawn still places the marker")
+ns.PointGuideArrow(nil)
+assert(ns.SetArrowShown("Queston", true))
+env.C_Timer = nil
 local points = { { map = 1, x = 0, y = 0 }, { map = 1, x = 200, y = 0 } }
 local placed = 0
 local function place()
@@ -98,6 +116,19 @@ local queued = frame.OnUpdate
 ns.PointGuideArrow(nil)
 queued(frame, 0.1)
 assert(frame.hidden and placed == 1 and ns.GuideTargets() == nil, "a queued tick cannot revive cleared guidance")
+
+ns.PointGuideArrow(points, place)
+queued(frame, 10)
+queued(frame, 10)
+local quiet = placed
+queued(frame, 0.1)
+assert(placed == quiet, "a settled arrow places nothing while you stand still")
+ns.RedrawGuideMarker()
+assert(placed == quiet, "asking for the marker writes nothing inside the caller")
+queued(frame, 0.1)
+assert(placed == quiet + 1, "the next tick places the marker again")
+ns.PointGuideArrow(nil)
+placed = 1
 
 ns.RefreshCompass = function()
 	ns.RefreshCompass = nil
@@ -533,6 +564,8 @@ assert(#markerPlaces >= 1, "the first update places the native marker")
 local markerTicker = assert(tickers[#tickers], "a marker-only ticker runs while our frame is hidden")
 assert(not markerTicker.cancelled, "and is still running")
 local placedOnce = #markerPlaces
+-- A guide that restates its step's quests reads the lines again; the hidden frame has no update loop of its own.
+ns.RefreshArrowLines()
 driver.move({ map = 1, x = 80, y = 0, z = 0 })
 markerTicker.callback()
 assert(#markerPlaces > placedOnce, "a later poll tick places the marker again as the walk reaches the next bend")
@@ -606,6 +639,58 @@ tickers[#tickers].callback()
 assert(not ns.ArrivalStop(), "leaving the stop while RestedXP leads still clears the remembered arrival")
 ns.StopInside = origStopInside
 ns.ArrowLeadChanged = origLeadChanged
+ns.PointGuideArrow(nil)
+
+-- #1308: a companion with its own arrow hides our frame on any journey, the player's own included. The marker poll
+-- keeps placing the native marker, and the lead stays ours, so a guide addon's arrow stays down beside the companion's.
+owner = nil
+ns.db.arrivalPin = true
+driver.move({ map = 1, x = 0, y = 0, z = 0 })
+ns.PointGuideArrow(markerBends, placeMarker)
+assert(not frame.hidden and ns.ArrowLeads(), "the journey starts with our frame leading")
+leadNotices = 0
+ns.ArrowLeadChanged = function()
+	leadNotices = leadNotices + 1
+end
+assert(ns.SetArrowShown("Queston", false) == true and ns.SetArrowShown("Other", false) == true, "two owners hold")
+assert(frame.hidden and ns.ArrowLeads(), "the companion's arrow leads in our frame's place")
+assert(leadNotices == 0, "so no guide bridge hears the lead change")
+local companionTicker = tickers[#tickers]
+assert(not companionTicker.cancelled, "the marker poll takes over")
+local companionPlaced = #markerPlaces
+driver.move({ map = 1, x = 80, y = 0, z = 0 })
+companionTicker.callback()
+assert(#markerPlaces > companionPlaced, "the native marker still follows the bends")
+ns.PointGuideArrow(markerBends, placeMarker)
+assert(frame.hidden and ns.ArrowLeads(), "a new leg stays hidden under the hold")
+assert(ns.SetArrowShown("Queston", true) == true)
+assert(frame.hidden, "one owner releasing leaves the other's hold")
+assert(ns.SetArrowShown("Other", true) == true)
+assert(not frame.hidden and tickers[#tickers].cancelled, "the last release brings our frame and its ticker back")
+
+-- A bend on another map with no marker leading there is one no arrow here can point at, held or not.
+ns.SetArrowShown("Queston", false)
+ns.PointGuideArrow({ { map = 2, x = 0, y = 0 }, { map = 2, x = 100, y = 0 } }, placeMarker)
+assert(not ns.ArrowLeads(), "nothing leads to a bend neither the marker nor an arrow can point at")
+
+-- The arrival pin is part of our frame: hidden while held, shown on release.
+ns.PointGuideArrow(nil)
+insideHeld = true
+ns.StopInside = function(stop)
+	return stop == heldStop and insideHeld
+end
+ns.PointArrivalPin(heldStop)
+assert(frame.hidden and ns.ArrowLeads(), "a held companion keeps the arrival pin hidden")
+ns.SetArrowShown("Queston", true)
+assert(not frame.hidden and frame.arrival, "release shows the arrival pin")
+ns.PointArrivalPin(nil)
+ns.StopInside = origStopInside
+ns.ArrowLeadChanged = origLeadChanged
+
+for _, case in ipairs({ { "  ", false }, { 7, false }, { "Queston" }, { "Queston", 1 } }) do
+	local ok, reason = ns.SetArrowShown(case[1], case[2])
+	assert(ok == nil and reason == "invalid", "a blank owner or a non-boolean switch is refused")
+end
 ns.PointGuideArrow(nil)
 
 -- A mouth on the current journey shows one instruction independently of quest objectives.

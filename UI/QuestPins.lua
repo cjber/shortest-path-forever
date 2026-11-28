@@ -34,6 +34,18 @@ local PROVIDER_EVENTS = {
 	"CVAR_UPDATE",
 }
 
+-- The objective quests a stop marks (#472, #859), which its map button shows too (Route.lua). Its hand-ins come after
+-- them, so a stop that only hands a quest in still has one to show.
+---@param point SPFPoint
+---@return integer[]
+function ns.StopQuests(point)
+	local quests = { point.questID }
+	for _, questID in ipairs(point.questIDs or {}) do
+		quests[#quests + 1] = questID
+	end
+	return quests
+end
+
 -- The quests the drawn stops mark: the stops from the one being travelled to, as Route.lua draws them, and a lone
 -- destination. A corpse run's goal marks no quest, and a player who turned the switch off keeps every marker the
 -- game draws (#871).
@@ -50,10 +62,7 @@ local function Marked()
 		if not point or point.corpse or (point.stop or point).unmarked then
 			return
 		end
-		if point.questID then
-			marked[point.questID] = true
-		end
-		for _, questID in ipairs(point.questIDs or {}) do
+		for _, questID in ipairs(ns.StopQuests(point)) do
 			marked[questID] = true
 		end
 		-- A quest handed in at the stop has no objective area here: its pin is hidden all the same, so the game's "?"

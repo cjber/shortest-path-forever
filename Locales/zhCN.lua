@@ -160,9 +160,12 @@ L["Choose which arrows to show when following a standalone RestedXP guide."] =
 	"选择单独使用 RestedXP 指南时要显示的箭头。" -- mt
 L["RestedXP arrow"] = "RestedXP 箭头设置" -- mt
 L["RestedXP's arrow"] = "RestedXP 的箭头" -- mt
+L["Route to your map pin"] = "前往你的地图标记"
 L["Shortest Path's arrow"] = "Shortest Path 的箭头" -- mt
 L["Shortest Path pins and route lines on the world map."] = "世界地图上的 Shortest Path 图钉和路线。" -- mt
 L["Show Shortest Path marks"] = "显示 Shortest Path 标记" -- mt
+L["Starts a journey when you place the game's map pin. The journey key still works when this is off."] =
+	"放置游戏的地图标记时开始旅程。关闭此选项后仍可使用旅程按键。"
 L["The travel action will update after combat."] = "旅行操作将在战斗结束后更新。"
 L["Rides to spend less time walking through %s (level %s)"] =
 	"搭乘交通工具以减少在%s（等级%s）内步行的路程"
@@ -214,8 +217,8 @@ L["Show portals"] = "显示传送门"
 L["Show routes on the world map"] = "在世界地图上显示航线"
 L["Show the compass"] = "显示指南针"
 L["Show the flight to take"] = "显示要乘坐的航班"
-L["Show the next direction and the game's navigation marker. When off, only the route on the map and minimap stays."] =
-	"显示下一个方向和游戏的导航标记。关闭时，只保留地图和小地图上的路线。"
+L["Show Shortest Path's arrow and the game's navigation marker. TomTom's arrow has its own settings."] =
+	"显示 Shortest Path 的箭头和游戏的导航标记。TomTom 的箭头有单独的设置。" -- mt
 L["Show the time left under the compass"] = "在指南针下显示剩余时间"
 L["Show the way to your corpse"] = "显示前往尸体的路"
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =
@@ -525,8 +528,7 @@ L["Journey stops"] = "旅程停靠点" -- mt
 L["Ordering stops by estimated travel time..."] = "正在按预计旅行时间排列停靠点..." -- mt
 L["Orders the stops by estimated travel time. You can change the order."] =
 	"按预计旅行时间排列停靠点。你可以更改顺序。" -- mt
-L["Place a map waypoint, then add it to this journey."] =
-	"请先在地图上设置路点，再将其添加到此旅程。" -- mt
+L["Place pins on the map to add stops."] = "在地图上设置路点，即可添加旅程停靠点。" -- mt
 L["Remove"] = "移除" -- mt
 L["Stop %d of %d."] = "第%d个停靠点，共%d个。" -- mt
 L["Stop your current journey before starting this journey."] = "请先停止当前旅程，再开始此旅程。" -- mt
@@ -641,6 +643,10 @@ L["Right-click to choose map services."] = "右键点击选择地图服务。" -
 L["Use TomTom's arrow"] = "使用 TomTom 的箭头" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"安装 TomTom 时，用 TomTom 的箭头指向每一步，替代本插件箭头和游戏标记。" -- mt
-L["A guide step on another continent keeps the old route on screen while the new one plans."] =
-	"另一块大陆上的指南步骤会在规划新路线时保留旧路线显示。" -- mt
+L["The compass can stay on screen without a journey."] = "没有旅程时，指南针也可以留在屏幕上。" -- mt
 L["Mailbox"] = "邮箱" -- mt
+L["Skip this stop"] = "跳过此采集点" -- mt
+L["Destination queued until combat ends."] = "目的地已排队，战斗结束后规划。" -- mt
+L["Keep the compass visible without a journey"] = "没有旅程时仍显示指南针"
+L["Shows your heading when there are no directions to follow. Requires Show the compass."] =
+	"没有路线指引时显示你的朝向。需要开启“显示指南针”。"

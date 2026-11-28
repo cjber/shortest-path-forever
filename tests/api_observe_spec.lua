@@ -37,6 +37,8 @@ for _, options in ipairs({
 	{ policy = "walking", x = 1 },
 	{ stopMarkers = "no" },
 	{ stopMarkers = 0 },
+	{ fadeLaterLegs = "no" },
+	{ tourLine = 1 },
 }) do
 	local ok, reason = API.NavigateRoute("o", { stop(1000) }, options)
 	equal(ok, nil, "invalid options answer nil")
@@ -60,6 +62,17 @@ check(API.NavigateRoute("o", { stop(1000), stop(2000) }, { stopMarkers = true, p
 check(not ns.JourneyGoal().unmarked, "markers true pins the stops")
 check(API.NavigateRoute("o", { stop(1000), stop(2000) }), "default markers")
 check(not ns.JourneyGoal().unmarked, "the default pins the stops")
+check(API.NavigateRoute("o", { stop(1000), stop(2000) }, { fadeLaterLegs = false }), "later legs unfaded")
+check(ns.JourneyGoal().unfaded, "fadeLaterLegs false marks the route")
+check(API.NavigateRoute("o", { stop(1000), stop(2000) }), "default fade")
+check(not ns.JourneyGoal().unfaded, "the default fades later legs")
+local tour = { stop(1000), stop(2000), stop(3000), stop(4000) }
+check(API.NavigateRoute("o", tour, { tourLine = true }), "a tour")
+check(ns.JourneyGoal().tourLine, "tourLine true marks the route")
+equal(ns.JourneyPreview()[#ns.JourneyPreview()].stop, 4, "the preview runs to the last stop")
+equal(ns.JourneyPreview(2)[#ns.JourneyPreview(2)].stop, 3, "a limit stops the preview that many legs on")
+check(API.NavigateRoute("o", tour), "the same stops without it")
+check(not ns.JourneyGoal().tourLine, "a resubmit follows the option")
 check(API.Cancel("o"), "cancel")
 d.path.settle()
 

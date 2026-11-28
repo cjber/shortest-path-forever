@@ -139,8 +139,8 @@ do
 	tomtom:ShowHideCrazyArrow()
 	equal(c.arrow.alpha, 0, "TomTom settings updates preserve suppression")
 	c.ns.db.arrow = false
-	c.ns.PointGuideArrow(nil)
-	equal(c.arrow.alpha, 0, "turning SPF's arrow off keeps TomTom's arrow muted while the journey guides")
+	c.ns.PointGuideArrow({ { map = 1, x = 1, y = 1 } })
+	equal(c.arrow.alpha, 0.4, "turning SPF's arrow off hands the screen back to TomTom's arrow")
 	equal(c.arrow.mouse, false, "TomTom's current input setting is retained")
 	c.ns.db.arrow = true
 	c.ns.PointGuideArrow({ { map = 1, x = 1, y = 1 } })
@@ -169,39 +169,28 @@ do
 	equal(c.arrow.alpha, 0.4, "turning follow off restores TomTom guidance")
 end
 
--- Turning our arrow off hides TomTom's Crazy Arrow too while a journey owns its waypoint: the route stays, and the
--- duplicate arrow is not shown again.
+-- Show direction arrow hides only Shortest Path's own arrow: TomTom's stays on the waypoint a journey follows (#1390).
 do
 	local c = Boot(true)
 	c.ns.db.arrow = false
 	local tomtom = c.login()
 	c.world()
 	c.frame()
-	local shows = 0
-	local showHide = tomtom.ShowHideCrazyArrow
-	function tomtom:ShowHideCrazyArrow(...)
-		shows = shows + 1
-		return showHide(self, ...)
-	end
-	tomtom:Way(1, 60, 52, "No arrow")
+	tomtom:Way(1, 60, 52, "TomTom only")
 	c.driver.path.settle()
 	equal(c.API.CurrentStop("TomTom"), 1, "the off arrow still follows the journey's waypoint")
-	equal(c.arrow.alpha, 0, "the off arrow keeps TomTom's Crazy Arrow muted")
-	equal(c.arrow.mouse, false, "the muted TomTom arrow cannot intercept clicks")
-	equal(shows, 0, "muting does not call ShowHideCrazyArrow to re-show TomTom's arrow")
+	equal(c.arrow.alpha, 0.7, "TomTom's arrow stays visible with our arrow off")
+	equal(c.arrow.mouse, true, "and takes the mouse as usual")
+	c.ns.PointGuideArrow({ { map = 1, x = 1, y = 1 } })
+	equal(c.arrow.alpha, 0.7, "new directions leave it visible")
 
-	-- The journey ending restores TomTom's arrow.
-	c.ns.ClearJourney()
-	equal(c.arrow.alpha, 0.7, "ending the journey with the arrow off restores TomTom's arrow")
-	equal(c.arrow.mouse, true, "restoring the arrow restores its input")
-
-	-- So does turning our arrow back on once it no longer guides.
-	tomtom:Way(1, 65, 52, "Back on")
-	c.driver.path.settle()
-	equal(c.arrow.alpha, 0, "a new journey mutes TomTom again with the arrow off")
 	c.ns.db.arrow = true
-	c.ns.PointGuideArrow(nil)
-	equal(c.arrow.alpha, 0.7, "turning the arrow back on restores TomTom when guidance is paused")
+	c.ns.PointGuideArrow({ { map = 1, x = 1, y = 1 } })
+	equal(c.arrow.alpha, 0, "turning our arrow on mutes TomTom's duplicate")
+	c.ns.db.arrow = false
+	c.ns.JourneyGuide.ArrowChanged()
+	c.ns.SyncTomTomArrow()
+	equal(c.arrow.alpha, 0.7, "turning it off again restores TomTom's arrow")
 	equal(c.arrow.mouse, true, "and its input")
 end
 
@@ -214,9 +203,11 @@ do
 	c.driver.path.settle()
 	tomtom:ClearCrazyArrowPoint(false)
 	c.ns.PointGuideArrow(nil)
-	equal(c.arrow.hidden, true, "restoring settings never resurrects an empty TomTom arrow")
+	tomtom:ArrowUpdate()
+	equal(c.arrow.hidden, true, "TomTom hides its empty arrow on update after restoring settings")
 	tomtom:ShowHideCrazyArrow()
-	equal(c.arrow.hidden, true, "later TomTom settings refreshes keep its empty arrow hidden")
+	tomtom:ArrowUpdate()
+	equal(c.arrow.hidden, true, "TomTom hides its empty arrow on update after a settings refresh")
 	equal(c.API.CurrentStop("TomTom"), 1, "clearing only the arrow retains the followed journey")
 	tomtom:Way(1, 65, 52, "Next arrow")
 	c.driver.path.settle()
@@ -435,6 +426,122 @@ do
 	c.world()
 	c.frame()
 	equal(c.ns.HasJourney(), false, "a waypoint removed during login plans nothing")
+end
+
+-- Turning the setting on follows the waypoint the arrow already points to, never over a journey under way.
+do
+	local c = Boot(false)
+	local tomtom = c.login()
+	c.world()
+	c.frame()
+	local function turnOn()
+		c.ns.db.tomtomFollow = true
+		c.ns.RefreshTomTomFollow(true)
+		c.driver.path.settle()
+	end
+	local function turnOff()
+		c.ns.db.tomtomFollow = false
+		c.ns.RefreshTomTomFollow(true)
+	end
+	tomtom:Way(1, 60, 50, "Standing")
+	turnOn()
+	equal(c.title(), "Journey to Standing", "the selected waypoint is followed")
+	turnOff()
+	turnOn()
+	equal(c.title(), "Journey to Standing", "and followed again after off and on")
+
+	-- Other callers (TomTom loading, "Use TomTom's arrow") restart no journey the player ended.
+	c.ns.ClearJourney()
+	c.ns.RefreshTomTomFollow()
+	equal(c.ns.HasJourney(), false, "only turning the setting on picks the arrow's waypoint up")
+
+	turnOff()
+	c.API.Navigate("Guide", 1, 0.6, 0.55, "Guide stop")
+	turnOn()
+	equal(c.title(), "Journey to Guide stop", "a journey under way is kept")
+	c.ns.ClearJourney()
+
+	for _, mark in ipairs({ { corpse = true }, { from = "Polestar" } }) do
+		turnOff()
+		mark.title = "Not ours to follow"
+		tomtom:AddWaypoint(1, 0.3, mark.corpse and 0.3 or 0.31, mark)
+		turnOn()
+		equal(c.ns.HasJourney(), false, "corpse and Polestar waypoints are never picked up")
+	end
+
+	turnOff()
+	local gone = tomtom:Way(1, 61, 50, "Gone")
+	tomtom:RemoveWaypoint(gone)
+	turnOn()
+	equal(c.ns.HasJourney(), false, "a removed waypoint still on the arrow is not picked up")
+
+	-- In combat the pick-up waits, and a journey planned meanwhile is kept.
+	turnOff()
+	tomtom:Way(1, 62, 50, "In combat")
+	c.combat = true
+	turnOn()
+	equal(c.ns.HasJourney(), false, "nothing is planned in combat")
+	c.combat = false
+	c.watcher:OnEvent("PLAYER_REGEN_ENABLED")
+	c.driver.path.settle()
+	equal(c.title(), "Journey to In combat", "the selected waypoint is followed after combat")
+	turnOff()
+	c.combat = true
+	turnOn()
+	c.ns.PickInCombat({ map = 1, x = 0.6, y = 0.55, title = "Picked" })
+	c.combat = false
+	c.watcher:OnEvent("PLAYER_REGEN_ENABLED")
+	c.driver.path.settle()
+	equal(c.title(), "Journey to Picked", "a journey picked in combat is kept")
+end
+
+-- What happens later in a fight wins over a waypoint still waiting for its end.
+do
+	local c = Boot(true)
+	local tomtom = c.login()
+	c.world()
+	c.frame()
+	c.ns.IsOwnTomTomWaypoint = function(uid)
+		return uid.title == "Ours"
+	end
+	local count = 0
+	local function fight(during)
+		count = count + 1
+		c.ns.ClearJourney()
+		c.combat = true
+		tomtom:Way(1, 40 + count, 50, "Waiting")
+		during()
+		c.combat = false
+		c.watcher:OnEvent("PLAYER_REGEN_ENABLED")
+		c.driver.path.settle()
+		return c.title()
+	end
+	local picked = fight(function()
+		c.ns.PickInCombat({ map = 1, x = 0.6, y = 0.55, title = "Picked" })
+	end)
+	equal(picked, "Journey to Picked", "a destination picked in combat is kept")
+	equal(fight(c.ns.PlayerClear), nil, "a route cleared in combat stays cleared")
+	local corpse = fight(function()
+		tomtom:AddWaypoint(1, 0.3, 0.3, { title = "My Corpse", corpse = true })
+	end)
+	equal(corpse, nil, "an arrow moved to the corpse drops the waiting waypoint")
+	local polestar = fight(function()
+		tomtom:AddWaypoint(1, 0.3, 0.31, { title = "Theirs", from = "Polestar" })
+	end)
+	equal(polestar, nil, "an arrow moved to Polestar's waypoint drops the waiting one")
+	local ours = fight(function()
+		tomtom:AddWaypoint(1, 0.3, 0.32, { title = "Ours" })
+	end)
+	equal(ours, "Journey to Waiting", "our own waypoint on the arrow drops nothing")
+
+	c.ns.db.tomtomFollow = false
+	c.ns.RefreshTomTomFollow(true)
+	local cleared = fight(function()
+		c.ns.db.tomtomFollow = true
+		c.ns.RefreshTomTomFollow(true)
+		c.ns.PlayerClear()
+	end)
+	equal(cleared, nil, "a route cleared after turning Follow on in combat stays cleared")
 end
 
 -- With the setting off, TomTom's own waypoints plan nothing, at login or after it.

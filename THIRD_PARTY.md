@@ -65,6 +65,14 @@ Credit for the reports and requests behind the addon.
 
 | Who | What | Notes |
 |---|---|---|
+| GamingExports | Destinations picked in combat are queued and their line shows | CurseForge comment 100017277, #1413 |
+| fredranger | Flight times only count flights flown from end to end | Discord, #1421 |
+| static2290 | Start Journey stops while following a map pin | Discord, #1410 |
+| static2290 | Add Journey stops directly from the map | Discord, #1411 |
+| static2290 | Remember Journey stops and resume the remaining route | Discord, #1412 |
+| [hailtohell](https://github.com/hailtohell) | Other addons can draw walks from your floor | GitHub, #1409 |
+| forleong | TomTom arrow handoff with the RestedXP bridge | CurseForge thread 100011835, #1390 |
+| xh43k | A switch for routing to the map pin | Discord, #1391 |
 | Nedula | Minimap walking route size | CurseForge thread 8778371; #1281 |
 | alexaroth | One destination pin on OpenMap | Discord; #1267 |
 | alexaroth | Routes to the zone clicked in OpenMap | Discord; #1268 |
@@ -82,7 +90,7 @@ Credit for the reports and requests behind the addon.
 | [Chulf58](https://github.com/Chulf58) | Walking paths for other addons to guide along | GitHub; #1026 |
 | [embiem](https://github.com/embiem) | Separate Hearthstone and class teleport switches | GitHub; #775 |
 | [InfamousMunky](https://github.com/InfamousMunky) | The Hearthstone switch outside settings | GitHub; cjber/adventure-guide-forever#707 |
-| A player | Journeys avoid opposing-faction guarded lifts | CurseForge thread 8726893, #911 |
+| user_6q0jf3zanigk317s | Journeys avoid opposing-faction guarded lifts | CurseForge thread 8726893, #911 |
 | kaelr1 | Transmogrifiers in Nearby services and map pins | Discord, #909 |
 | user\_lsqt69ps7bgb5p7e | Journeys with several chosen stops | CurseForge thread 8705002, #846 |
 | Enel3008 | Choose how strongly journeys prefer roads | CurseForge thread 8705155, #848 |
@@ -153,7 +161,7 @@ Credit for the reports and requests behind the addon.
 | Bolton\_wow | Unknown flight points no longer marked as known | CurseForge; 8673972 |
 | Aldericdevir | Journeys to quests with only a start pin | GitHub; #629 |
 | joaocjesus | Controller route waits for the map to close (code) | GitHub; #581, PR #580 |
-| jakerist (Grayburn) | Destination pin points the right way | GitHub; #624 |
+| jakerist | Destination pin points the right way | GitHub; #624 |
 | MacieGx | Stop right-clicks work first time (code) | GitHub; #542, PR #533 |
 | MacieGx | Walks start and end on your floor (code) | GitHub; PR #574, PR #696 |
 | MacieGx | Nearby goods suit your level (code) | GitHub; PR #601 |
@@ -173,7 +181,7 @@ Credit for the reports and requests behind the addon.
 | Speaker1264 | Combat Text taint fixed | GitHub; #457 |
 | SuubzTV | Fixed the RestedXP guidance regression | CurseForge; #458 |
 | Fel7 | Build a path returns to the quest menu | CurseForge; #459 |
-| Kragmars | Objective lines under the arrow and pin | Discord; #660 |
+| kragmars | Objective lines under the arrow and pin | Discord; #660 |
 | spidersylar | Known flight points kept per character | CurseForge; #685 |
 | Acem | Known flight points kept per character | CurseForge; #685 |
 | tgkGate | Fixed the path job yield error | CurseForge; #717 |
@@ -210,6 +218,87 @@ Credit for the reports and requests behind the addon.
 | nimri82 | The public guidance point for RestedXP-Navigator | CurseForge; #777 |
 | [cmartin303](https://github.com/cmartin303) | Short walks through Ironforge keep nearby doorways | GitHub; #910 |
 | [lukehmu](https://github.com/lukehmu) | Journey clicks in the corners of a square minimap | GitHub; #1152 |
+| [cmartin303](https://github.com/cmartin303) | Walks from a pier can start on it | GitHub; #889 |
+| [cmartin303](https://github.com/cmartin303) | Followed roads hold through bends and gaps | GitHub; #891 |
+| [cmartin303](https://github.com/cmartin303) | Faint and narrow roads stay connected | GitHub; #893 |
+| Hex_512 | A turned-off ForeverCore is named when you try Shortest Path | CurseForge; #996 |
+| klessky92\_ | A turned-off ForeverCore is named when you try Shortest Path | CurseForge; #996 |
+| user\_nj1mf9vmj5vyv6iu | Walking directions while long routes are checked | CurseForge; #997 |
+| [ScottWilson0903](https://github.com/ScottWilson0903) | Druid flight path used for Alliance journeys | GitHub; #1010 |
+| mrhumid | Loch Modan walks use the Dun Algaz tunnel | Discord; #1011 |
+| PrinceOfPromise | Loch Modan walks use the Dun Algaz tunnel | CurseForge thread 8761572; #1011 |
+| user\_0dz6gz97l7u8znua12954 | No empty Boats header near enemy docks | CurseForge; #1017 |
+| [Gieryic](https://github.com/Gieryic) | Adjustable off-path tolerance for walking | GitHub; #1033 |
+| borick7318 | Click the cast prompt's icon to travel | Discord; #1035 |
+| row023 | Trade District walks start on the street | Discord; #1046 |
+| FalconDS9 | Only your chosen key plans a map journey | CurseForge; #1050 |
+| karrier\_user\_slouyac50poxg707 | Only your chosen key plans a map journey | CurseForge thread 8693411; #1050 |
+| kaelr1 | Boat rows show the right destinations | Discord; #1057 |
+| Marlynnie | Theramore routes no longer sail off and back | CurseForge thread 8749092; #1062 |
+| vibblez | Hinterlands walks take the direct path | Discord; #1063 |
+| dumbdavid | Journey clicks say when journeys are off | Discord; #1076 |
+| user\_8hw6almdkhj2amgo | Forever's trainers listed in Nearby services | CurseForge; #1082 |
+| user\_pznv13y5espypdlg | A switch to hide the cast prompt | CurseForge; #1086 |
+| Pharadigm | Shift-click shows the Waypoint UI marker again | CurseForge; #1092 |
+| [smsunarto](https://github.com/smsunarto) | Waypoint UI markers start with journeys (code) | GitHub; PR #1009 |
+| \_spada | Long walks no longer lose to short flights | Discord; #1102 |
+| [itsthatguy](https://github.com/itsthatguy) | Lighter processor use on walking journeys (code) | GitHub; PR #1097 |
+| KariArisu | Arrow returns beside Waypoint UI's marker | CurseForge; #1124 |
+| user\_391rfqgumztl83m4 | No journey tooltip covering the minimap | CurseForge thread 8757234; #1128 |
+| Banantwist | No journey tooltip covering the minimap | CurseForge thread 8757234; #1128 |
+| znke | No journey tooltip covering the minimap | CurseForge thread 8757685; #1128 |
+| Freaky\_Fred1 | Waypoint stays at the step's destination | CurseForge; #1138 |
+| user\_qtzuiuer28ngqgnt | Journeys no longer load forever | CurseForge; #1141 |
+| syrieal | A switch to hide the Shift-click hint | CurseForge; #1142 |
+| [lukehmu](https://github.com/lukehmu) | Clearer label for the journeys setting | GitHub; #1150 |
+| [lukehmu](https://github.com/lukehmu) | World map icons hide in combat | GitHub; #1151 |
+| user\_mtserwgidj8lchpp | Switch off map pins and route lines | CurseForge; #1153 |
+| .r.c.j | Stormwind walking routes plan sooner | Discord; #1154 |
+| PrinceOfPromise | Nearby travel times show sooner after reload | CurseForge; #1159 |
+| user\_lcyuz0oeo02at06036285 | No second arrow beside the character | CurseForge; #1161 |
+| TT\_El\_Barto | Flight masters keep other networks' known points | CurseForge; #1165 |
+| [AdrianOrenstein](https://github.com/AdrianOrenstein) | Casting no longer causes route lag spikes | GitHub; #1233 |
+| [rml9ty](https://github.com/rml9ty) | A switch for the minimap journey key hint | GitHub; #1241 |
+| antarek | Trainer journeys skip trainers with nothing left | CurseForge; #1245 |
+| user\_lfc6afjgqiurfo3964026 | RestedXP keeps its own steady arrow | CurseForge thread 8765918; #1246 |
+| lumpi_lumpi | Follow Zygor guides | Discord; #1247 |
+| [HeartOfD2](https://github.com/HeartOfD2) | RestedXP journeys mark each bend again | GitHub; #1254 |
+| Bervath | RestedXP journeys mark each bend again | CurseForge thread 8771732; #1254 |
+| [JanitorHead](https://github.com/JanitorHead) | Shift-click past the map's edge passes on (code) | GitHub; PR #1274 |
+| jaidy_ | Arrow returns for standalone RestedXP guides | Discord; #1296 |
+| bradeckz | Arrow returns for standalone RestedXP guides | Discord; #1296 |
+| EPSH | Arrow returns for standalone RestedXP guides | CurseForge thread 8771759; #1296 |
+| alexaroth | Flight master pins across OpenMap's stitched view | Discord; #1299 |
+| therealdoctordave | Arrow off leaves no TomTom marker | Discord; #1301 |
+| alexaroth | The route stays on the map in combat | Discord; #1302 |
+| [hwalflor](https://github.com/hwalflor) | Add-ons can hide the route arrow (API) | GitHub; #1308 |
+| xh43k | Minimap trail switch is easier to find | CurseForge thread 8783179; #1309 |
+| TechnoHunter | No tracker error from repeated departures | CurseForge thread 8785047; #1310 |
+| konasek20 | No tracker error from repeated departures | Discord; #1310 |
+| jaidy_ | Routed arrow keeps leading after quest turn-ins | Discord; #1311 |
+| Zhiroc | One right-click clears a journey | Discord; #1312 |
+| [farbod21](https://github.com/farbod21) | Readable tracker text beside shrunken fonts | GitHub; #1334 |
+| thefarbod | Readable tracker text beside shrunken fonts | Discord; #1335 |
+| xh43k | Ctrl-click map pins plan journeys with OpenMap | Discord; #1336 |
+| xh43k | Clearing quest focus ends its journey | Discord; #1340 |
+| xh43k | Quick Nearby services button on the map | Discord; #1342 |
+| [SelkieMoejun](https://github.com/SelkieMoejun) | Tracker text stays readable with EllesmereUI | GitHub; #1343 |
+| xh43k | Deleting a map pin ends its journey | Discord; #1348 |
+| aoulacg23211 | Older saves keep their RestedXP arrow | CurseForge thread 100007129; #1349 |
+| forleong | Option to use TomTom's arrow for journeys | CurseForge; #1350 |
+| geno1 | Custom road allowance no longer slows routes | Discord; #1355 |
+| wesslan | Tracker text keeps its shadow | CurseForge thread 100006133; #1357 |
+| JRBVoodoo | One pin for OpenMap quest routes | CurseForge; #1366 |
+| user\_tr1cy1rhqvkqen5u63977 | Walking routes can be dotted or solid | CurseForge thread 100001405; #1367 |
+| xh43k | Mailboxes in Nearby services | CurseForge thread 100002349; #1368 |
+| Rayve0Black | Mailbox icons on the world map | CurseForge thread 100013325; #1373 |
+| Wraith12 | Skip a farming stop from the tracker | CurseForge; #1394 |
+| kaelr1 | Hide the journey tracker from its menu | Discord; #991 |
+| puglife_636 | The screen compass starts off | CurseForge thread 8735296; #985 |
+| markits | Each town service has its own map icon | CurseForge thread 8736988; #985 |
+| user\_h1s2g8ruvulbm6909075 | ForeverCore ships inside Shortest Path | CurseForge thread 8754508 |
+| Crazy\_Yew\_Trees | Routes keep out of zones far above your level | CurseForge thread 8716692; #897, #1007 |
+| schmelbertina | Routes keep out of zones far above your level | CurseForge thread 8719289; #897, #1007 |
 
 ## Inspired by
 

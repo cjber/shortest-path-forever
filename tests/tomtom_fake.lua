@@ -26,10 +26,11 @@ local Fake = {}
 
 ---@param saved? table[] the waypoints TomTom saved last session: {map, x, y, title = ...}
 ---@param wayframe? table the arrow frame, when a spec observes its visibility
-function Fake.New(saved, wayframe)
-	local tomtom = { profile = { stickycorpse = false, setclosest = true } }
+---@param modern? boolean use TomTom 4.4.1 waypoint storage and arrow removal order
+function Fake.New(saved, wayframe, modern)
+	local tomtom = { profile = { stickycorpse = false, setclosest = true, savewaypoints = true } }
 	local waypoints, valid, profile = {}, {}, {}
-	local arrow
+	local arrow, closestPending
 	local hijacked = false
 	tomtom.waypoints = waypoints
 
@@ -41,7 +42,7 @@ function Fake.New(saved, wayframe)
 		if arrow and arrow.corpse and self.profile.stickycorpse then
 			return
 		end
-		arrow = uid
+		arrow, closestPending = uid, false
 		if wayframe then
 			wayframe:Show()
 		end
@@ -68,12 +69,16 @@ function Fake.New(saved, wayframe)
 
 	function tomtom.ClearWaypoint(_, uid)
 		valid[uid] = nil
+		if modern and arrow == uid then
+			arrow, closestPending = nil, true
+		end
 	end
 
 	function tomtom.IsValidWaypoint(_, uid)
 		assert(type(uid) == "table", "TomTom:IsValidWaypoint(waypoint) UID is not a table.")
 		local map = waypoints[uid[1]]
-		return map ~= nil and map[Key(uid[1], uid[2], uid[3], uid.title)] == uid
+		local stored = map and map[Key(uid[1], uid[2], uid[3], uid.title)]
+		return stored ~= nil and (modern or stored == uid)
 	end
 
 	function tomtom:AddWaypoint(m, x, y, opts)
@@ -82,26 +87,29 @@ function Fake.New(saved, wayframe)
 			opts.crazy = true
 		end
 		if opts.persistent == nil then
-			opts.persistent = true
+			opts.persistent = self.profile.savewaypoints
 		end
 		local key = Key(m, x, y, opts.title)
 		if waypoints[m] and waypoints[m][key] then
 			return waypoints[m][key]
 		end
-		local uid = { m, x, y, title = opts.title, from = opts.from or "?" }
+		local uid = { m, x, y, title = opts.title, from = opts.from or (modern and opts.source) or "?" }
 		for k, v in pairs(opts) do
 			if not uid[k] then
 				uid[k] = v
 			end
 		end
 		valid[uid] = true
-		if opts.crazy then
+		if opts.crazy and not modern then
 			self:SetCrazyArrow(uid, 15, opts.title)
 		end
 		waypoints[m] = waypoints[m] or {}
 		waypoints[m][key] = uid
 		if opts.persistent then
 			profile[key] = uid
+		end
+		if opts.crazy and modern then
+			self:SetCrazyArrow(uid, 15, opts.title)
 		end
 		return uid
 	end
@@ -166,11 +174,17 @@ function Fake.New(saved, wayframe)
 	-- The arrow's next update: a waypoint that is gone is dropped, and the closest one left is taken.
 	---@param closest? table the waypoint GetClosestWaypoint would find, if any
 	function tomtom:ArrowUpdate(closest)
-		if arrow and not valid[arrow] then
-			arrow = nil
+		if wayframe and (wayframe.hidden or hijacked) then
+			return
+		end
+		if closestPending or (arrow and not valid[arrow]) then
+			arrow, closestPending = nil, false
 			if self.profile.setclosest and closest and valid[closest] then
 				self:SetCrazyArrow(closest, 15, closest.title)
 			end
+		end
+		if not arrow and wayframe then
+			wayframe:Hide()
 		end
 	end
 
@@ -214,10 +228,132 @@ function Fake.New(saved, wayframe)
 	end
 
 	for _, uid in ipairs(saved or {}) do
-		local copy = { uid[1], uid[2], uid[3], title = uid.title, persistent = true }
+		local copy = { uid[1], uid[2], uid[3], persistent = true }
+		for key, value in pairs(uid) do
+			copy[key] = value
+		end
 		profile[Key(uid[1], uid[2], uid[3], uid.title)] = copy
 	end
 	return tomtom
+end
+
+-- RestedXP-TomTom 1.5.2 takes ownership by waypoint identity. The quiet delay is a fixture value.
+function Fake.Bridge(env)
+	local quietDelay = 1
+	local bridge = { paused = false }
+	local waypoint, lastElement, hooked, quietSince, emptySince
+	local function HasForeign(tomtom)
+		if type(tomtom.waypoints) ~= "table" then
+			return true
+		end
+		for _, entries in pairs(tomtom.waypoints) do
+			for _, uid in pairs(entries) do
+				if uid ~= waypoint then
+					return true
+				end
+			end
+		end
+		return false
+	end
+
+	local function Remove(tomtom)
+		if waypoint and tomtom:IsValidWaypoint(waypoint) then
+			tomtom:RemoveWaypoint(waypoint)
+		end
+		waypoint, lastElement = nil, nil
+	end
+
+	local function Tick(force)
+		local tomtom, arrow = env.TomTom, env.RXPG_ARROW
+		if not (tomtom and arrow) then
+			return
+		end
+		arrow:SetAlpha(0)
+		arrow:Show()
+		if not hooked then
+			hooked = true
+			bridge.paused = HasForeign(tomtom)
+			env.hooksecurefunc(tomtom, "SetCrazyArrow", function(_, uid)
+				if uid ~= waypoint then
+					bridge.paused, quietSince = true, nil
+				end
+			end)
+		end
+		local now = env.GetTime()
+		local reselect = force
+		if force then
+			bridge.paused, quietSince = false, nil
+		elseif bridge.paused then
+			if HasForeign(tomtom) then
+				quietSince = nil
+			else
+				quietSince = quietSince or now
+				if now - quietSince >= quietDelay then
+					bridge.paused, quietSince, reselect = false, nil, true
+				end
+			end
+		end
+		local element = arrow.element
+		if not element then
+			emptySince = emptySince or now
+			if now - emptySince >= quietDelay then
+				Remove(tomtom)
+			end
+			return
+		end
+		emptySince = nil
+		if element ~= lastElement or not (waypoint and tomtom:IsValidWaypoint(waypoint)) then
+			Remove(tomtom)
+			lastElement = element
+			waypoint = tomtom:AddWaypoint(element.zone, element.x / 100, element.y / 100, {
+				title = element.title,
+				source = "RXPGuides",
+				persistent = false,
+				crazy = false,
+			})
+			reselect = true
+		end
+		if reselect and not bridge.paused then
+			tomtom:SetCrazyArrow(waypoint, 15, waypoint.title)
+		end
+	end
+
+	local frame = env.CreateFrame("Frame")
+	local ticksOn = { PLAYER_ENTERING_WORLD = true, PLAYER_CONTROL_GAINED = true, PLAYER_ALIVE = true }
+	frame:RegisterEvent("PLAYER_LOGIN")
+	for event in pairs(ticksOn) do
+		frame:RegisterEvent(event)
+	end
+	frame:SetScript("OnEvent", function(_, event)
+		if event == "PLAYER_LOGIN" then
+			local elapsed = 0
+			frame:SetScript("OnUpdate", function(_, delta)
+				elapsed = elapsed + delta
+				if elapsed >= 0.25 then
+					elapsed = elapsed % 0.25
+					Tick()
+				end
+			end)
+			env.C_Timer.NewTicker(0.5, function(ticker)
+				Tick()
+				if env.RXPG_ARROW and env.RXPG_ARROW.element then
+					ticker:Cancel()
+				end
+			end, 10)
+			env.hooksecurefunc(env.RXP, "DrawArrow", function()
+				Tick()
+			end)
+		elseif ticksOn[event] then
+			Tick()
+		end
+	end)
+	env.RXPTOMTOM_SetCurrentWaypoint = function()
+		Tick(true)
+	end
+	function bridge.Waypoint()
+		return waypoint
+	end
+	return bridge
 end
 
 return Fake

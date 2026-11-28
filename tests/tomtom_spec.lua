@@ -484,34 +484,37 @@ do
 		equal(c.arrowFrame() ~= nil and c.arrowFrame().hidden == false, true, "native arrow shows normally")
 	end
 
-	-- 5. Respects arrow=false (#1301): adds nothing, removes driven waypoint when turned off, preserves mute.
+	-- 5. Show direction arrow is about our own arrow: Use TomTom's arrow still points the journey with it off (#1390),
+	-- and both off leaves no arrow of ours on screen (#1301).
 	do
-		local c = BootArrow({ tomtomArrow = true, tomtomFollow = true, arrow = false })
-		local adds = 0
-		local origAdd = c.tomtom.AddWaypoint
-		function c.tomtom:AddWaypoint(...)
-			adds = adds + 1
-			return origAdd(self, ...)
-		end
-		c.driver.begin({ map = 1, x = 0, y = 0 }, { map = 1, x = 0, y = -5000 })
-		equal(adds, 0, "with arrow=false, tomtomArrow never adds a waypoint")
-		local wp = c.driver.waypoint()
-		equal(wp, nil, "with arrow=false, no game navigation marker either")
-		c.ns.ClearJourney()
-		-- Following a TomTom waypoint with arrow=false still mutes TomTom's Crazy Arrow (#1301).
-		c.tomtom:Way(1, 60, 50, "Muted")
-		c.driver.path.settle()
-		equal(c.crazy.alpha, 0, "with arrow=false, TomTom's Crazy Arrow stays muted while following")
-		c.ns.ClearJourney()
-		-- Turning arrow=false mid-journey immediately removes our driven waypoint.
-		c.ns.db.arrow = true
-		c.ns.JourneyGuide.ArrowChanged()
+		local c = BootArrow({ tomtomArrow = true, arrow = false })
 		c.driver.begin({ map = 1, x = 0, y = 0 }, { map = 1, x = 0, y = -5000 })
 		local driven = c.tomtom.Arrow()
-		equal(type(driven), "table", "turning arrow back on lets tomtomArrow set a waypoint")
+		equal(type(driven), "table", "with our arrow off, Use TomTom's arrow still sets a waypoint")
+		equal(c.crazy.hidden, false, "TomTom's arrow shows")
+		equal(c.crazy.alpha, 0.7, "TomTom's arrow is not muted")
+		equal(c.arrowFrame() == nil or c.arrowFrame().hidden == true, true, "our own arrow stays off")
+		equal((c.driver.waypoint()), nil, "with arrow=false, no game navigation marker")
+		equal(c.ns.ArrowLeads(), true, "guide addons' arrows stand down beside TomTom's")
+		equal(c.ns.CastPromptShown(), false, "the cast prompt stays off with our arrow")
+		c.ns.db.tomtomArrow = false
+		c.ns.RefreshTomTomArrow()
+		equal(c.tomtom:IsValidWaypoint(driven), false, "both off removes our driven waypoint")
+		equal(c.ns.ArrowLeads(), false, "nothing leads with both off")
+	end
+
+	-- The settings checkbox alone hands the screen between the two arrows on a followed waypoint (#1390).
+	do
+		local c = BootArrow({ tomtomFollow = true })
+		c.tomtom:Way(1, 60, 50, "Followed")
+		c.driver.path.settle()
+		equal(c.crazy.alpha, 0, "our arrow replaces TomTom's on the followed waypoint")
 		c.ns.db.arrow = false
 		c.ns.JourneyGuide.ArrowChanged()
-		equal(c.tomtom:IsValidWaypoint(driven), false, "turning arrow=false mid-journey removes our driven waypoint")
+		equal(c.crazy.alpha, 0.7, "unticking Show direction arrow brings TomTom's back")
+		c.ns.db.arrow = true
+		c.ns.JourneyGuide.ArrowChanged()
+		equal(c.crazy.alpha, 0, "ticking it mutes TomTom's again")
 	end
 
 	-- 6. Real TomTom absent (only our shim in _G.TomTom): tomtomArrow stays inactive and never calls the shim.

@@ -160,10 +160,13 @@ L["Choose which arrows to show when following a standalone RestedXP guide."] =
 	"Wählt die Pfeile aus, die beim Folgen eines eigenständigen RestedXP-Guides angezeigt werden." -- mt
 L["RestedXP arrow"] = "RestedXP-Pfeil" -- mt
 L["RestedXP's arrow"] = "Pfeil von RestedXP" -- mt
+L["Route to your map pin"] = "Reise zur eigenen Kartenmarkierung"
 L["Shortest Path's arrow"] = "Pfeil von Shortest Path" -- mt
 L["Shortest Path pins and route lines on the world map."] =
 	"Markierungen und Routenlinien von Shortest Path auf der Weltkarte." -- mt
 L["Show Shortest Path marks"] = "Shortest-Path-Markierungen anzeigen" -- mt
+L["Starts a journey when you place the game's map pin. The journey key still works when this is off."] =
+	"Startet eine Reise, wenn du die Kartenmarkierung des Spiels setzt. Die Reisetaste funktioniert auch bei deaktivierter Option."
 L["The travel action will update after combat."] = "Die Reiseaktion wird nach dem Kampf aktualisiert."
 L["Rides to spend less time walking through %s (level %s)"] =
 	"Nutzt ein Transportmittel für einen kürzeren Fußweg durch %s (Stufe %s)"
@@ -216,8 +219,8 @@ L["Show portals"] = "Portale zeigen"
 L["Show routes on the world map"] = "Routen auf der Weltkarte zeigen"
 L["Show the compass"] = "Kompass zeigen"
 L["Show the flight to take"] = "Zu nehmenden Flug zeigen"
-L["Show the next direction and the game's navigation marker. When off, only the route on the map and minimap stays."] =
-	"Die nächste Richtung und die Navigationsmarkierung des Spiels zeigen. Wenn aus, bleibt nur die Route auf Karte und Minikarte."
+L["Show Shortest Path's arrow and the game's navigation marker. TomTom's arrow has its own settings."] =
+	"Den Pfeil von Shortest Path und die Navigationsmarkierung des Spiels zeigen. Der TomTom-Pfeil hat eigene Einstellungen." -- mt
 L["Show the time left under the compass"] = "Restzeit unter dem Kompass zeigen"
 L["Show the way to your corpse"] = "Weg zu Eurem Leichnam zeigen"
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =
@@ -532,8 +535,7 @@ L["Journey stops"] = "Reisehalte" -- mt
 L["Ordering stops by estimated travel time..."] = "Halte werden nach geschätzter Reisezeit geordnet..." -- mt
 L["Orders the stops by estimated travel time. You can change the order."] =
 	"Ordnet die Halte nach geschätzter Reisezeit. Du kannst die Reihenfolge ändern." -- mt
-L["Place a map waypoint, then add it to this journey."] =
-	"Setze einen Kartenwegpunkt und füge ihn dann dieser Reise hinzu." -- mt
+L["Place pins on the map to add stops."] = "Setze Wegpunkte auf der Karte, um Reisehalte hinzuzufügen." -- mt
 L["Remove"] = "Entfernen" -- mt
 L["Stop %d of %d."] = "Halt %d von %d." -- mt
 L["Stop your current journey before starting this journey."] =
@@ -653,6 +655,10 @@ L["Right-click to choose map services."] = "Rechtsklick, um Dienste auf der Kart
 L["Use TomTom's arrow"] = "TomTom-Pfeil verwenden" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"Wenn TomTom installiert ist, richtet sich der TomTom-Pfeil auf jeden Schritt statt unseres Pfeils und der Spielmarkierung." -- mt
-L["A guide step on another continent keeps the old route on screen while the new one plans."] =
-	"Ein Führungsschritt auf einem anderen Kontinent hält die alte Route sichtbar, bis die neue geplant ist." -- mt
+L["The compass can stay on screen without a journey."] = "Der Kompass kann auch ohne Reise auf dem Bildschirm bleiben." -- mt
 L["Mailbox"] = "Briefkasten" -- mt
+L["Skip this stop"] = "Diesen Halt überspringen" -- mt
+L["Destination queued until combat ends."] = "Ziel bis zum Ende des Kampfes vorgemerkt." -- mt
+L["Keep the compass visible without a journey"] = "Kompass auch ohne Reise anzeigen"
+L["Shows your heading when there are no directions to follow. Requires Show the compass."] =
+	"Zeigt deine Blickrichtung an, wenn keine Wegführung aktiv ist. Erfordert „Kompass zeigen“."

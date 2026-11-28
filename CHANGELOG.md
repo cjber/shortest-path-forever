@@ -10,6 +10,134 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.50.0] - 2026-11-28
+
+<!-- discord-image: docs/screenshots/compass.png -->
+
+### Added
+
+- **The compass can stay on screen without a journey.** A new setting shows which way you are facing when there are no directions to follow. It needs Show the compass. (#1430)
+
+### Fixed
+
+- Removing a waypoint from TomTom's arrow keeps it removed while Shortest Path guides you to the same target. (#1433)
+
+## [1.49.4] - 2026-11-27
+
+### Fixed
+
+- **Turning off Show direction arrow leaves TomTom's arrow alone.** It hides Shortest Path's arrow and the game's marker only. *Follow TomTom's arrow* keeps TomTom's arrow on screen, and *Use TomTom's arrow* keeps pointing it at each step. Thanks to forleong for the report. (#1390)
+
+## [1.49.3] - 2026-11-27
+
+### Fixed
+
+- **Follow TomTom's arrow picks your waypoint back up.** Turning it on follows the arrow's waypoint when no other journey is under way, including a RestedXP step. A step that arrives in combat keeps its route, name and quests, and a destination you pick in combat is kept. Thanks to forleong for the report. (#1390)
+
+## [1.49.2] - 2026-11-27
+
+### Fixed
+
+- A short dotted walk between two close stops on the world map can now show a dot midway between their markers. (#1418)
+
+## [1.49.1] - 2026-11-27
+
+### Fixed
+
+- Destinations picked in combat are no longer lost or silent. A message says yours is queued, including picks from Nearby services, and the journey plots when the fight ends. A route already plotted also shows its line when you open the map or change maps mid-fight. Thanks to GamingExports for the report. (#1413)
+- **Flight times no longer shrink after some rides.** A ride that left the path it was matched to could save a time of a few seconds for a long flight, so journeys using it looked far shorter than they are. A flight is now timed only when flown from end to end, and earlier timings are measured afresh. Thanks to fredranger for the report. (#1421)
+
+## [1.49.0] - 2026-11-27
+
+<!-- discord-image: docs/screenshots/stops.png -->
+
+### Added
+
+- **Journey stops remembers your list.** Your list and chosen order survive a reload or relog, and a journey in progress picks up at the first unfinished stop. Thanks to static2290 for the idea. (#1412)
+- **A calmer route for tours of many close stops.** Addons that tour dozens of places can ask for a solid line with
+  softly rounded corners that shows the leg you are on and the next four.
+- **Add stops directly from the map.** Place pins while editing your Journey stops list to add them. Thanks to static2290 for the idea. (#1411)
+- **Move the Journey stops window.** Drag it off the part of the map you want to pin. (#1411)
+
+### Fixed
+
+- **The minimap no longer covers the next stop of a tour.** On a tour of many close stops the next one is circled, so the
+  herb, vein or other icon there shows through.
+- Other addons can draw walks from your current floor. In places like Ironforge, their paths can now lead you out through the gates. Thanks to hailtohell for the report. (#1409)
+- **Start Journey stops while following a map pin.** Pressing Start replaces the journey to your pin. Thanks to static2290 for the report. (#1410)
+- **The arrival sound follows a journey that changes hands.** When another addon takes over a journey at the same destination its arrival is quiet, and one you take over plays your sound.
+
+### For addon authors
+
+- API minor 13 accepts `"player"` as the origin for `WalkPath`, `EstimateWalks`, `Estimate` and `EstimateDetail`.
+
+## [1.48.2] - 2026-11-27
+
+### Fixed
+
+- The RestedXP arrow stays in TomTom while following it. With the RestedXP TomTom bridge, Use TomTom's arrow and Follow TomTom's arrow all on, TomTom's arrow keeps pointing at the RestedXP step after you log in and after a waypoint you set in TomTom. Thanks to forleong for the report. (#1390)
+- RestedXP's step pins keep your guidance running. A map pin that a RestedXP step places or clears leaves your current journey alone. Map pins you place still take over as usual. (#1402)
+- The game's marker keeps up with bends when another arrow leads. With Shortest Path's own arrow hidden, a guide addon restating the quests of its current step no longer stops the marker moving on to the next bend of the route. (#1404)
+
+## [1.48.1] - 2026-11-27
+
+<!-- forever-core-sync -->
+
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
+### Changed
+
+- The Thanks page lists more players. More of the people whose reports and ideas shipped are now thanked by name in game.
+
+## [1.48.0] - 2026-11-26
+
+<!-- discord-image: docs/screenshots/tracker.png -->
+
+### Added
+
+- On a farming tour, right-click the current journey step and choose **Skip this stop** to pass a node and continue. Thanks to user_a6yc8131n90u9fms for the idea (#1394).
+
+### Fixed
+
+- Completing the last step of a farming stop by hand no longer ends the farming tour.
+
+## [1.47.0] - 2026-11-26
+
+<!-- discord-image: docs/screenshots/darkshore.png -->
+
+### Added
+
+- Addons with their own arrow can hide Shortest Path's while the game's waypoint marker keeps following your route.
+- Route to your map pin in Guidance, on by default: turn it off to keep the game's map pin without starting a journey. Shift- and Alt-click still plan journeys. Thanks to xh43k for the report. (#1391)
+
+### Fixed
+
+- With the RestedXP TomTom bridge, TomTom's arrow stays through RestedXP guide steps and waypoints you set in TomTom: during those guides the bridge keeps TomTom's arrow and Shortest Path's own arrow shows the route. Thanks to forleong for the report. (#1390)
+
+### For addon authors
+
+- `SetArrowShown(owner, shown)` (API minor 10) hides or returns the arrow's frame; the waypoint stays Shortest Path's. (#1308)
+- `NavigateRoute` takes `fadeLaterLegs = false` to draw a loop's later legs at full strength on the world map. (#1388)
+
+## [1.46.0] - 2026-11-26
+
+<!-- discord-image: docs/screenshots/darkshore.png -->
+
+### Added
+
+- **Walking routes can now be dotted or solid.** In Settings > Map marks > Walking route, choose Line style. Dotted remains the default.
+- **Mailboxes are now a Nearby service.** Find the nearest mailbox and show mailbox icons on the world map. (#1368, #1373)
+- Other addons can hide Shortest Path's world map pins while they show their own, keeping the route line, and bring them back afterwards. Gathering Guide Forever uses this for its calm map.
+
+### Changed
+
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
+### Fixed
+
+- **Clearing an OpenMap quest marker now clears the journey.** OpenMap and Shortest Path Forever now treat the guide marker as one destination, so clearing it does not leave the quest route running behind it.
+- **Road and wall report marks show over explored ground.** On the world map they were drawn under the explored-area art. (#1383)
+
 ## [1.45.13] - 2026-11-26
 
 ### Changed
