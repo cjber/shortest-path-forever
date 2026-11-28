@@ -19,14 +19,25 @@ local UNDER_THICKNESS = THICKNESS + 2
 -- but drop well back against parchment; StopPin.lua fades its later stops by this same amount.
 local LATER_ALPHA = 0.4
 ns.LaterAlpha = LATER_ALPHA
--- A tour's later legs are solid and only a few, so they stay readable while receding less. Its bends are cut back this
--- many screen pixels, never past this share of either side, and bridged by this many segments: enough to soften a
--- corner without moving the line off the walk.
-local TOUR_LATER_ALPHA, TOUR_CUT, TOUR_CUT_SHARE, TOUR_STEPS = 0.6, 3.5, 0.4, 4
+-- A tour's later legs are solid and only a few, so they stay readable while receding less.
+local TOUR_LATER_ALPHA = 0.6
 -- Screen pixels. The client draws nothing for a sliver of a line, so a flight or a solid walk passes over points
--- closer than these (five leaves a pixel of a walk's segment cut at both ends), and a bend's curve takes no more
--- steps than its cut has room for at TOUR_STEP each.
-local FLIGHT_APART, WALK_APART, TOUR_STEP = 3, 5, 0.75
+-- closer than these (five leaves a pixel of a walk's segment cut at both ends).
+local FLIGHT_APART, WALK_APART = 3, 5
+-- A looping tour's line: what each tier is drawn as (the lowest rank first, beneath), and the arrows along it.
+local ARROW_EVERY, ARROW_SIZE, ENTRANCE_SIZE = 57, 4, 8
+---@class SPFTierStyle : SPFSmoothStyle
+---@field thick number
+---@field alpha number
+---@field arrow boolean?
+---@field color colorRGBA?
+local TIERS = {
+	walked = { rank = 1, thick = 2, alpha = 0.3 },
+	far = { rank = 2, thick = 2, alpha = 0.55, arrow = true },
+	later = { rank = 3, thick = 2, alpha = TOUR_LATER_ALPHA },
+	near = { rank = 4, thick = 2, alpha = 1 },
+	loop = { rank = 4, thick = 3, alpha = 1, arrow = true },
+}
 -- Breadcrumbs stop short of each stop's mark, so the way runs up to a stop rather than under it: a dot is left out when
 -- its rim would come within STOP_GAP of the mark, on screen, at either end of a leg.
 local STOP_GAP = 2
@@ -75,7 +86,8 @@ local minX, maxX, minY, maxY = 0, 1, 0, 1
 ---@field clipBottom? number
 ---@field marks? {x: number, y: number, radius: number}[] -- stop marks the dots leave a gap around
 ---@field current number -- paths after this many belong to later hops
----@field tour? boolean -- a tour of many close stops: solid walks with soft corners, later legs receding less
+---@field tour? boolean -- a tour of many close stops: its walks are one flowing line, later legs receding less
+---@field loop? boolean -- the tour goes round and round: every hop is drawn, in tiers, with arrows
 ---@field highlight? table<number, boolean> -- stops whose leg is shown at full strength while the pointer is on them
 ---@field colors table<SPFMode, colorRGBA>
 
@@ -105,6 +117,8 @@ ns.Strokes = Strokes
 local out
 ---@type number, number, number, number, number, number, number
 local scale, width, height, dot, dotRim, spacing, walked
+-- The thickness of a solid line, in screen pixels.
+local lineWidth = THICKNESS
 -- Where along the walk the first dot sits.
 local phase = 0
 -- Whether a dotted segment of the current path lies in the view.
@@ -156,7 +170,7 @@ local function Begin(buffer, viewScale, small, stitched)
 	minX, maxX = wide and -math.huge or 0, wide and math.huge or 1
 	minY, maxY = minX, maxX
 	dot, dotRim, spacing = small and SMALL_DOT or DOT, RIM, small and SMALL_SPACING or SPACING
-	walked, fade, later, route, circleCount, gapped = 0, 1, 1, nil, 0, false
+	walked, fade, later, route, circleCount, gapped, lineWidth = 0, 1, 1, nil, 0, false, THICKNESS
 end
 
 local function Stroke(x1, y1, x2, y2, color, isDot, dotSize)
@@ -173,8 +187,8 @@ local function Stroke(x1, y1, x2, y2, color, isDot, dotSize)
 		ux, uy = (x2 - x1) / length * dotRim / scale, (y2 - y1) / length * dotRim / scale
 	end
 	out.x1[n], out.y1[n], out.x2[n], out.y2[n], out.ux[n], out.uy[n] = x1, y1, x2, y2, ux, uy
-	out.width[n] = (isDot and (dotSize or dot) or THICKNESS) / scale
-	out.under[n] = (isDot and (dotSize or dot) + dotRim * 2 or UNDER_THICKNESS) / scale
+	out.width[n] = (isDot and (dotSize or dot) or lineWidth) / scale
+	out.under[n] = (isDot and (dotSize or dot) + dotRim * 2 or lineWidth + 2) / scale
 	out.alpha[n], out.color[n], out.dot[n], out.route[n] = fade * later, color, isDot or false, route
 end
 
@@ -241,6 +255,22 @@ local function Circle(x, y, radius)
 	Avoid(x, y, radius + (STOP_GAP + dot / 2 + dotRim) / scale)
 end
 
+-- The colour of a line under cover: bluer and darker the deeper it runs. Quantized, so colours are shared.
+local function Shade(depth)
+	local shade = math.floor(depth / (depth + 20) * DEPTH_SHADES)
+	if not depthColors[shade] then
+		local strength = shade / DEPTH_SHADES
+		depthColors[shade] = CreateColor(0.62 - 0.38 * strength, 0.86 - 0.24 * strength, 1)
+	end
+	return depthColors[shade]
+end
+
+-- A round mark where a line goes under cover or comes back out.
+local function Portal(x, y, depth)
+	local reach = ENTRANCE_SIZE / 2 / scale
+	Stroke(x - reach, y, x + reach, y, Shade(depth), true, ENTRANCE_SIZE)
+end
+
 -- A solid stretch, from low to high of a segment, left open inside the avoided marks from the one at `mark` on.
 local function Open(x1, y1, dx, dy, low, high, color, mark)
 	if low >= high then
@@ -272,7 +302,21 @@ local function Segment(x1, y1, x2, y2, low, high, color, dashed, a, b, entranceL
 	if not dashed then
 		walked, entranceDistance = 0, nil
 		if low then
-			Open(x1, y1, dx, dy, low, high, color, gapped and 1 or circleCount + 1)
+			local mark = gapped and 1 or circleCount + 1
+			local aDepth, bDepth = a and a.depth, b and b.depth
+			if aDepth and bDepth then
+				Open(x1, y1, dx, dy, low, high, Shade((aDepth + bDepth) / 2), mark)
+			elseif aDepth or bDepth then
+				-- Under cover up to or from the cut, which also gets a mark where the line passes through it.
+				local cut = a and a.depthCut or 0.5
+				Open(x1, y1, dx, dy, low, math.min(high, cut), aDepth and Shade(aDepth) or color, mark)
+				Open(x1, y1, dx, dy, math.max(low, cut), high, bDepth and Shade(bDepth) or color, mark)
+				if cut >= low and cut <= high then
+					Portal(x1 + cut * dx, y1 + cut * dy, aDepth or bDepth)
+				end
+			else
+				Open(x1, y1, dx, dy, low, high, color, mark)
+			end
 		end
 		return
 	end
@@ -301,16 +345,7 @@ local function Segment(x1, y1, x2, y2, low, high, color, dashed, a, b, entranceL
 			elseif t >= cut then
 				depth = bDepth
 			end
-			local ink = color
-			if depth then
-				-- Quantize only the color. The surface data decides which dots are underground.
-				local shade = math.floor(depth / (depth + 20) * DEPTH_SHADES)
-				if not depthColors[shade] then
-					local strength = shade / DEPTH_SHADES
-					depthColors[shade] = CreateColor(0.62 - 0.38 * strength, 0.86 - 0.24 * strength, 1)
-				end
-				ink = depthColors[shade]
-			end
+			local ink = depth and Shade(depth) or color
 			local size, radius = dot, half
 			if depth and entranceDistance and start + distance >= entranceDistance then
 				local extra = dot * (ENTRANCE_SCALE - 1) / 2 / scale
@@ -392,50 +427,50 @@ local function MiddleDot(view, path, points, color)
 	spacing, phase = usual, 0
 end
 
--- The segment of a tour's walk still waiting to learn whether it ends in a bend: its ends, as map fractions, and its
--- length before any cut, in the view's units.
-local held, hx1, hy1, hx2, hy2, hlength = false, 0, 0, 0, 0, 0
+-- A tour's walks are gathered into Smooth.lua's one flowing line and drawn together once every path is in: the
+-- control points of the walk in hand, and the marks and arrows to lay over the finished line.
+local runX, runY, runDepth, runCount = {}, {}, {}, 0
+---@type number[], number[], (number|false)[], number[]
+local coverX, coverY, coverDepth, coverAlpha = {}, {}, {}, {}
+local coverCount = 0
+---@type number[], number[], number[], number[], number[]
+local arrowX, arrowY, arrowDX, arrowDY, arrowAlpha = {}, {}, {}, {}, {}
+local arrowCount = 0
+-- Where the last chord ended, how deep, and how far along since the last arrow.
+---@type number?, number?, number|false, number
+local lastX, lastY, lastDepth, along = nil, nil, false, 0
+local arrowColor
 
-local function Flush(color)
-	if held then
-		held = false
-		Line(hx1, hy1, hx2, hy2, color)
+-- Styles, one per tier, placeholder and colour, so a redraw allocates none.
+---@type table<SPFTierStyle, table<colorRGBA, SPFTierStyle[]>>
+local styles = {}
+---@param tier SPFTierStyle
+---@param placeholder boolean?
+---@param color colorRGBA
+local function TierStyle(tier, placeholder, color)
+	local byColor = styles[tier]
+	if not byColor then
+		byColor = {}
+		styles[tier] = byColor
 	end
+	local pair = byColor[color]
+	if not pair then
+		pair = {}
+		byColor[color] = pair
+	end
+	local key = placeholder and 2 or 1
+	if not pair[key] then
+		pair[key] = {
+			rank = tier.rank,
+			thick = tier.thick,
+			alpha = tier.alpha * (key == 2 and 0.45 or 1),
+			arrow = tier.arrow,
+			color = color,
+		}
+	end
+	return pair[key]
 end
 
--- A tour's walk, one segment at a time: where the next one carries on from the held one, both are cut back from the
--- bend and joined by a curve around it. Ends and breaks in the walk stay exact.
-local function Soft(x1, y1, x2, y2, color)
-	local length = math.sqrt(((x2 - x1) * width) ^ 2 + ((y2 - y1) * height) ^ 2)
-	if length == 0 then
-		return
-	end
-	local startX, startY = x1, y1
-	if held and hx2 == x1 and hy2 == y1 then
-		-- A straight run needs no curve, and no extra strokes.
-		local cross = (x1 - hx1) * (y2 - y1) - (y1 - hy1) * (x2 - x1)
-		if math.abs(cross) * width * height > 0.01 * hlength * length then
-			local cut = math.min(TOUR_CUT / scale, TOUR_CUT_SHARE * hlength, TOUR_CUT_SHARE * length)
-			local ax, ay = x1 + (hx1 - x1) * cut / hlength, y1 + (hy1 - y1) * cut / hlength
-			startX, startY = x1 + (x2 - x1) * cut / length, y1 + (y2 - y1) * cut / length
-			held = false
-			Line(hx1, hy1, ax, ay, color)
-			local px, py = ax, ay
-			local steps = math.max(1, math.min(TOUR_STEPS, math.floor(cut * scale / TOUR_STEP)))
-			for step = 1, steps do
-				local t = step / steps
-				local x = (1 - t) ^ 2 * ax + 2 * (1 - t) * t * x1 + t ^ 2 * startX
-				local y = (1 - t) ^ 2 * ay + 2 * (1 - t) * t * y1 + t ^ 2 * startY
-				Line(px, py, x, y, color)
-				px, py = x, y
-			end
-		end
-	end
-	Flush(color)
-	held, hx1, hy1, hx2, hy2, hlength = true, startX, startY, x2, y2, length
-end
-
--- A small cross where a hop with no line of its own (a portal, a preview across the sea) leaves or lands.
 local function Mark(x, y, color)
 	if x and (wide or (x >= 0 and x <= 1 and y >= 0 and y <= 1)) then
 		local size = 4 / scale
@@ -443,6 +478,125 @@ local function Mark(x, y, color)
 		Line(x - dx, y, x + dx, y, color)
 		Line(x, y - dy, x, y + dy, color)
 	end
+end
+
+local function Cover(x, y, depth, alpha)
+	coverCount = coverCount + 1
+	coverX[coverCount], coverY[coverCount], coverDepth[coverCount], coverAlpha[coverCount] = x, y, depth, alpha
+end
+
+-- One chord of the flowing line: drawn as a solid line (shaded under cover), with a mark where it goes under or
+-- comes out, and an arrow every ARROW_EVERY pixels along the tiers that carry them.
+local function Chord(x1, y1, x2, y2, style, depth)
+	local continuous = lastX == x1 and lastY == y1
+	if lastDepth and not (continuous and depth) then
+		Cover(lastX, lastY, lastDepth, style.alpha)
+	end
+	if depth and not (continuous and lastDepth) then
+		Cover(x1, y1, depth, style.alpha)
+	end
+	lastX, lastY, lastDepth = x2, y2, depth
+	lineWidth, later = style.thick, style.alpha
+	Line(x1 / width, -y1 / height, x2 / width, -y2 / height, depth and Shade(depth) or style.color)
+	if style.arrow then
+		local length = math.sqrt((x2 - x1) ^ 2 + (y2 - y1) ^ 2)
+		along = (continuous and along or ARROW_EVERY / 2) + length * scale
+		if along >= ARROW_EVERY and length > 0 then
+			along = 0
+			arrowCount = arrowCount + 1
+			arrowX[arrowCount], arrowY[arrowCount] = (x1 + x2) / 2, (y1 + y2) / 2
+			arrowDX[arrowCount], arrowDY[arrowCount], arrowAlpha[arrowCount] =
+				(x2 - x1) / length, (y2 - y1) / length, style.alpha
+		end
+	end
+end
+
+-- The walk in hand, handed to Smooth.lua; the next one does not carry on from it.
+---@param style SPFTierStyle
+---@param exact boolean?
+local function EndRun(style, exact)
+	if runCount > 1 then
+		ns.Smooth.Walk(runX, runY, runDepth, runCount, style, exact)
+	end
+	runCount = 0
+end
+
+-- A tour's walk: its points to the flowing line, split where it jumps or leaves the map. A hop still planning is
+-- a straight run through its stops.
+---@param view SPFMapView
+---@param path SPFDrawPath
+---@param points SPFPoint[]
+---@param style SPFTierStyle
+local function TourWalk(view, path, points, style)
+	local previous, px, py
+	runCount = 0
+	for index = 1, #points do
+		local point = points[index]
+		local x, y = view.position(point, view.mapID)
+		local joined = previous and x and px and previous.map == point.map and (path.preview or not previous.jump)
+		if not joined then
+			EndRun(style, path.preview)
+			ns.Smooth.Break()
+			if previous and not path.preview then
+				Mark(px, py, style.color)
+				Mark(x, y, style.color)
+			end
+		end
+		if x then
+			runCount = runCount + 1
+			runX[runCount], runY[runCount], runDepth[runCount] = x * width, -y * height, point.depth or false
+		end
+		previous, px, py = point, x, y
+	end
+	EndRun(style, path.preview)
+	ns.Smooth.Break()
+end
+
+local function Arrows()
+	if arrowCount == 0 then
+		return
+	end
+	arrowColor = arrowColor or CreateColor(1, 0.96, 0.8)
+	fade, lineWidth = 1, THICKNESS
+	local reach = ARROW_SIZE / scale
+	for i = 1, arrowCount do
+		local x, y, dx, dy = arrowX[i], arrowY[i], arrowDX[i], arrowDY[i]
+		later = arrowAlpha[i]
+		-- Two strokes back from the tip, 30 degrees either side of the way the line runs.
+		for _, side in ipairs({ -1, 1 }) do
+			local c, s = 0.866, 0.5 * side
+			local bx, by = -(dx * c - dy * s), -(dx * s + dy * c)
+			Line(
+				(x + dx * reach / 2) / width,
+				-(y + dy * reach / 2) / height,
+				(x + dx * reach / 2 + bx * reach) / width,
+				-(y + dy * reach / 2 + by * reach) / height,
+				arrowColor
+			)
+		end
+	end
+end
+
+-- The whole tour's walks, lowest tier first so the near ones lie on top, then the marks and arrows over them.
+local function DrawTour(left, right, bottom, top)
+	fade, route = 1, nil
+	for rank = 1, 4 do
+		lastX, lastY, lastDepth = nil, nil, false
+		local alpha = 1
+		ns.Smooth.Draw(rank, left, right, bottom, top, function(x1, y1, x2, y2, style, depth)
+			alpha = style.alpha
+			Chord(x1, y1, x2, y2, style, depth)
+		end)
+		if lastDepth then
+			Cover(lastX, lastY, lastDepth, alpha)
+		end
+	end
+	fade, lineWidth = 1, THICKNESS
+	for i = 1, coverCount do
+		later = coverAlpha[i]
+		Portal(coverX[i], coverY[i], coverDepth[i])
+	end
+	Arrows()
 end
 
 -- Smooth loading-screen bridges. The control follows the last sampled direction of travel.
@@ -542,6 +696,73 @@ local function OverviewCrossing(view, path, color)
 	return false
 end
 
+-- Everything but a tour's walks: lines and breadcrumbs as the segments they are, flights through their rounded
+-- corners, sea crossings as curves, and hops with no line of their own as marks.
+---@param view SPFMapView
+---@param path SPFDrawPath
+---@param points SPFPoint[]
+---@param color colorRGBA
+local function Plain(view, path, points, color)
+	local mapID, position = view.mapID, view.position
+	local previous, px, py
+	local crossing = OverviewCrossing(view, path, color)
+	local apart = path.mode == "flight" and not path.preview and FLIGHT_APART
+		or path.mode == "walk" and not WalkingRouteDotted(view.tour) and WALK_APART
+	local drawn, broken = out.n, false
+	inView = false
+	for index = 1, crossing and 0 or #points do
+		local point = points[index]
+		local x, y = position(point, mapID)
+		local after = points[index + 1]
+		-- Smoothed flight points and terrain walk steps can be about a pixel apart or less on the world map.
+		-- Keep longer connected strokes, retaining endpoints and loading boundaries.
+		local short = apart
+			and after
+			and previous
+			and not previous.jump
+			and not point.jump
+			and previous.map == point.map
+			and after.map == point.map
+			and px
+			and py
+			and x
+			and y
+			and ((x - px) * width) ^ 2 + ((y - py) * height) ^ 2 < (apart / scale) ^ 2
+		if not short then
+			if path.mode == "portal" or path.mode == "passage" then
+				Mark(x, y, color)
+			elseif previous then
+				broken = broken or not (px and x and previous.map == point.map and (path.preview or not previous.jump))
+				if path.preview then
+					-- A hop still planning has no geometry to draw; a straight line would cross the sea.
+					if previous.map ~= point.map then
+						Mark(px, py, color)
+						Mark(x, y, color)
+					elseif px and x then
+						Line(px, py, x, y, color, true)
+					end
+				elseif previous.jump or previous.map ~= point.map then
+					entranceDistance = nil
+					if path.mode == "boat" or path.mode == "zeppelin" then
+						Bridge(view, path.points, index, px, py, x, y, color)
+					else
+						Mark(px, py, color)
+						Mark(x, y, color)
+					end
+				elseif px and x then
+					Line(px, py, x, y, color, path.mode == "walk" and WalkingRouteDotted(), previous, point)
+				else
+					entranceDistance = nil
+				end
+			end
+			previous, px, py = point, x, y
+		end
+	end
+	if path.mode == "walk" and inView and not broken and out.n == drawn then
+		MiddleDot(view, path, points, color)
+	end
+end
+
 -- The paths as the world map shows them at this view: lines clipped to the map and the view, walks as breadcrumbs with
 -- a gap at each stop mark, sea crossings as curves and hops with no line of their own as marks.
 ---@param buffer SPFStrokes
@@ -550,6 +771,8 @@ end
 function Strokes.Map(buffer, paths, view)
 	Begin(buffer, view.scale, view.small, view.stitched)
 	width, height = view.width, view.height
+	coverCount, arrowCount = 0, 0
+	ns.Smooth.Begin(view.scale)
 	if view.clipLeft then
 		minX, maxX = math.max(minX, view.clipLeft), math.min(maxX, view.clipRight)
 		minY, maxY = math.max(minY, view.clipTop), math.min(maxY, view.clipBottom)
@@ -561,87 +784,33 @@ function Strokes.Map(buffer, paths, view)
 			Circle(mark.x * width, -mark.y * height, mark.radius / view.zoom)
 		end
 	end
-	local mapID, position = view.mapID, view.position
 	for pathIndex, path in ipairs(paths) do
 		local color = path.color or view.colors[path.mode]
 		route = path.route
 		fade = path.placeholder and 0.45 or 1
-		later = pathIndex > view.current and (view.tour and TOUR_LATER_ALPHA or LATER_ALPHA) or 1
+		local behind = pathIndex > view.current
+		later = behind and (view.tour and TOUR_LATER_ALPHA or LATER_ALPHA) or 1
 		-- A stop under the pointer shows its own leg at full strength, so the faded way ahead answers the cursor.
-		if view.highlight and path.stop and view.highlight[path.stop] then
+		local lit = view.highlight and path.stop and view.highlight[path.stop]
+		if lit then
 			later = 1
 		end
 		walked, entranceDistance = 0, nil
-		local previous, px, py
 		local points = ns.FlightLinePoints(path)
-		local crossing = OverviewCrossing(view, path, color)
-		local apart = path.mode == "flight" and not path.preview and FLIGHT_APART
-			or path.mode == "walk" and not WalkingRouteDotted(view.tour) and WALK_APART
-		local drawn, broken = out.n, false
-		inView = false
-		for index = 1, crossing and 0 or #points do
-			local point = points[index]
-			local x, y = position(point, mapID)
-			local after = points[index + 1]
-			-- Smoothed flight points and terrain walk steps can be about a pixel apart or less on the world map.
-			-- Keep longer connected strokes, retaining endpoints and loading boundaries.
-			local short = apart
-				and after
-				and previous
-				and not previous.jump
-				and not point.jump
-				and previous.map == point.map
-				and after.map == point.map
-				and px
-				and py
-				and x
-				and y
-				and ((x - px) * width) ^ 2 + ((y - py) * height) ^ 2 < (apart / scale) ^ 2
-			if not short then
-				if path.mode == "portal" or path.mode == "passage" then
-					Mark(x, y, color)
-				elseif previous then
-					broken = broken
-						or not (px and x and previous.map == point.map and (path.preview or not previous.jump))
-					if path.preview then
-						-- A hop still planning has no geometry to draw; a straight line would cross the sea.
-						if previous.map ~= point.map then
-							Flush(color)
-							Mark(px, py, color)
-							Mark(x, y, color)
-						elseif px and x then
-							if view.tour then
-								Soft(px, py, x, y, color)
-							else
-								Line(px, py, x, y, color, true)
-							end
-						end
-					elseif previous.jump or previous.map ~= point.map then
-						Flush(color)
-						entranceDistance = nil
-						if path.mode == "boat" or path.mode == "zeppelin" then
-							Bridge(view, path.points, index, px, py, x, y, color)
-						else
-							Mark(px, py, color)
-							Mark(x, y, color)
-						end
-					elseif px and x then
-						if view.tour and path.mode == "walk" then
-							Soft(px, py, x, y, color)
-						else
-							Line(px, py, x, y, color, path.mode == "walk" and WalkingRouteDotted(), previous, point)
-						end
-					else
-						entranceDistance = nil
-					end
-				end
-				previous, px, py = point, x, y
+		if view.tour and path.mode == "walk" then
+			local tier = path.tier
+			if view.loop then
+				tier = (lit or not tier) and "loop" or tier
+			else
+				tier = not lit and behind and "later" or "near"
 			end
+			TourWalk(view, path, points, TierStyle(TIERS[tier], path.placeholder, color))
+		else
+			Plain(view, path, points, color)
 		end
-		Flush(color)
-		if path.mode == "walk" and inView and not broken and out.n == drawn then
-			MiddleDot(view, path, points, color)
-		end
+	end
+	if view.tour then
+		DrawTour(minX * width, maxX * width, -maxY * height, -minY * height)
 	end
 end
 

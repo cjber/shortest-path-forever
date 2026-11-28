@@ -115,6 +115,7 @@ Journey\Corpse.lua
 Journey\FactionHint.lua
 UI\StopPin.lua
 UI\FlightLines.lua
+UI\Smooth.lua
 UI\Strokes.lua
 UI\QuestPins.lua
 UI\Route.lua
