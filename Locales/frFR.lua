@@ -666,3 +666,6 @@ L["Turning off Show direction arrow leaves TomTom's arrow alone."] =
 L["Mailbox"] = "Boîte aux lettres" -- mt
 L["Skip this stop"] = "Passer cette étape de collecte" -- mt
 L["Destination queued until combat ends."] = "Destination en attente jusqu’à la fin du combat." -- mt
+L["Keep the compass visible without a journey"] = "Garder la boussole visible sans trajet" -- mt
+L["Shows your heading when there are no directions to follow. Requires Show the compass."] =
+	"Indique la direction dans laquelle vous regardez quand aucun itinéraire ne vous guide. Nécessite l’option « Afficher la boussole »." -- mt

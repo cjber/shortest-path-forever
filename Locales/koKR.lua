@@ -672,3 +672,6 @@ L["Turning off Show direction arrow leaves TomTom's arrow alone."] =
 L["Mailbox"] = "우체통" -- mt
 L["Skip this stop"] = "이 채집 지점 건너뛰기" -- mt
 L["Destination queued until combat ends."] = "전투가 끝날 때까지 목적지가 대기합니다." -- mt
+L["Keep the compass visible without a journey"] = "여정 없이도 나침반 표시"
+L["Shows your heading when there are no directions to follow. Requires Show the compass."] =
+	"따라갈 길 안내가 없을 때 바라보는 방향을 표시합니다. '나침반 표시'를 켜야 합니다."

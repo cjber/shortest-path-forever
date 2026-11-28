@@ -648,3 +648,6 @@ L["Turning off Show direction arrow leaves TomTom's arrow alone."] =
 L["Mailbox"] = "邮箱" -- mt
 L["Skip this stop"] = "跳过此采集点" -- mt
 L["Destination queued until combat ends."] = "目的地已排队，战斗结束后规划。" -- mt
+L["Keep the compass visible without a journey"] = "没有旅程时仍显示指南针"
+L["Shows your heading when there are no directions to follow. Requires Show the compass."] =
+	"没有路线指引时显示你的朝向。需要开启“显示指南针”。"
